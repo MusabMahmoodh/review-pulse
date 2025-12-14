@@ -147,9 +147,11 @@ This document outlines the step-by-step process to integrate Google Reviews into
 2. **Enable Required APIs**
    - Navigate to **APIs & Services > Library**
    - Enable the following APIs:
+     - **My Business Account Management API** - For managing accounts and access
      - **My Business Business Information API** - For managing locations and business information
      - **Google Business Profile API** - For accessing reviews and other business data
    - Note: These APIs may only be available after your access request is approved
+   - **Important**: After enabling, you may need to request a quota increase if the default quota is 0
 
 3. **Configure OAuth Consent Screen**
    - Go to **APIs & Services > OAuth consent screen**
@@ -877,9 +879,22 @@ Based on the [official documentation](https://developers.google.com/my-business/
 
 6. **"404 Not Found" or "API not enabled"**
    - Ensure you have **requested and received approval** for Business Profile API access
-   - Verify "My Business Business Information API" is enabled in Google Cloud Console
+   - Verify "My Business Account Management API" and "My Business Business Information API" are enabled in Google Cloud Console
    - Check that your Google account has a Business Profile set up
    - See: https://developers.google.com/my-business/content/overview for access requirements
+
+7. **"429 Quota Exceeded" or "Quota limit: 0"**
+   - This means your API access is enabled but the quota hasn't been allocated yet
+   - The default quota is often 0 requests per minute until Google approves your quota request
+   - **Solution**: Request a quota increase in Google Cloud Console:
+     1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+     2. Navigate to **APIs & Services > Quotas**
+     3. Search for "My Business Account Management API" or "My Business Business Information API"
+     4. Select the quota metric (e.g., "Requests per minute")
+     5. Click **Edit Quotas** and request an increase
+     6. Provide a business justification for the quota increase
+   - Alternatively, wait for Google to automatically allocate quota after API access approval
+   - See: https://cloud.google.com/docs/quotas/help/request_increase
 
 ---
 

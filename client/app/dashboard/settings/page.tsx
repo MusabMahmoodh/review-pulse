@@ -110,15 +110,16 @@ function SettingsPageContent() {
     }
 
     if (googleError) {
-      const errorMessages: Record<string, string> = {
-        missing_params: "Missing authorization parameters",
-        token_failed: "Failed to obtain access token from Google",
-        account_failed: "Failed to fetch your Google Business Profile account",
-        no_account: "No Google Business Profile account found. Please set up Google Business Profile first.",
-        location_failed: "Failed to fetch business locations",
-        no_location: "No business location found. Please ensure your Google Business Profile has at least one location.",
-        unknown: "An unknown error occurred during Google authorization",
-      }
+    const errorMessages: Record<string, string> = {
+      missing_params: "Missing authorization parameters",
+      token_failed: "Failed to obtain access token from Google",
+      account_failed: "Failed to fetch your Google Business Profile account",
+      no_account: "No Google Business Profile account found. Please set up Google Business Profile first.",
+      location_failed: "Failed to fetch business locations",
+      no_location: "No business location found. Please ensure your Google Business Profile has at least one location.",
+      quota_exceeded: "API quota exceeded. Your Google Business Profile API access may still be pending approval, or quota hasn't been allocated. Please request quota increase in Google Cloud Console.",
+      unknown: "An unknown error occurred during Google authorization",
+    }
 
       toast({
         title: "Connection Failed",

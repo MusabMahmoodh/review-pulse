@@ -337,8 +337,9 @@ router.get("/google/callback", async (req, res) => {
     let accountName: string | null = null;
     let locations: any[] = [];
 
-    // Step 1: List accounts using Business Information API
-    const accountResponse = await fetch("https://mybusinessbusinessinformation.googleapis.com/v1/accounts", {
+    // Step 1: List accounts using Account Management API
+    // Note: Account management uses a different service than Business Information
+    const accountResponse = await fetch("https://mybusinessaccountmanagement.googleapis.com/v1/accounts", {
       headers: {
         Authorization: `Bearer ${tokens.access_token}`,
       },
@@ -346,12 +347,34 @@ router.get("/google/callback", async (req, res) => {
 
     if (!accountResponse.ok) {
       const errorText = await accountResponse.text();
-      console.error("Failed to fetch accounts from Business Information API:", accountResponse.status, errorText);
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: { message: errorText } };
+      }
+      
+      console.error("Failed to fetch accounts:", accountResponse.status, errorText);
+      
+      // Handle quota exceeded error (429)
+      if (accountResponse.status === 429) {
+        const isJsonRequest = req.headers["content-type"]?.includes("application/json") || req.query.format === "json";
+        if (isJsonRequest) {
+          return res.status(429).json({ 
+            error: "API quota exceeded",
+            message: "Your Google Business Profile API quota limit is 0. This usually means your API access request is still pending approval, or the quota hasn't been allocated yet.",
+            details: errorData.error?.message || "Quota limit: 0 requests per minute",
+            help: "Please request API access and quota increase at: https://cloud.google.com/docs/quotas/help/request_increase"
+          });
+        }
+        return res.redirect(`${clientUrl}/dashboard/settings?google_error=quota_exceeded`);
+      }
+      
       const isJsonRequest = req.headers["content-type"]?.includes("application/json") || req.query.format === "json";
       if (isJsonRequest) {
         return res.status(400).json({ 
           error: "Failed to fetch Google Business Profile accounts",
-          details: "Make sure 'My Business Business Information API' is enabled in Google Cloud Console",
+          details: errorData.error?.message || "Make sure 'My Business Account Management API' and 'My Business Business Information API' are enabled in Google Cloud Console",
           status: accountResponse.status
         });
       }
