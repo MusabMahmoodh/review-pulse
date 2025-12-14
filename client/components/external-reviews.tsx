@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { RefreshCw, Star, Calendar, Loader2 } from "lucide-react"
 import type { ExternalReview } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast-simple"
+import { useExternalReviews, useSyncExternalReviews } from "@/hooks"
 
 interface ExternalReviewsProps {
   restaurantId: string
@@ -15,57 +16,32 @@ interface ExternalReviewsProps {
 
 export function ExternalReviews({ restaurantId, compact = false }: ExternalReviewsProps) {
   const { toast } = useToast()
-  const [reviews, setReviews] = useState<ExternalReview[]>([])
-  const [loading, setLoading] = useState(true)
-  const [syncing, setSyncing] = useState(false)
   const [selectedPlatform, setSelectedPlatform] = useState<string>("all")
 
-  useEffect(() => {
-    fetchReviews()
-  }, [restaurantId])
+  const { data, isLoading: loading } = useExternalReviews(restaurantId)
+  const syncMutation = useSyncExternalReviews()
 
-  const fetchReviews = async () => {
-    try {
-      const response = await fetch(`/api/external-reviews/list?restaurantId=${restaurantId}`)
-      const data = await response.json()
-      setReviews(data.reviews || [])
-    } catch (error) {
-      console.error("Error fetching reviews:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const reviews = data?.reviews || []
 
-  const syncReviews = async (platforms?: string[]) => {
-    setSyncing(true)
-    try {
-      const response = await fetch("/api/external-reviews/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ restaurantId, platforms }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to sync reviews")
+  const syncReviews = async () => {
+    syncMutation.mutate(
+      { restaurantId },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Sync Complete",
+            description: "Reviews synced successfully",
+          })
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to sync reviews",
+            variant: "destructive",
+          })
+        },
       }
-
-      const data = await response.json()
-
-      toast({
-        title: "Sync Complete",
-        description: `Synced ${data.syncedCount} new reviews`,
-      })
-
-      await fetchReviews()
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to sync reviews",
-        variant: "destructive",
-      })
-    } finally {
-      setSyncing(false)
-    }
+    )
   }
 
   const getPlatformIcon = (platform: string) => {
@@ -185,9 +161,9 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
               <CardTitle className="text-lg">External Reviews</CardTitle>
               <CardDescription>Reviews from Google, Facebook, and Instagram</CardDescription>
             </div>
-            <Button onClick={() => syncReviews()} disabled={syncing} size="sm">
-              <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
-              {syncing ? "Syncing..." : "Sync Now"}
+            <Button onClick={() => syncReviews()} disabled={syncMutation.isPending} size="sm">
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? "animate-spin" : ""}`} />
+              {syncMutation.isPending ? "Syncing..." : "Sync Now"}
             </Button>
           </div>
         </CardHeader>
@@ -235,7 +211,7 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
               <p>No reviews from {selectedPlatform === "all" ? "any platform" : selectedPlatform} yet.</p>
               <Button
                 onClick={() => syncReviews()}
-                disabled={syncing}
+                disabled={syncMutation.isPending}
                 variant="outline"
                 className="mt-4 bg-transparent"
               >

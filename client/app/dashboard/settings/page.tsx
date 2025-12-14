@@ -17,7 +17,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
 
-  const restaurantId = "demo-restaurant-1"
+  const restaurantId = "rest_1765722970886_70yxgey"
 
   useEffect(() => {
     // Load current keywords

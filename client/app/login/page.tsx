@@ -11,11 +11,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ChefHat, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast-simple"
+import { useLogin } from "@/hooks/use-auth"
 
 export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
+  const loginMutation = useLogin()
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -23,36 +24,26 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
 
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Login failed")
+    loginMutation.mutate(
+      { email: formData.email, password: formData.password },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Welcome back!",
+            description: "Redirecting to your dashboard...",
+          })
+          router.push("/dashboard")
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Error",
+            description: error?.data?.error || error?.message || "Invalid credentials",
+            variant: "destructive",
+          })
+        },
       }
-
-      toast({
-        title: "Welcome back!",
-        description: "Redirecting to your dashboard...",
-      })
-
-      router.push("/dashboard")
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Invalid credentials",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
+    )
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,8 +96,8 @@ export default function LoginPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
+              <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+                {loginMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Signing in...

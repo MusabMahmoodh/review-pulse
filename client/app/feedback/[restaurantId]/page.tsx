@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ChefHat, Send, CheckCircle, Star } from "lucide-react"
 import { useToast } from "@/hooks/use-toast-simple"
+import { useSubmitFeedback } from "@/hooks"
 
 interface PageProps {
   params: Promise<{ restaurantId: string }>
@@ -20,7 +21,7 @@ export default function FeedbackPage({ params }: PageProps) {
   const restaurantId = resolvedParams.restaurantId
   const { toast } = useToast()
   const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const submitMutation = useSubmitFeedback()
   const [formData, setFormData] = useState({
     customerName: "",
     customerContact: "",
@@ -40,36 +41,29 @@ export default function FeedbackPage({ params }: PageProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
 
-    try {
-      const response = await fetch("/api/feedback/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          restaurantId,
-          ...formData,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to submit feedback")
+    submitMutation.mutate(
+      {
+        restaurantId,
+        ...formData,
+      },
+      {
+        onSuccess: () => {
+          setSubmitted(true)
+          toast({
+            title: "Thank you!",
+            description: "Your feedback has been submitted successfully",
+          })
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to submit feedback. Please try again.",
+            variant: "destructive",
+          })
+        },
       }
-
-      setSubmitted(true)
-      toast({
-        title: "Thank you!",
-        description: "Your feedback has been submitted successfully",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to submit feedback. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
+    )
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -177,9 +171,9 @@ export default function FeedbackPage({ params }: PageProps) {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              <Button type="submit" className="w-full" size="lg" disabled={submitMutation.isPending}>
                 <Send className="mr-2 h-4 w-4" />
-                {loading ? "Submitting..." : "Submit Feedback"}
+                {submitMutation.isPending ? "Submitting..." : "Submit Feedback"}
               </Button>
             </form>
           </CardContent>

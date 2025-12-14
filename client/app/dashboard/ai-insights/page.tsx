@@ -1,32 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
-import type { AIInsight } from "@/lib/types"
 import { AIInsightsNew } from "@/components/ai-insights-new"
+import { useAIInsights } from "@/hooks"
 
 export default function AIInsightsPage() {
-  const [aiInsight, setAiInsight] = useState<AIInsight | null>(null)
-  const [loading, setLoading] = useState(true)
-  const restaurantId = "demo-restaurant-1"
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const insightsRes = await fetch(`/api/ai/insights?restaurantId=${restaurantId}`)
-        const insightsData = await insightsRes.json()
-        setAiInsight(insightsData.insight)
-      } catch (error) {
-        console.error("Error fetching AI insights:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [restaurantId])
+  const restaurantId = "rest_1765722970886_70yxgey"
+  const { data: insightsData } = useAIInsights(restaurantId)
+  const aiInsight = insightsData?.insight || null
 
   return (
     <div className="min-h-screen bg-background">

@@ -85,7 +85,20 @@ CREATE DATABASE review_pulse;
 npm run migration:run
 ```
 
+3. Create an admin user:
+```bash
+npm run admin:create
+# Or with custom credentials:
+npm run admin:create admin@example.com mypassword123
+```
+
+4. (Optional) Bootstrap demo data for testing:
+```bash
+npm run data:bootstrap
+```
+
 For more details on migrations, see [MIGRATIONS.md](./MIGRATIONS.md).
+For more details on utility scripts, see [SCRIPTS.md](./SCRIPTS.md).
 
 ## API Documentation
 

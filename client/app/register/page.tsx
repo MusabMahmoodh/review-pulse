@@ -13,11 +13,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { ChefHat, Loader2, Plus, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast-simple"
 import { Badge } from "@/components/ui/badge"
+import { useRegister } from "@/hooks/use-auth"
 
 export default function RegisterPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
+  const registerMutation = useRegister()
   const [formData, setFormData] = useState({
     restaurantName: "",
     email: "",
@@ -31,7 +32,6 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
@@ -40,7 +40,6 @@ export default function RegisterPage() {
         description: "Passwords do not match",
         variant: "destructive",
       })
-      setLoading(false)
       return
     }
 
@@ -50,7 +49,6 @@ export default function RegisterPage() {
         description: "Password must be at least 8 characters",
         variant: "destructive",
       })
-      setLoading(false)
       return
     }
 
@@ -60,39 +58,35 @@ export default function RegisterPage() {
         description: "Please add at least 3 keywords for social media search",
         variant: "destructive",
       })
-      setLoading(false)
       return
     }
 
-    try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, socialKeywords: keywords }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Registration failed")
+    registerMutation.mutate(
+      {
+        restaurantName: formData.restaurantName,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        address: formData.address,
+        socialKeywords: keywords,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Success!",
+            description: "Your account has been created",
+          })
+          router.push("/dashboard")
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Error",
+            description: error?.data?.error || error?.message || "Registration failed",
+            variant: "destructive",
+          })
+        },
       }
-
-      toast({
-        title: "Success!",
-        description: "Your account has been created",
-      })
-
-      // Redirect to dashboard
-      router.push("/dashboard")
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Registration failed",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
+    )
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -255,8 +249,8 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
+              <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
+                {registerMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Creating Account...

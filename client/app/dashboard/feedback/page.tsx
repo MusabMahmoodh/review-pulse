@@ -1,32 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
-import type { CustomerFeedback } from "@/lib/types"
 import { FeedbackList } from "@/components/feedback-list"
+import { useFeedbackList } from "@/hooks"
 
 export default function FeedbackPage() {
-  const [feedback, setFeedback] = useState<CustomerFeedback[]>([])
-  const [loading, setLoading] = useState(true)
-  const restaurantId = "demo-restaurant-1"
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const feedbackRes = await fetch(`/api/feedback/list?restaurantId=${restaurantId}`)
-        const feedbackData = await feedbackRes.json()
-        setFeedback(feedbackData.feedback)
-      } catch (error) {
-        console.error("Error fetching feedback:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [restaurantId])
+  const restaurantId = "rest_1765722970886_70yxgey"
+  const { data: feedbackData, isLoading: loading } = useFeedbackList(restaurantId)
+  const feedback = feedbackData?.feedback || []
 
   return (
     <div className="min-h-screen bg-background">

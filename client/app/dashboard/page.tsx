@@ -1,49 +1,26 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChefHat, QrCode, LogOut, ChevronRight, Settings } from "lucide-react"
 import Link from "next/link"
-import type { CustomerFeedback, FeedbackStats, AIInsight } from "@/lib/types"
 import { FeedbackList } from "@/components/feedback-list"
 import { StatsCards } from "@/components/stats-cards"
 import { RatingsChart } from "@/components/ratings-chart"
 import { ExternalReviews } from "@/components/external-reviews"
+import { useFeedbackList, useFeedbackStats, useAIInsights } from "@/hooks"
 
 export default function DashboardPage() {
-  const [feedback, setFeedback] = useState<CustomerFeedback[]>([])
-  const [stats, setStats] = useState<FeedbackStats | null>(null)
-  const [aiInsight, setAiInsight] = useState<AIInsight | null>(null)
-  const [loading, setLoading] = useState(true)
+  const restaurantId = "rest_1765722970886_70yxgey"
 
-  const restaurantId = "demo-restaurant-1"
+  const { data: feedbackData, isLoading: feedbackLoading } = useFeedbackList(restaurantId)
+  const { data: statsData, isLoading: statsLoading } = useFeedbackStats(restaurantId)
+  const { data: insightsData, isLoading: insightsLoading } = useAIInsights(restaurantId)
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [feedbackRes, statsRes, insightsRes] = await Promise.all([
-          fetch(`/api/feedback/list?restaurantId=${restaurantId}`),
-          fetch(`/api/feedback/stats?restaurantId=${restaurantId}`),
-          fetch(`/api/ai/insights?restaurantId=${restaurantId}`),
-        ])
-
-        const feedbackData = await feedbackRes.json()
-        const statsData = await statsRes.json()
-        const insightsData = await insightsRes.json()
-
-        setFeedback(feedbackData.feedback)
-        setStats(statsData.stats)
-        setAiInsight(insightsData.insight)
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [restaurantId])
+  const feedback = feedbackData?.feedback || []
+  const stats = statsData?.stats || null
+  const aiInsight = insightsData?.insight || null
+  const loading = feedbackLoading || statsLoading || insightsLoading
 
   return (
     <div className="min-h-screen bg-background pb-20">

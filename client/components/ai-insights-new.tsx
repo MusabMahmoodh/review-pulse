@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import type { AIInsight } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast-simple"
+import { useGenerateInsights, useAIChat } from "@/hooks"
 
 interface AIInsightsNewProps {
   restaurantId: string
@@ -33,11 +34,12 @@ interface ChatMessage {
 export function AIInsightsNew({ restaurantId, initialInsight }: AIInsightsNewProps) {
   const { toast } = useToast()
   const [insight, setInsight] = useState<AIInsight | null>(initialInsight || null)
-  const [loading, setLoading] = useState(false)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [inputMessage, setInputMessage] = useState("")
-  const [chatLoading, setChatLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  const generateInsightsMutation = useGenerateInsights()
+  const chatMutation = useAIChat()
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -45,36 +47,29 @@ export function AIInsightsNew({ restaurantId, initialInsight }: AIInsightsNewPro
     }
   }, [chatMessages])
 
-  const generateInsights = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch("/api/ai/generate-insights", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ restaurantId }),
-      })
-
-      if (!response.ok) throw new Error("Failed to generate insights")
-
-      const data = await response.json()
-      setInsight(data.insight)
-
-      toast({
-        title: "Insights Generated",
-        description: "AI has analyzed your feedback",
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to generate insights",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
+  const generateInsights = () => {
+    generateInsightsMutation.mutate(
+      { restaurantId },
+      {
+        onSuccess: (data) => {
+          setInsight(data.insight)
+          toast({
+            title: "Insights Generated",
+            description: "AI has analyzed your feedback",
+          })
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to generate insights",
+            variant: "destructive",
+          })
+        },
+      }
+    )
   }
 
-  const sendChatMessage = async () => {
+  const sendChatMessage = () => {
     if (!inputMessage.trim()) return
 
     const userMessage: ChatMessage = {
@@ -84,40 +79,29 @@ export function AIInsightsNew({ restaurantId, initialInsight }: AIInsightsNewPro
     }
 
     setChatMessages((prev) => [...prev, userMessage])
+    const messageToSend = inputMessage
     setInputMessage("")
-    setChatLoading(true)
 
-    try {
-      const response = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          restaurantId,
-          message: inputMessage,
-          conversationHistory: chatMessages,
-        }),
-      })
-
-      if (!response.ok) throw new Error("Failed to get response")
-
-      const data = await response.json()
-
-      const assistantMessage: ChatMessage = {
-        role: "assistant",
-        content: data.response,
-        timestamp: new Date(),
+    chatMutation.mutate(
+      { restaurantId, message: messageToSend },
+      {
+        onSuccess: (data) => {
+          const assistantMessage: ChatMessage = {
+            role: "assistant",
+            content: data.response,
+            timestamp: new Date(),
+          }
+          setChatMessages((prev) => [...prev, assistantMessage])
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to get AI response",
+            variant: "destructive",
+          })
+        },
       }
-
-      setChatMessages((prev) => [...prev, assistantMessage])
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to get AI response",
-        variant: "destructive",
-      })
-    } finally {
-      setChatLoading(false)
-    }
+    )
   }
 
   if (!insight) {
@@ -129,8 +113,8 @@ export function AIInsightsNew({ restaurantId, initialInsight }: AIInsightsNewPro
           <CardDescription>Let AI analyze your feedback and provide actionable recommendations</CardDescription>
         </CardHeader>
         <CardContent className="text-center">
-          <Button onClick={generateInsights} disabled={loading} size="lg" className="w-full">
-            {loading ? (
+          <Button onClick={generateInsights} disabled={generateInsightsMutation.isPending} size="lg" className="w-full">
+            {generateInsightsMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Analyzing Feedback...
@@ -305,7 +289,7 @@ export function AIInsightsNew({ restaurantId, initialInsight }: AIInsightsNewPro
                     </div>
                   </div>
                 ))}
-                {chatLoading && (
+                {chatMutation.isPending && (
                   <div className="flex justify-start">
                     <div className="bg-muted rounded-2xl px-4 py-2">
                       <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -322,17 +306,17 @@ export function AIInsightsNew({ restaurantId, initialInsight }: AIInsightsNewPro
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && sendChatMessage()}
-              disabled={chatLoading}
+              disabled={chatMutation.isPending}
             />
-            <Button onClick={sendChatMessage} disabled={chatLoading || !inputMessage.trim()} size="icon">
+            <Button onClick={sendChatMessage} disabled={chatMutation.isPending || !inputMessage.trim()} size="icon">
               <Send className="h-4 w-4" />
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <Button onClick={generateInsights} disabled={loading} variant="outline" className="w-full bg-transparent">
-        {loading ? (
+      <Button onClick={generateInsights} disabled={generateInsightsMutation.isPending} variant="outline" className="w-full bg-transparent">
+        {generateInsightsMutation.isPending ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Regenerating...
