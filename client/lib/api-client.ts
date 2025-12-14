@@ -240,8 +240,14 @@ export const googleAuthApi = {
 };
 
 // AI API
+export type TimePeriod = "2days" | "week" | "month" | "2months" | "3months" | "4months" | "5months" | "6months";
+
 export const aiApi = {
-  getInsights: async (restaurantId: string) => {
+  getInsights: async (restaurantId: string, timePeriod?: TimePeriod) => {
+    const params = new URLSearchParams({ restaurantId });
+    if (timePeriod) {
+      params.append("timePeriod", timePeriod);
+    }
     return fetchApi<{
       insight: {
         id: string;
@@ -252,17 +258,17 @@ export const aiApi = {
         keyTopics: string[];
         generatedAt: string;
       } | null;
-    }>(`/api/ai/insights?restaurantId=${restaurantId}`);
+    }>(`/api/ai/insights?${params.toString()}`);
   },
 
-  generateInsights: async (restaurantId: string) => {
+  generateInsights: async (restaurantId: string, timePeriod: TimePeriod = "month") => {
     return fetchApi<{
       success: boolean;
       insight: any;
       message: string;
     }>("/api/ai/generate-insights", {
       method: "POST",
-      body: JSON.stringify({ restaurantId }),
+      body: JSON.stringify({ restaurantId, timePeriod }),
     });
   },
 

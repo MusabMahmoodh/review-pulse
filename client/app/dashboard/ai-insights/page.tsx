@@ -8,6 +8,7 @@ import { useAIInsights } from "@/hooks"
 
 export default function AIInsightsPage() {
   const restaurantId = "rest_1765722970886_70yxgey"
+  // Fetch initial insights (component will handle time period selection)
   const { data: insightsData } = useAIInsights(restaurantId)
   const aiInsight = insightsData?.insight || null
 

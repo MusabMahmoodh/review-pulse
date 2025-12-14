@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Sparkles,
   AlertTriangle,
   TrendingUp,
@@ -15,10 +22,12 @@ import {
   Users,
   Clock,
   Loader2,
+  Calendar,
 } from "lucide-react"
 import type { AIInsight } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useGenerateInsights, useAIChat } from "@/hooks"
+import type { TimePeriod } from "@/lib/api-client"
 
 interface AIInsightsNewProps {
   restaurantId: string
@@ -31,11 +40,23 @@ interface ChatMessage {
   timestamp: Date
 }
 
+const TIME_PERIOD_OPTIONS: { value: TimePeriod; label: string }[] = [
+  { value: "2days", label: "Last 2 Days" },
+  { value: "week", label: "Last Week" },
+  { value: "month", label: "Last Month" },
+  { value: "2months", label: "Last 2 Months" },
+  { value: "3months", label: "Last 3 Months" },
+  { value: "4months", label: "Last 4 Months" },
+  { value: "5months", label: "Last 5 Months" },
+  { value: "6months", label: "Last 6 Months" },
+]
+
 export function AIInsightsNew({ restaurantId, initialInsight }: AIInsightsNewProps) {
   const { toast } = useToast()
   const [insight, setInsight] = useState<AIInsight | null>(initialInsight || null)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [inputMessage, setInputMessage] = useState("")
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>("month")
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const generateInsightsMutation = useGenerateInsights()
@@ -49,19 +70,19 @@ export function AIInsightsNew({ restaurantId, initialInsight }: AIInsightsNewPro
 
   const generateInsights = () => {
     generateInsightsMutation.mutate(
-      { restaurantId },
+      { restaurantId, timePeriod },
       {
         onSuccess: (data) => {
           setInsight(data.insight)
           toast({
             title: "Insights Generated",
-            description: "AI has analyzed your feedback",
+            description: `AI has analyzed your feedback for ${TIME_PERIOD_OPTIONS.find((opt) => opt.value === timePeriod)?.label.toLowerCase()}`,
           })
         },
-        onError: () => {
+        onError: (error: any) => {
           toast({
             title: "Error",
-            description: "Failed to generate insights",
+            description: error?.data?.error || "Failed to generate insights",
             variant: "destructive",
           })
         },
@@ -112,7 +133,23 @@ export function AIInsightsNew({ restaurantId, initialInsight }: AIInsightsNewPro
           <CardTitle>AI-Powered Insights</CardTitle>
           <CardDescription>Let AI analyze your feedback and provide actionable recommendations</CardDescription>
         </CardHeader>
-        <CardContent className="text-center">
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2 justify-center">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Time Period:</span>
+            <Select value={timePeriod} onValueChange={(value) => setTimePeriod(value as TimePeriod)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TIME_PERIOD_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button onClick={generateInsights} disabled={generateInsightsMutation.isPending} size="lg" className="w-full">
             {generateInsightsMutation.isPending ? (
               <>
@@ -167,6 +204,30 @@ export function AIInsightsNew({ restaurantId, initialInsight }: AIInsightsNewPro
 
   return (
     <div className="space-y-4">
+      {/* Time Period Selector */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Analysis Period:</span>
+            </div>
+            <Select value={timePeriod} onValueChange={(value) => setTimePeriod(value as TimePeriod)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TIME_PERIOD_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Warnings Section */}
       <Card className="border-destructive/50">
         <CardHeader className="pb-3">
@@ -324,7 +385,7 @@ export function AIInsightsNew({ restaurantId, initialInsight }: AIInsightsNewPro
         ) : (
           <>
             <TrendingUp className="mr-2 h-4 w-4" />
-            Regenerate All Insights
+            Regenerate Insights for {TIME_PERIOD_OPTIONS.find((opt) => opt.value === timePeriod)?.label.toLowerCase()}
           </>
         )}
       </Button>

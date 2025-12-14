@@ -1,12 +1,12 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { aiApi } from "@/lib/api-client";
+import { aiApi, TimePeriod } from "@/lib/api-client";
 
-export function useAIInsights(restaurantId: string | null) {
+export function useAIInsights(restaurantId: string | null, timePeriod?: TimePeriod) {
   return useQuery({
-    queryKey: ["ai", "insights", restaurantId],
-    queryFn: () => aiApi.getInsights(restaurantId!),
+    queryKey: ["ai", "insights", restaurantId, timePeriod],
+    queryFn: () => aiApi.getInsights(restaurantId!, timePeriod),
     enabled: !!restaurantId,
   });
 }
@@ -15,7 +15,8 @@ export function useGenerateInsights() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ restaurantId }: { restaurantId: string }) => aiApi.generateInsights(restaurantId),
+    mutationFn: ({ restaurantId, timePeriod = "month" }: { restaurantId: string; timePeriod?: TimePeriod }) =>
+      aiApi.generateInsights(restaurantId, timePeriod),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ai", "insights", variables.restaurantId] });
     },

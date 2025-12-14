@@ -28,6 +28,9 @@ GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
 
 # Encryption key for OAuth tokens (generate with: openssl rand -hex 32)
 ENCRYPTION_KEY=your_32_byte_hex_encryption_key
+
+# OpenAI API Key (for AI insights generation)
+OPENAI_API_KEY=your_openai_api_key
 ```
 
 3. Make sure PostgreSQL is running and the database exists.
@@ -65,8 +68,8 @@ The server will run on `http://localhost:3001` by default.
 - `POST /api/external-reviews/sync` - Sync external reviews from Google (and other platforms)
 
 ### AI
-- `GET /api/ai/insights?restaurantId=xxx` - Get AI insights
-- `POST /api/ai/generate-insights` - Generate AI insights (placeholder)
+- `GET /api/ai/insights?restaurantId=xxx&timePeriod=xxx` - Get AI insights (optional timePeriod: 2days, week, month, 2months, 3months, 4months, 5months, 6months)
+- `POST /api/ai/generate-insights` - Generate AI insights with OpenAI (requires timePeriod: 2days, week, month, 2months, 3months, 4months, 5months, 6months)
 - `POST /api/ai/chat` - AI chat (placeholder)
 
 ## Database Models

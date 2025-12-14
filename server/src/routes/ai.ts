@@ -1,8 +1,51 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { AIInsight, Restaurant, CustomerFeedback } from "../models";
+import { AIInsight, Restaurant, CustomerFeedback, ExternalReview } from "../models";
+import { generateInsights, chatAboutFeedback } from "../utils/openai";
+import { MoreThanOrEqual } from "typeorm";
 
 const router = Router();
+
+type TimePeriod = "2days" | "week" | "month" | "2months" | "3months" | "4months" | "5months" | "6months";
+
+/**
+ * Calculate the start date based on time period
+ */
+function getStartDate(period: TimePeriod): Date {
+  const now = new Date();
+  const startDate = new Date(now);
+
+  switch (period) {
+    case "2days":
+      startDate.setDate(now.getDate() - 2);
+      break;
+    case "week":
+      startDate.setDate(now.getDate() - 7);
+      break;
+    case "month":
+      startDate.setMonth(now.getMonth() - 1);
+      break;
+    case "2months":
+      startDate.setMonth(now.getMonth() - 2);
+      break;
+    case "3months":
+      startDate.setMonth(now.getMonth() - 3);
+      break;
+    case "4months":
+      startDate.setMonth(now.getMonth() - 4);
+      break;
+    case "5months":
+      startDate.setMonth(now.getMonth() - 5);
+      break;
+    case "6months":
+      startDate.setMonth(now.getMonth() - 6);
+      break;
+    default:
+      startDate.setMonth(now.getMonth() - 1);
+  }
+
+  return startDate;
+}
 
 /**
  * @swagger
@@ -17,6 +60,13 @@ const router = Router();
  *         schema:
  *           type: string
  *         description: Restaurant ID
+ *       - in: query
+ *         name: timePeriod
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [2days, week, month, 2months, 3months, 4months, 5months, 6months]
+ *         description: Time period for filtering insights (defaults to most recent)
  *     responses:
  *       200:
  *         description: AI insights
@@ -57,6 +107,7 @@ const router = Router();
 router.get("/insights", async (req, res) => {
   try {
     const restaurantId = req.query.restaurantId as string;
+    const timePeriod = req.query.timePeriod as TimePeriod | undefined;
 
     if (!restaurantId) {
       return res.status(400).json({ error: "Restaurant ID required" });
@@ -64,11 +115,33 @@ router.get("/insights", async (req, res) => {
 
     const insightRepo = AppDataSource.getRepository(AIInsight);
 
-    const insights = await insightRepo.find({
-      where: { restaurantId },
-      order: { generatedAt: "DESC" },
-      take: 1, // Get the most recent insight
-    });
+    let query = insightRepo
+      .createQueryBuilder("insight")
+      .where("insight.restaurantId = :restaurantId", { restaurantId });
+
+    // If time period is specified, filter insights generated within that period
+    if (timePeriod) {
+      const validPeriods: TimePeriod[] = [
+        "2days",
+        "week",
+        "month",
+        "2months",
+        "3months",
+        "4months",
+        "5months",
+        "6months",
+      ];
+      if (!validPeriods.includes(timePeriod)) {
+        return res.status(400).json({
+          error: `Invalid time period. Must be one of: ${validPeriods.join(", ")}`,
+        });
+      }
+
+      const startDate = getStartDate(timePeriod);
+      query = query.andWhere("insight.generatedAt >= :startDate", { startDate });
+    }
+
+    const insights = await query.orderBy("insight.generatedAt", "DESC").take(1).getMany();
 
     if (insights.length === 0) {
       return res.json({ insight: null });
@@ -98,6 +171,10 @@ router.get("/insights", async (req, res) => {
  *             properties:
  *               restaurantId:
  *                 type: string
+ *               timePeriod:
+ *                 type: string
+ *                 enum: [2days, week, month, 2months, 3months, 4months, 5months, 6months]
+ *                 description: Time period for analysis (defaults to month)
  *     responses:
  *       200:
  *         description: Insights generated
@@ -121,14 +198,32 @@ router.get("/insights", async (req, res) => {
  */
 router.post("/generate-insights", async (req, res) => {
   try {
-    const { restaurantId } = req.body;
+    const { restaurantId, timePeriod = "month" } = req.body;
 
     if (!restaurantId) {
       return res.status(400).json({ error: "Restaurant ID required" });
     }
 
+    // Validate time period
+    const validPeriods: TimePeriod[] = [
+      "2days",
+      "week",
+      "month",
+      "2months",
+      "3months",
+      "4months",
+      "5months",
+      "6months",
+    ];
+    if (!validPeriods.includes(timePeriod)) {
+      return res.status(400).json({
+        error: `Invalid time period. Must be one of: ${validPeriods.join(", ")}`,
+      });
+    }
+
     const restaurantRepo = AppDataSource.getRepository(Restaurant);
     const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
+    const reviewRepo = AppDataSource.getRepository(ExternalReview);
     const insightRepo = AppDataSource.getRepository(AIInsight);
 
     const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
@@ -136,28 +231,53 @@ router.post("/generate-insights", async (req, res) => {
       return res.status(404).json({ error: "Restaurant not found" });
     }
 
-    // Get feedback for analysis
+    // Calculate start date based on time period
+    const startDate = getStartDate(timePeriod);
+
+    // Get feedback for analysis within the time period
     const feedback = await feedbackRepo.find({
-      where: { restaurantId },
+      where: {
+        restaurantId,
+        createdAt: MoreThanOrEqual(startDate),
+      },
       order: { createdAt: "DESC" },
     });
 
-    // TODO: Implement actual AI analysis using OpenAI or similar service
-    // For now, this is a placeholder
-    // In Phase 3, this will:
-    // 1. Analyze all feedback and external reviews
-    // 2. Generate summary with key positives and complaints
-    // 3. Generate recommendations
-    // 4. Calculate sentiment
-    // 5. Extract key topics
+    // Get external reviews for analysis within the time period
+    const reviews = await reviewRepo.find({
+      where: {
+        restaurantId,
+        reviewDate: MoreThanOrEqual(startDate),
+      },
+      order: { reviewDate: "DESC" },
+    });
 
+    // Check if we have any data to analyze
+    if (feedback.length === 0 && reviews.length === 0) {
+      return res.status(400).json({
+        error: `No feedback or reviews found for the selected time period (${timePeriod})`,
+      });
+    }
+
+    // Generate insights using OpenAI
+    let insightData;
+    try {
+      insightData = await generateInsights(feedback, reviews, restaurant.name);
+    } catch (error: any) {
+      console.error("OpenAI error:", error);
+      return res.status(500).json({
+        error: error.message || "Failed to generate insights with AI",
+      });
+    }
+
+    // Save insight to database
     const insight = insightRepo.create({
       id: `insight_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       restaurantId,
-      summary: "AI insights generation will be implemented in Phase 3",
-      recommendations: ["Placeholder recommendation"],
-      sentiment: "neutral",
-      keyTopics: ["Placeholder topic"],
+      summary: insightData.summary,
+      recommendations: insightData.recommendations,
+      sentiment: insightData.sentiment,
+      keyTopics: insightData.keyTopics,
     });
 
     await insightRepo.save(insight);
@@ -165,7 +285,7 @@ router.post("/generate-insights", async (req, res) => {
     return res.json({
       success: true,
       insight,
-      message: "Insights generated (placeholder - actual AI to be implemented)",
+      message: `Insights generated successfully for ${timePeriod} period`,
     });
   } catch (error) {
     console.error("Error generating insights:", error);
@@ -219,18 +339,51 @@ router.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "Restaurant ID and message required" });
     }
 
-    // TODO: Implement actual AI chat using OpenAI or similar service
-    // For now, this is a placeholder
-    // In Phase 4, this will:
-    // 1. Take user question
-    // 2. Analyze restaurant's feedback data
-    // 3. Generate contextual response using AI
-    // 4. Return helpful answer
+    const restaurantRepo = AppDataSource.getRepository(Restaurant);
+    const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
+    const reviewRepo = AppDataSource.getRepository(ExternalReview);
+
+    const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    // Get recent feedback and reviews for context (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const feedback = await feedbackRepo.find({
+      where: {
+        restaurantId,
+        createdAt: MoreThanOrEqual(thirtyDaysAgo),
+      },
+      order: { createdAt: "DESC" },
+      take: 50, // Limit to recent 50 for context
+    });
+
+    const reviews = await reviewRepo.find({
+      where: {
+        restaurantId,
+        reviewDate: MoreThanOrEqual(thirtyDaysAgo),
+      },
+      order: { reviewDate: "DESC" },
+      take: 50, // Limit to recent 50 for context
+    });
+
+    // Generate AI response using OpenAI
+    let aiResponse;
+    try {
+      aiResponse = await chatAboutFeedback(message, feedback, reviews, restaurant.name);
+    } catch (error: any) {
+      console.error("OpenAI chat error:", error);
+      return res.status(500).json({
+        error: error.message || "Failed to process chat message with AI",
+      });
+    }
 
     return res.json({
       success: true,
-      response:
-        "AI chat functionality will be implemented in Phase 4. This will allow restaurant owners to ask questions about their feedback data.",
+      response: aiResponse,
     });
   } catch (error) {
     console.error("Error in AI chat:", error);
