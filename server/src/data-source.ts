@@ -8,6 +8,7 @@ import { ExternalReview } from "./models/ExternalReview";
 import { AIInsight } from "./models/AIInsight";
 import { Admin } from "./models/Admin";
 import { Subscription } from "./models/Subscription";
+import { GoogleIntegration } from "./models/GoogleIntegration";
 
 // Load environment variables before creating DataSource
 dotenv.config();
@@ -30,6 +31,7 @@ export const AppDataSource = new DataSource({
         AIInsight,
         Admin,
         Subscription,
+        GoogleIntegration,
     ],
     migrations: [__dirname + "/migrations/**/*.ts"],
     migrationsTableName: "migrations",

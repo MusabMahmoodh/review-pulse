@@ -20,6 +20,14 @@ DB_NAME=review_pulse
 PORT=3001
 NODE_ENV=development
 CLIENT_URL=http://localhost:3000
+
+# Google OAuth (for Google Reviews integration)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
+
+# Encryption key for OAuth tokens (generate with: openssl rand -hex 32)
+ENCRYPTION_KEY=your_32_byte_hex_encryption_key
 ```
 
 3. Make sure PostgreSQL is running and the database exists.
@@ -36,6 +44,8 @@ The server will run on `http://localhost:3001` by default.
 ### Authentication
 - `POST /api/auth/register` - Register a new restaurant
 - `POST /api/auth/login` - Login restaurant
+- `GET /api/auth/google/authorize?restaurantId=xxx` - Initiate Google OAuth authorization
+- `GET /api/auth/google/callback` - Handle Google OAuth callback
 
 ### Feedback
 - `POST /api/feedback/submit` - Submit customer feedback
@@ -52,7 +62,7 @@ The server will run on `http://localhost:3001` by default.
 
 ### External Reviews
 - `GET /api/external-reviews/list?restaurantId=xxx` - List external reviews
-- `POST /api/external-reviews/sync` - Sync external reviews (placeholder)
+- `POST /api/external-reviews/sync` - Sync external reviews from Google (and other platforms)
 
 ### AI
 - `GET /api/ai/insights?restaurantId=xxx` - Get AI insights
@@ -65,6 +75,7 @@ The server will run on `http://localhost:3001` by default.
 - `RestaurantAuth` - Restaurant authentication credentials
 - `CustomerFeedback` - Customer feedback submissions
 - `ExternalReview` - External platform reviews (Google, Facebook, Instagram)
+- `GoogleIntegration` - Google OAuth integration data (tokens, location IDs)
 - `AIInsight` - AI-generated insights and recommendations
 - `Admin` - Admin users
 - `Subscription` - Restaurant subscription plans

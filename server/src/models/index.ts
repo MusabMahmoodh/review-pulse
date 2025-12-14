@@ -5,4 +5,5 @@ export { ExternalReview } from "./ExternalReview";
 export { AIInsight } from "./AIInsight";
 export { Admin } from "./Admin";
 export { Subscription } from "./Subscription";
+export { GoogleIntegration } from "./GoogleIntegration";
 

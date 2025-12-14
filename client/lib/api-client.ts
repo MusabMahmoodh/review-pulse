@@ -136,6 +136,25 @@ export const restaurantsApi = {
       keywords: string[];
     }>(`/api/restaurants/keywords?restaurantId=${restaurantId}`);
   },
+
+  updateKeywords: async (restaurantId: string, keywords: string[]) => {
+    return fetchApi<{
+      success: boolean;
+      message: string;
+      keywords: string[];
+    }>("/api/restaurants/keywords", {
+      method: "PUT",
+      body: JSON.stringify({ restaurantId, keywords }),
+    });
+  },
+
+  getGoogleIntegration: async (restaurantId: string) => {
+    return fetchApi<{
+      connected: boolean;
+      status: "active" | "expired" | "revoked" | null;
+      lastSyncedAt: string | null;
+    }>(`/api/restaurants/google-integration?restaurantId=${restaurantId}`);
+  },
 };
 
 // Admin API
@@ -199,15 +218,24 @@ export const externalReviewsApi = {
     }>(`/api/external-reviews/list?restaurantId=${restaurantId}`);
   },
 
-  sync: async (restaurantId: string) => {
+  sync: async (restaurantId: string, platforms?: string[]) => {
     return fetchApi<{
       success: boolean;
-      message: string;
+      results: Record<string, { success: boolean; count: number; error?: string }>;
+      totalSynced: number;
       syncedAt: string;
     }>("/api/external-reviews/sync", {
       method: "POST",
-      body: JSON.stringify({ restaurantId }),
+      body: JSON.stringify({ restaurantId, platforms }),
     });
+  },
+};
+
+// Google OAuth API
+export const googleAuthApi = {
+  authorize: (restaurantId: string) => {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    return `${backendUrl}/api/auth/google/authorize?restaurantId=${restaurantId}`;
   },
 };
 

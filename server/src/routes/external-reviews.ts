@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { ExternalReview, Restaurant } from "../models";
+import { ExternalReview, Restaurant, GoogleIntegration } from "../models";
+import { fetchGoogleReviews } from "../utils/google-reviews";
 
 const router = Router();
 
@@ -97,31 +98,64 @@ router.get("/list", async (req, res) => {
  */
 router.post("/sync", async (req, res) => {
   try {
-    const { restaurantId } = req.body;
+    const { restaurantId, platforms } = req.body;
 
     if (!restaurantId) {
       return res.status(400).json({ error: "Restaurant ID required" });
     }
 
     const restaurantRepo = AppDataSource.getRepository(Restaurant);
-    const reviewRepo = AppDataSource.getRepository(ExternalReview);
+    const integrationRepo = AppDataSource.getRepository(GoogleIntegration);
 
     const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
     if (!restaurant) {
       return res.status(404).json({ error: "Restaurant not found" });
     }
 
-    // TODO: Implement actual sync with Google, Facebook, Instagram APIs
-    // For now, this is a placeholder that returns success
-    // In Phase 2, this will:
-    // 1. Fetch reviews from Google Reviews API
-    // 2. Fetch reviews from Facebook Reviews API
-    // 3. Fetch mentions/comments from Instagram API
-    // 4. Store them in the database
+    const platformsToSync = platforms || ["google"];
+    const results: Record<string, { success: boolean; count: number; error?: string }> = {};
+
+    // Sync Google Reviews
+    if (platformsToSync.includes("google")) {
+      try {
+        const integration = await integrationRepo.findOne({ where: { restaurantId } });
+
+        if (!integration || integration.status !== "active") {
+          results.google = {
+            success: false,
+            count: 0,
+            error: "Google integration not connected or inactive. Please connect your Google account first.",
+          };
+        } else {
+          // Get last sync time for incremental sync
+          const sinceDate = integration.lastSyncedAt || undefined;
+          const count = await fetchGoogleReviews(restaurantId, sinceDate);
+
+          results.google = {
+            success: true,
+            count,
+          };
+        }
+      } catch (error: any) {
+        console.error("Google sync error:", error);
+        results.google = {
+          success: false,
+          count: 0,
+          error: error.message || "Failed to sync Google reviews",
+        };
+      }
+    }
+
+    // TODO: Add Facebook and Instagram sync here
+
+    // Check if any sync succeeded
+    const hasSuccess = Object.values(results).some((r) => r.success);
+    const totalSynced = Object.values(results).reduce((sum, r) => sum + r.count, 0);
 
     return res.json({
-      success: true,
-      message: "Sync initiated (placeholder - actual sync to be implemented)",
+      success: hasSuccess,
+      results,
+      totalSynced,
       syncedAt: new Date(),
     });
   } catch (error) {
