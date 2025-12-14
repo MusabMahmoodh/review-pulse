@@ -1,0 +1,273 @@
+"use client"
+
+import { useState, useRef, useEffect, useMemo, useCallback } from "react"
+import ReactMarkdown from "react-markdown"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import {
+  MessageCircle,
+  Send,
+  Loader2,
+  X,
+  Minimize2,
+} from "lucide-react"
+import { useToast } from "@/hooks/use-toast-simple"
+import { useAIChat } from "@/hooks"
+import { useIsMobile } from "@/hooks/use-mobile"
+
+interface ChatMessage {
+  role: "user" | "assistant"
+  content: string
+  timestamp: Date
+}
+
+interface AIChatWidgetProps {
+  restaurantId: string
+  isMobile?: boolean
+}
+
+export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWidgetProps) {
+  const { toast } = useToast()
+  const mobileHook = useIsMobile()
+  const isMobile = useMemo(() => mobileHook || isMobileProp, [mobileHook, isMobileProp])
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+  const [inputMessage, setInputMessage] = useState("")
+  const [isOpen, setIsOpen] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const chatMutation = useAIChat()
+
+  useEffect(() => {
+    if (scrollRef.current && isOpen) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [chatMessages, isOpen])
+
+  const sendChatMessage = useCallback(() => {
+    if (!inputMessage.trim()) return
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: inputMessage,
+      timestamp: new Date(),
+    }
+
+    setChatMessages((prev) => [...prev, userMessage])
+    const messageToSend = inputMessage
+    setInputMessage("")
+
+    chatMutation.mutate(
+      { restaurantId, message: messageToSend },
+      {
+        onSuccess: (data) => {
+          const assistantMessage: ChatMessage = {
+            role: "assistant",
+            content: data.response,
+            timestamp: new Date(),
+          }
+          setChatMessages((prev) => [...prev, assistantMessage])
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to get AI response",
+            variant: "destructive",
+          })
+        },
+      }
+    )
+  }, [inputMessage, restaurantId, chatMutation, toast])
+
+  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      sendChatMessage()
+    }
+  }, [sendChatMessage])
+
+  const markdownComponents = useMemo(() => ({
+    p: ({ children }: { children: React.ReactNode }) => <p className="mb-2 last:mb-0 text-foreground">{children}</p>,
+    ul: ({ children }: { children: React.ReactNode }) => <ul className="mb-2 ml-4 list-disc space-y-1.5">{children}</ul>,
+    ol: ({ children }: { children: React.ReactNode }) => <ol className="mb-2 ml-4 list-decimal space-y-1.5">{children}</ol>,
+    li: ({ children }: { children: React.ReactNode }) => <li className="text-sm text-foreground">{children}</li>,
+    strong: ({ children }: { children: React.ReactNode }) => <strong className="font-semibold text-foreground">{children}</strong>,
+    em: ({ children }: { children: React.ReactNode }) => <em className="italic">{children}</em>,
+    code: ({ children }: { children: React.ReactNode }) => (
+      <code className="bg-muted-foreground/20 px-1.5 py-0.5 rounded text-xs font-mono text-foreground">
+        {children}
+      </code>
+    ),
+    h1: ({ children }: { children: React.ReactNode }) => <h1 className="text-base font-bold mb-2 mt-3 first:mt-0 text-foreground">{children}</h1>,
+    h2: ({ children }: { children: React.ReactNode }) => <h2 className="text-sm font-semibold mb-2 mt-3 first:mt-0 text-foreground">{children}</h2>,
+    h3: ({ children }: { children: React.ReactNode }) => <h3 className="text-sm font-medium mb-1 mt-2 first:mt-0 text-foreground">{children}</h3>,
+    blockquote: ({ children }: { children: React.ReactNode }) => (
+      <blockquote className="border-l-4 border-muted-foreground/30 pl-3 italic my-2 text-muted-foreground">
+        {children}
+      </blockquote>
+    ),
+  }), [])
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputMessage(e.target.value)
+  }, [])
+
+  const chatContent = (
+    <>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 scroll-smooth">
+        {chatMessages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center p-8">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <MessageCircle className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">Ask AI Anything</h3>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              Get detailed answers about your feedback. Try asking:
+            </p>
+            <div className="mt-4 space-y-2 text-left">
+              <p className="text-xs text-muted-foreground">• "What are customers saying about our food?"</p>
+              <p className="text-xs text-muted-foreground">• "How can we improve service?"</p>
+              <p className="text-xs text-muted-foreground">• "What are the main complaints?"</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {chatMessages.map((msg, index) => (
+              <div key={`${msg.timestamp.getTime()}-${index}`} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground"
+                  }`}
+                >
+                  {msg.role === "assistant" ? (
+                    <div className="text-sm leading-relaxed markdown-content">
+                      <ReactMarkdown components={markdownComponents}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+            {chatMutation.isPending && (
+              <div className="flex justify-start">
+                <div className="bg-muted rounded-2xl px-4 py-3">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="border-t p-4 flex-shrink-0">
+        <div className="flex gap-2">
+          <Input
+            ref={inputRef}
+            placeholder="Ask a question..."
+            value={inputMessage}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyPress}
+            disabled={chatMutation.isPending}
+            className="flex-1"
+            autoFocus={!isMobile}
+          />
+          <Button
+            onClick={sendChatMessage}
+            disabled={chatMutation.isPending || !inputMessage.trim()}
+            size="icon"
+          >
+            {chatMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </div>
+    </>
+  )
+
+  if (isMobile) {
+    return (
+      <>
+        {/* Floating Button */}
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+          aria-label="Open AI Chat"
+        >
+          {chatMessages.length > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-white text-xs flex items-center justify-center">
+              {chatMessages.length}
+            </span>
+          )}
+          <MessageCircle className="h-6 w-6" />
+        </button>
+
+        {/* Mobile Sheet */}
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetContent side="bottom" className="h-[85vh] p-0 flex flex-col">
+            <SheetHeader className="px-4 pt-4 pb-2 border-b">
+              <div className="flex items-center justify-between">
+                <SheetTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5" />
+                  AI Assistant
+                </SheetTitle>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsOpen(false)}
+                  className="h-8 w-8"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </SheetHeader>
+            {chatContent}
+          </SheetContent>
+        </Sheet>
+      </>
+    )
+  }
+
+  // Desktop: Sidebar Chat
+  return (
+    <Card className="h-full flex flex-col shadow-lg">
+      <CardHeader className="pb-3 border-b flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">AI Assistant</CardTitle>
+          </div>
+          {chatMessages.length > 0 && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setChatMessages([])}
+              className="h-8 w-8"
+              title="Clear chat"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 flex flex-col p-0 min-h-0 overflow-hidden">
+        {chatContent}
+      </CardContent>
+    </Card>
+  )
+}
+
