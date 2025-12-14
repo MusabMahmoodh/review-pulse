@@ -1,0 +1,96 @@
+# Review Pulse Server
+
+Backend server for the Review Pulse application using Express, TypeORM, and PostgreSQL.
+
+## Setup
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Set up environment variables:
+Create a `.env` file in the server root with:
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=review_pulse
+PORT=3001
+NODE_ENV=development
+CLIENT_URL=http://localhost:3000
+```
+
+3. Make sure PostgreSQL is running and the database exists.
+
+4. Start the server:
+```bash
+npm run dev
+```
+
+The server will run on `http://localhost:3001` by default.
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register a new restaurant
+- `POST /api/auth/login` - Login restaurant
+
+### Feedback
+- `POST /api/feedback/submit` - Submit customer feedback
+- `GET /api/feedback/list?restaurantId=xxx` - List feedback for a restaurant
+- `GET /api/feedback/stats?restaurantId=xxx` - Get feedback statistics
+
+### Restaurants
+- `GET /api/restaurants/keywords?restaurantId=xxx` - Get restaurant keywords
+
+### Admin
+- `POST /api/admin/login` - Admin login
+- `GET /api/admin/restaurants` - List all restaurants (admin)
+- `PATCH /api/admin/restaurants/status` - Update restaurant status
+
+### External Reviews
+- `GET /api/external-reviews/list?restaurantId=xxx` - List external reviews
+- `POST /api/external-reviews/sync` - Sync external reviews (placeholder)
+
+### AI
+- `GET /api/ai/insights?restaurantId=xxx` - Get AI insights
+- `POST /api/ai/generate-insights` - Generate AI insights (placeholder)
+- `POST /api/ai/chat` - AI chat (placeholder)
+
+## Database Models
+
+- `Restaurant` - Restaurant information
+- `RestaurantAuth` - Restaurant authentication credentials
+- `CustomerFeedback` - Customer feedback submissions
+- `ExternalReview` - External platform reviews (Google, Facebook, Instagram)
+- `AIInsight` - AI-generated insights and recommendations
+- `Admin` - Admin users
+- `Subscription` - Restaurant subscription plans
+
+## Development
+
+The server uses TypeORM with PostgreSQL with migrations enabled. **Never use `synchronize: true` in production!**
+
+### Database Setup
+
+1. Create your PostgreSQL database:
+```sql
+CREATE DATABASE review_pulse;
+```
+
+2. Run migrations to set up the schema:
+```bash
+npm run migration:run
+```
+
+For more details on migrations, see [MIGRATIONS.md](./MIGRATIONS.md).
+
+## API Documentation
+
+Swagger API documentation is available at:
+- **Development**: http://localhost:3001/api-docs
+
+The Swagger UI provides interactive API documentation where you can test all endpoints directly from your browser.
+
