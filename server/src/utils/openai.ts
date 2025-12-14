@@ -227,7 +227,14 @@ ${reviewData
   .map((r, i) => `${i + 1}. [${r.platform}] ${r.rating}/5: "${r.comment}"`)
   .join("\n") || "No external reviews"}
 
-Answer the user's question based on this feedback data. Be helpful, specific, and actionable.`;
+Answer the user's question based on this feedback data. Be helpful, specific, and actionable.
+
+Format your response using Markdown:
+- Use **bold** for emphasis on important points
+- Use numbered lists (1., 2., 3.) for multiple recommendations
+- Use bullet points (- or *) for lists
+- Use headings (##) to organize sections if needed
+- Keep paragraphs concise and readable`;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -243,7 +250,7 @@ Answer the user's question based on this feedback data. Be helpful, specific, an
         },
       ],
       temperature: 0.7,
-      max_tokens: 500,
+      max_tokens: 1000,
     });
 
     const responseContent = completion.choices[0]?.message?.content;

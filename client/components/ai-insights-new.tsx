@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import ReactMarkdown from "react-markdown"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -346,7 +347,37 @@ export function AIInsightsNew({ restaurantId, initialInsight }: AIInsightsNewPro
                         msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
                       }`}
                     >
-                      <p className="text-sm leading-relaxed">{msg.content}</p>
+                      {msg.role === "assistant" ? (
+                        <div className="text-sm leading-relaxed markdown-content">
+                          <ReactMarkdown
+                            components={{
+                              p: ({ children }) => <p className="mb-2 last:mb-0 text-foreground">{children}</p>,
+                              ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-1.5">{children}</ul>,
+                              ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-1.5">{children}</ol>,
+                              li: ({ children }) => <li className="text-sm text-foreground">{children}</li>,
+                              strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                              em: ({ children }) => <em className="italic">{children}</em>,
+                              code: ({ children }) => (
+                                <code className="bg-muted-foreground/20 px-1.5 py-0.5 rounded text-xs font-mono text-foreground">
+                                  {children}
+                                </code>
+                              ),
+                              h1: ({ children }) => <h1 className="text-base font-bold mb-2 mt-3 first:mt-0 text-foreground">{children}</h1>,
+                              h2: ({ children }) => <h2 className="text-sm font-semibold mb-2 mt-3 first:mt-0 text-foreground">{children}</h2>,
+                              h3: ({ children }) => <h3 className="text-sm font-medium mb-1 mt-2 first:mt-0 text-foreground">{children}</h3>,
+                              blockquote: ({ children }) => (
+                                <blockquote className="border-l-4 border-muted-foreground/30 pl-3 italic my-2 text-muted-foreground">
+                                  {children}
+                                </blockquote>
+                              ),
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                      )}
                     </div>
                   </div>
                 ))}
