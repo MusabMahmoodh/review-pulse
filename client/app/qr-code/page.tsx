@@ -11,7 +11,7 @@ export default function QRCodePage() {
   const { toast } = useToast()
   const [copied, setCopied] = useState(false)
   // In production, get restaurant ID from auth session
-  const restaurantId = "rest_1765722970886_70yxgey"
+  const restaurantId = "rest_1765777607402_t8kmpnz"
   const feedbackUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/feedback/${restaurantId}`
   const qrCodeUrl = `https://chart.googleapis.com/chart?cht=qr&chs=400x400&chl=${encodeURIComponent(feedbackUrl)}&choe=UTF-8`
 

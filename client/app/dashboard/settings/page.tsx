@@ -19,7 +19,7 @@ function SettingsPageContent() {
   const queryClient = useQueryClient()
   const [newKeyword, setNewKeyword] = useState("")
 
-  const restaurantId = "rest_1765722970886_70yxgey"
+  const restaurantId = "rest_1765777607402_t8kmpnz"
 
   // Fetch keywords
   const { data: keywordsData, isLoading: keywordsLoading } = useQuery({

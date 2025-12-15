@@ -11,7 +11,7 @@ import { ExternalReviews } from "@/components/external-reviews"
 import { useFeedbackList, useFeedbackStats, useAIInsights } from "@/hooks"
 
 export default function DashboardPage() {
-  const restaurantId = "rest_1765722970886_70yxgey"
+  const restaurantId = "rest_1765777607402_t8kmpnz"
 
   const { data: feedbackData, isLoading: feedbackLoading } = useFeedbackList(restaurantId)
   const { data: statsData, isLoading: statsLoading } = useFeedbackStats(restaurantId)

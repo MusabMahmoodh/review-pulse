@@ -7,7 +7,7 @@ import { FeedbackList } from "@/components/feedback-list"
 import { useFeedbackList } from "@/hooks"
 
 export default function FeedbackPage() {
-  const restaurantId = "rest_1765722970886_70yxgey"
+  const restaurantId = "rest_1765777607402_t8kmpnz"
   const { data: feedbackData, isLoading: loading } = useFeedbackList(restaurantId)
   const feedback = feedbackData?.feedback || []
 

@@ -11,7 +11,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import type { AIInsight } from "@/lib/types"
 
 export default function AIInsightsPage() {
-  const restaurantId = "rest_1765722970886_70yxgey"
+  const restaurantId = "rest_1765777607402_t8kmpnz"
   const isMobile = useIsMobile()
   const { data: insightsData } = useAIInsights(restaurantId)
   const [insight, setInsight] = useState<AIInsight | null>(insightsData?.insight || null)
