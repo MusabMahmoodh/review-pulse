@@ -13,8 +13,12 @@ import { GoogleIntegration } from "./models/GoogleIntegration";
 // Load environment variables before creating DataSource
 dotenv.config();
 
-// Replace with your actual database credentials
-export const AppDataSource = new DataSource({
+// Determine if we're connecting to a cloud database (Neon, Supabase, etc.)
+const isCloudDB = process.env.DB_HOST?.includes("neon.tech") || 
+                  process.env.DB_HOST?.includes("supabase.co");
+
+// Build connection options
+const connectionOptions: any = {
     type: "postgres",
     host: process.env.DB_HOST || "localhost",
     port: parseInt(process.env.DB_PORT || "5432"),
@@ -36,4 +40,21 @@ export const AppDataSource = new DataSource({
     migrations: [__dirname + "/migrations/**/*.ts"],
     migrationsTableName: "migrations",
     subscribers: [],
-});
+};
+
+// Cloud databases (Neon, Supabase) require SSL connections
+if (isCloudDB) {
+    connectionOptions.ssl = {
+        rejectUnauthorized: false
+    };
+    // Additional connection options for cloud databases
+    connectionOptions.extra = {
+        ssl: {
+            rejectUnauthorized: false
+        },
+        // Increase connection timeout for cloud databases
+        connectionTimeoutMillis: 10000,
+    };
+}
+
+export const AppDataSource = new DataSource(connectionOptions);

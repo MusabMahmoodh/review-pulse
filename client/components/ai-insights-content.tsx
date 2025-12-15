@@ -316,3 +316,4 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
   )
 }
 
+

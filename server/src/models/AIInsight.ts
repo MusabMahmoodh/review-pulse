@@ -30,3 +30,4 @@ export class AIInsight {
   restaurant!: Restaurant;
 }
 
+

@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChefHat, QrCode, LogOut, ChevronRight, Settings } from "lucide-react"
+import { ChefHat, QrCode, LogOut, ChevronRight, Settings, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { FeedbackList } from "@/components/feedback-list"
 import { StatsCards } from "@/components/stats-cards"
@@ -58,19 +58,34 @@ export default function DashboardPage() {
       <div className="px-4 py-4 space-y-4">
         {stats && <StatsCards stats={stats} />}
 
-        <Card className="overflow-hidden">
-          <Link href="/dashboard/ai-insights">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">AI Insights</CardTitle>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+        <Link href="/dashboard/ai-insights" className="block">
+          <div className="group relative overflow-hidden rounded-xl border border-purple-200/50 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] dark:border-purple-900/30 dark:from-purple-950/50 dark:via-blue-950/50 dark:to-indigo-950/50">
+            {/* Animated gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/10 to-purple-500/0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-hover:animate-shimmer" />
+            
+            {/* Sparkle decoration */}
+            <div className="absolute right-4 top-4">
+              <Sparkles className="h-6 w-6 text-purple-400/60 transition-all duration-300 group-hover:text-purple-500 group-hover:scale-110 dark:text-purple-500/60 dark:group-hover:text-purple-400" />
+            </div>
+            
+            {/* Content */}
+            <div className="relative z-10">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 shadow-md">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">AI Insights</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Powered by advanced AI</p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-purple-500 transition-transform duration-300 group-hover:translate-x-1 dark:text-purple-400" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Get AI-powered analysis and recommendations</p>
-            </CardContent>
-          </Link>
-        </Card>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Get AI-powered analysis and actionable recommendations to improve your restaurant
+              </p>
+            </div>
+          </div>
+        </Link>
 
         <Card className="overflow-hidden">
           <CardHeader className="pb-3">

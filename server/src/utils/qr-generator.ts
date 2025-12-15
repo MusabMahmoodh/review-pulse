@@ -7,3 +7,4 @@ export function generateQRCodeUrl(restaurantId: string): string {
   return `${baseUrl}/feedback/${restaurantId}`;
 }
 
+

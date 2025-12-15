@@ -108,3 +108,4 @@ Make sure:
 - PostgreSQL is running
 - The database exists and migrations have been run
 
+
