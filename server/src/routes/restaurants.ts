@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
 import { Restaurant, GoogleIntegration } from "../models";
+import { requireAuth } from "../middleware/auth";
 
 const router = Router();
 
@@ -36,13 +37,9 @@ const router = Router();
  *       500:
  *         description: Internal server error
  */
-router.get("/keywords", async (req, res) => {
+router.get("/keywords", requireAuth, async (req, res) => {
   try {
-    const restaurantId = req.query.restaurantId as string;
-
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
-    }
+    const restaurantId = req.restaurantId as string;
 
     const restaurantRepo = AppDataSource.getRepository(Restaurant);
 
@@ -90,12 +87,13 @@ router.get("/keywords", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.put("/keywords", async (req, res) => {
+router.put("/keywords", requireAuth, async (req, res) => {
   try {
-    const { restaurantId, keywords } = req.body;
+    const restaurantId = req.restaurantId as string;
+    const { keywords } = req.body;
 
-    if (!restaurantId || !keywords || !Array.isArray(keywords)) {
-      return res.status(400).json({ error: "Restaurant ID and keywords array required" });
+    if (!keywords || !Array.isArray(keywords)) {
+      return res.status(400).json({ error: "Keywords array required" });
     }
 
     if (keywords.length < 3 || keywords.length > 5) {
@@ -156,13 +154,9 @@ router.put("/keywords", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.get("/google-integration", async (req, res) => {
+router.get("/google-integration", requireAuth, async (req, res) => {
   try {
-    const restaurantId = req.query.restaurantId as string;
-
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
-    }
+    const restaurantId = req.restaurantId as string;
 
     const integrationRepo = AppDataSource.getRepository(GoogleIntegration);
     const integration = await integrationRepo.findOne({ where: { restaurantId } });

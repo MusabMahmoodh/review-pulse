@@ -2,6 +2,7 @@ import { Router } from "express";
 import { AppDataSource } from "../data-source";
 import { ExternalReview, Restaurant, GoogleIntegration } from "../models";
 import { fetchGoogleReviews } from "../utils/google-reviews";
+import { requireAuth } from "../middleware/auth";
 
 const router = Router();
 
@@ -35,13 +36,9 @@ const router = Router();
  *       500:
  *         description: Internal server error
  */
-router.get("/list", async (req, res) => {
+router.get("/list", requireAuth, async (req, res) => {
   try {
-    const restaurantId = req.query.restaurantId as string;
-
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
-    }
+    const restaurantId = req.restaurantId as string;
 
     const reviewRepo = AppDataSource.getRepository(ExternalReview);
 
@@ -96,13 +93,10 @@ router.get("/list", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.post("/sync", async (req, res) => {
+router.post("/sync", requireAuth, async (req, res) => {
   try {
-    const { restaurantId, platforms } = req.body;
-
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
-    }
+    const restaurantId = req.restaurantId as string;
+    const { platforms } = req.body;
 
     const restaurantRepo = AppDataSource.getRepository(Restaurant);
     const integrationRepo = AppDataSource.getRepository(GoogleIntegration);

@@ -12,6 +12,17 @@ export class ApiError extends Error {
   }
 }
 
+const TOKEN_KEY = "rp_auth_token";
+
+function getBrowserToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
 async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit & { authToken?: string }
@@ -19,13 +30,14 @@ async function fetchApi<T>(
   const url = `${API_BASE_URL}${endpoint}`;
 
   const { authToken, ...fetchOptions } = options || {};
+  const token = authToken ?? getBrowserToken();
 
   const response = await fetch(url, {
     ...fetchOptions,
     headers: {
       "Content-Type": "application/json",
       ...(fetchOptions as RequestInit | undefined)?.headers,
-      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
 

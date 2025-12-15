@@ -1,6 +1,7 @@
-import jwt from "jsonwebtoken";
+import jwt, { SignOptions, Secret } from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
+const JWT_SECRET: Secret = process.env.JWT_SECRET || "dev-secret-change-me";
+// Keep as a plain string/number and cast when used to avoid TS overload issues
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
 export interface JwtPayload {
@@ -9,7 +10,10 @@ export interface JwtPayload {
 }
 
 export function signAccessToken(payload: JwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  const options: SignOptions = {
+    expiresIn: JWT_EXPIRES_IN as any,
+  };
+  return jwt.sign(payload, JWT_SECRET, options);
 }
 
 export function verifyAccessToken(token: string): JwtPayload | null {

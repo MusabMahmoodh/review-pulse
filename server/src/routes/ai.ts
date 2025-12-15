@@ -3,6 +3,7 @@ import { AppDataSource } from "../data-source";
 import { AIInsight, Restaurant, CustomerFeedback, ExternalReview } from "../models";
 import { generateInsights, chatAboutFeedback } from "../utils/openai";
 import { MoreThanOrEqual } from "typeorm";
+import { requireAuth } from "../middleware/auth";
 
 const router = Router();
 
@@ -104,9 +105,9 @@ function getStartDate(period: TimePeriod): Date {
  *       500:
  *         description: Internal server error
  */
-router.get("/insights", async (req, res) => {
+router.get("/insights", requireAuth, async (req, res) => {
   try {
-    const restaurantId = req.query.restaurantId as string;
+    const restaurantId = req.restaurantId as string;
     const timePeriod = req.query.timePeriod as TimePeriod | undefined;
 
     if (!restaurantId) {
@@ -196,9 +197,10 @@ router.get("/insights", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.post("/generate-insights", async (req, res) => {
+router.post("/generate-insights", requireAuth, async (req, res) => {
   try {
-    const { restaurantId, timePeriod = "month" } = req.body;
+    const { timePeriod = "month" } = req.body;
+    const restaurantId = req.restaurantId as string;
 
     if (!restaurantId) {
       return res.status(400).json({ error: "Restaurant ID required" });
@@ -331,12 +333,13 @@ router.post("/generate-insights", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.post("/chat", async (req, res) => {
+router.post("/chat", requireAuth, async (req, res) => {
   try {
-    const { restaurantId, message } = req.body;
+    const { message } = req.body;
+    const restaurantId = req.restaurantId as string;
 
     if (!restaurantId || !message) {
-      return res.status(400).json({ error: "Restaurant ID and message required" });
+      return res.status(400).json({ error: "Message required" });
     }
 
     const restaurantRepo = AppDataSource.getRepository(Restaurant);

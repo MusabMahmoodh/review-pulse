@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
 import { CustomerFeedback, Restaurant, ExternalReview } from "../models";
+import { requireAuth } from "../middleware/auth";
 
 const router = Router();
 
@@ -148,13 +149,9 @@ router.post("/submit", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.get("/list", async (req, res) => {
+router.get("/list", requireAuth, async (req, res) => {
   try {
-    const restaurantId = req.query.restaurantId as string;
-
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
-    }
+    const restaurantId = req.restaurantId as string;
 
     const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
 
@@ -224,13 +221,9 @@ router.get("/list", async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-router.get("/stats", async (req, res) => {
+router.get("/stats", requireAuth, async (req, res) => {
   try {
-    const restaurantId = req.query.restaurantId as string;
-
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
-    }
+    const restaurantId = req.restaurantId as string;
 
     const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
     const externalReviewRepo = AppDataSource.getRepository(ExternalReview);
