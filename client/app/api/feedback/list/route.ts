@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { mockDb } from "@/lib/mock-data"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,14 +11,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Restaurant ID required" }, { status: 400 })
     }
 
-    const feedback = mockDb.feedback.getByRestaurant(restaurantId)
+    // Call backend API
+    const response = await fetch(`${API_BASE_URL}/api/feedback/list?restaurantId=${restaurantId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
 
-    // Sort by date, most recent first
-    feedback.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      return NextResponse.json(
+        { error: errorData.error || "Failed to fetch feedback" },
+        { status: response.status }
+      )
+    }
 
-    return NextResponse.json({ feedback })
+    const data = await response.json()
+    return NextResponse.json(data)
   } catch (error) {
-    console.error("[v0] Error fetching feedback:", error)
+    console.error("Error fetching feedback:", error)
     return NextResponse.json({ error: "Failed to fetch feedback" }, { status: 500 })
   }
 }

@@ -17,13 +17,14 @@ import {
   TrendingUp,
   Lightbulb,
   Users,
-  Clock,
   Loader2,
   Calendar,
+  TrendingDown,
+  Minus,
 } from "lucide-react"
 import type { AIInsight } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast-simple"
-import { useGenerateInsights } from "@/hooks"
+import { useGenerateInsights, useFeedbackStats } from "@/hooks"
 import type { TimePeriod } from "@/lib/api-client"
 
 interface AIInsightsContentProps {
@@ -47,6 +48,9 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
   const { toast } = useToast()
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("month")
   const generateInsightsMutation = useGenerateInsights()
+  const { data: statsData } = useFeedbackStats(restaurantId)
+
+  const stats = statsData?.stats
 
   const generateInsights = () => {
     generateInsightsMutation.mutate(
@@ -70,9 +74,100 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
     )
   }
 
-  if (!insight) {
-    return (
-      <div className="space-y-6">
+  // Plain derived data – no useMemo, just simple logic
+  const warnings =
+    !insight || !insight.recommendations || insight.recommendations.length === 0
+      ? []
+      : (() => {
+          const urgentKeywords = ["urgent", "immediate", "critical", "important", "address", "fix", "resolve"]
+          const warningsList: Array<{ type: string; message: string; priority: "high" | "medium" }> = []
+
+          insight.recommendations.forEach((rec) => {
+            const lowerRec = rec.toLowerCase()
+            const isUrgent = urgentKeywords.some((keyword) => lowerRec.includes(keyword))
+            const priority: "high" | "medium" =
+              isUrgent || insight.sentiment === "negative" ? "high" : "medium"
+
+            warningsList.push({
+              type: priority === "high" ? "urgent" : "attention",
+              message: rec,
+              priority,
+            })
+          })
+
+          return warningsList.slice(0, 3)
+        })()
+
+  const generalInsights = (() => {
+    const items: Array<{
+      icon: typeof TrendingUp
+      title: string
+      description: string
+      trend: string
+    }> = []
+
+    if (insight?.keyTopics && insight.keyTopics.length > 0) {
+      items.push({
+        icon: Users,
+        title: "Most Talked About",
+        description: insight.keyTopics[0] || "Customer feedback",
+        trend: `${insight.keyTopics.length} key topics`,
+      })
+    }
+
+    if (stats) {
+      const trendIcon =
+        stats.recentTrend === "improving"
+          ? TrendingUp
+          : stats.recentTrend === "declining"
+          ? TrendingDown
+          : Minus
+      const trendText =
+        stats.recentTrend === "improving"
+          ? "Improving"
+          : stats.recentTrend === "declining"
+          ? "Needs attention"
+          : "Stable"
+
+      items.push({
+        icon: trendIcon,
+        title: "Overall Trend",
+        description: `Customer satisfaction ${stats.recentTrend}`,
+        trend: trendText,
+      })
+
+      const ratings = stats.averageRatings
+      const bestAspect =
+        ratings.food >= ratings.staff && ratings.food >= ratings.ambience
+          ? { name: "Food Quality", rating: ratings.food }
+          : ratings.staff >= ratings.ambience
+          ? { name: "Staff Service", rating: ratings.staff }
+          : { name: "Ambience", rating: ratings.ambience }
+
+      items.push({
+        icon: TrendingUp,
+        title: "Top Performer",
+        description: bestAspect.name,
+        trend: `${bestAspect.rating.toFixed(1)}/5.0`,
+      })
+    }
+
+    while (items.length < 3 && insight?.keyTopics && items.length < insight.keyTopics.length) {
+      const topicIndex = items.length
+      items.push({
+        icon: Lightbulb,
+        title: "Key Topic",
+        description: insight.keyTopics[topicIndex] || "Customer feedback",
+        trend: "Active discussion",
+      })
+    }
+
+    return items.slice(0, 3)
+  })()
+
+  return (
+    <div className="space-y-6">
+      {!insight ? (
         <Card className="border-2 border-dashed">
           <CardHeader className="text-center py-12">
             <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -122,198 +217,158 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
             </Button>
           </CardContent>
         </Card>
-      </div>
-    )
-  }
-
-  const warnings = [
-    {
-      type: "urgent",
-      message: "3 customers mentioned slow service in the past week",
-      priority: "high",
-    },
-    {
-      type: "attention",
-      message: "Dessert menu variety needs improvement",
-      priority: "medium",
-    },
-  ]
-
-  const generalInsights = [
-    {
-      icon: Users,
-      title: "Most Talked About",
-      description: "Food quality & authenticity",
-      trend: "+12% this week",
-    },
-    {
-      icon: TrendingUp,
-      title: "Trending Positive",
-      description: "Staff friendliness",
-      trend: "95% positive",
-    },
-    {
-      icon: Clock,
-      title: "Peak Feedback Time",
-      description: "Weekend evenings",
-      trend: "6 PM - 9 PM",
-    },
-  ]
-
-  return (
-    <div className="space-y-6">
-      {/* Time Period Selector */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-muted-foreground" />
-              <span className="text-sm font-medium">Analysis Period:</span>
-            </div>
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Select value={timePeriod} onValueChange={(value) => setTimePeriod(value as TimePeriod)}>
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIME_PERIOD_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                onClick={generateInsights}
-                disabled={generateInsightsMutation.isPending}
-                variant="outline"
-                size="sm"
-              >
-                {generateInsightsMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <TrendingUp className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Warnings Section */}
-      {warnings.length > 0 && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              <CardTitle className="text-lg">Attention Needed</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {warnings.map((warning, index) => (
-              <div
-                key={index}
-                className="p-4 rounded-lg border bg-background border-destructive/20 flex items-start gap-3"
-              >
-                <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{warning.message}</p>
-                  <Badge variant="outline" className="mt-2 text-xs">
-                    {warning.priority === "high" ? "High Priority" : "Medium Priority"}
-                  </Badge>
+      ) : (
+        <>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">Analysis Period:</span>
+                </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <Select value={timePeriod} onValueChange={(value) => setTimePeriod(value as TimePeriod)}>
+                    <SelectTrigger className="w-full sm:w-[200px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIME_PERIOD_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={generateInsights}
+                    disabled={generateInsightsMutation.isPending}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {generateInsightsMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <TrendingUp className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
 
-      {/* General Insights */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">General Insights</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {generalInsights.map((item, index) => {
-              const Icon = item.icon
-              return (
-                <div key={index} className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 border">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold mb-1">{item.title}</p>
-                    <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
-                    <p className="text-xs text-primary font-medium">{item.trend}</p>
-                  </div>
+          {warnings.length > 0 && (
+            <Card className="border-destructive/50 bg-destructive/5">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                  <CardTitle className="text-lg">Attention Needed</CardTitle>
                 </div>
-              )
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* AI Summary */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">AI Summary</CardTitle>
-            </div>
-            <Badge
-              variant="outline"
-              className={
-                insight.sentiment === "positive"
-                  ? "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20"
-                  : insight.sentiment === "negative"
-                  ? "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20"
-                  : "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20"
-              }
-            >
-              {insight.sentiment.charAt(0).toUpperCase() + insight.sentiment.slice(1)}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm leading-relaxed text-foreground">{insight.summary}</p>
-
-          {insight.recommendations.length > 0 && (
-            <div className="space-y-3 pt-4 border-t">
-              <p className="text-sm font-semibold text-foreground">Key Recommendations</p>
-              <div className="space-y-2">
-                {insight.recommendations.map((rec, index) => (
-                  <div key={index} className="flex gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold">
-                      {index + 1}
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {warnings.map((warning, index) => (
+                  <div
+                    key={index}
+                    className="p-4 rounded-lg border bg-background border-destructive/20 flex items-start gap-3"
+                  >
+                    <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{warning.message}</p>
+                      <Badge variant="outline" className="mt-2 text-xs">
+                        {warning.priority === "high" ? "High Priority" : "Medium Priority"}
+                      </Badge>
                     </div>
-                    <p className="text-sm text-foreground flex-1">{rec}</p>
                   </div>
                 ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
-          {insight.keyTopics.length > 0 && (
-            <div className="pt-4 border-t">
-              <p className="text-sm font-semibold text-foreground mb-3">Key Topics</p>
-              <div className="flex flex-wrap gap-2">
-                {insight.keyTopics.map((topic, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {topic}
-                  </Badge>
-                ))}
-              </div>
-            </div>
+          {generalInsights.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg">General Insights</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {generalInsights.map((item, index) => {
+                    const Icon = item.icon
+                    return (
+                      <div key={index} className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 border">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Icon className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold mb-1">{item.title}</p>
+                          <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
+                          <p className="text-xs text-primary font-medium">{item.trend}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+
+          <Card>
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg">AI Summary</CardTitle>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={
+                    insight.sentiment === "positive"
+                      ? "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20"
+                      : insight.sentiment === "negative"
+                      ? "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20"
+                      : "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20"
+                  }
+                >
+                  {insight.sentiment.charAt(0).toUpperCase() + insight.sentiment.slice(1)}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm leading-relaxed text-foreground">{insight.summary}</p>
+
+              {insight.recommendations.length > 0 && (
+                <div className="space-y-3 pt-4 border-t">
+                  <p className="text-sm font-semibold text-foreground">Key Recommendations</p>
+                  <div className="space-y-2">
+                    {insight.recommendations.map((rec, index) => (
+                      <div key={index} className="flex gap-3">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justifyCenter text-xs font-semibold">
+                          {index + 1}
+                        </div>
+                        <p className="text-sm text-foreground flex-1">{rec}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {insight.keyTopics.length > 0 && (
+                <div className="pt-4 border-t">
+                  <p className="text-sm font-semibold text-foreground mb-3">Key Topics</p>
+                  <div className="flex flex-wrap gap-2">
+                    {insight.keyTopics.map((topic, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        {topic}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   )
 }
-
-

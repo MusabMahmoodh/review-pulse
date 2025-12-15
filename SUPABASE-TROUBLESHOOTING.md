@@ -185,3 +185,5 @@ The code should automatically handle SSL for Supabase. If issues persist:
    - Supabase: [Discord](https://discord.supabase.com) or [GitHub Discussions](https://github.com/supabase/supabase/discussions)
    - Check Supabase status: [status.supabase.com](https://status.supabase.com)
 
+
+
