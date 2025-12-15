@@ -11,7 +11,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ChefHat className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">FeedbackHub</span>
+            <span className="text-xl font-bold">Review Pulse</span>
           </div>
           <nav className="flex items-center gap-4">
             <Link href="/login">
@@ -171,7 +171,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t mt-16">
         <div className="container mx-auto px-4 py-8 text-center text-sm text-muted-foreground">
-          <p>© 2025 FeedbackHub. All rights reserved.</p>
+          <p>© 2025 Review Pulse. All rights reserved.</p>
         </div>
       </footer>
     </div>
