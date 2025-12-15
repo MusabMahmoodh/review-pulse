@@ -76,7 +76,7 @@ export default function RegisterPage() {
             title: "Success!",
             description: "Your account has been created",
           })
-          router.push("/dashboard")
+          router.push("/login")
         },
         onError: (error: any) => {
           toast({

@@ -4,6 +4,7 @@ import { Restaurant, RestaurantAuth, GoogleIntegration } from "../models";
 import { hashPassword, comparePassword } from "../utils/password";
 import { generateRestaurantId, generateQRCodeUrl } from "../utils/qr-generator";
 import { encrypt } from "../utils/encryption";
+import { signAccessToken, verifyAccessToken, extractTokenFromHeader } from "../utils/jwt";
 
 const router = Router();
 
@@ -207,8 +208,14 @@ router.post("/login", async (req, res) => {
       return res.status(404).json({ error: "Restaurant not found" });
     }
 
+    const token = signAccessToken({
+      restaurantId: restaurant.id,
+      email: restaurant.email,
+    });
+
     return res.json({
       success: true,
+      token,
       restaurantId: restaurant.id,
       restaurant: {
         id: restaurant.id,
@@ -219,6 +226,53 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({ error: "Login failed" });
+  }
+});
+
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current authenticated restaurant
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current restaurant
+ *       401:
+ *         description: Unauthorized
+ */
+router.get("/me", async (req, res) => {
+  try {
+    const token = extractTokenFromHeader(req.headers.authorization);
+    if (!token) {
+      return res.status(401).json({ error: "Missing or invalid authorization header" });
+    }
+
+    const payload = verifyAccessToken(token);
+    if (!payload) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+
+    const restaurantRepo = AppDataSource.getRepository(Restaurant);
+    const restaurant = await restaurantRepo.findOne({ where: { id: payload.restaurantId } });
+
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    return res.json({
+      success: true,
+      restaurant: {
+        id: restaurant.id,
+        name: restaurant.name,
+        email: restaurant.email,
+      },
+    });
+  } catch (error) {
+    console.error("Auth me error:", error);
+    return res.status(500).json({ error: "Failed to fetch current user" });
   }
 });
 

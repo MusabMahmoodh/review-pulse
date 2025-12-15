@@ -14,15 +14,18 @@ export class ApiError extends Error {
 
 async function fetchApi<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit & { authToken?: string }
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
+  const { authToken, ...fetchOptions } = options || {};
+
   const response = await fetch(url, {
-    ...options,
+    ...fetchOptions,
     headers: {
       "Content-Type": "application/json",
-      ...options?.headers,
+      ...(fetchOptions as RequestInit | undefined)?.headers,
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
     },
   });
 
@@ -57,6 +60,7 @@ export const authApi = {
   login: async (email: string, password: string) => {
     return fetchApi<{
       success: boolean;
+      token: string;
       restaurantId: string;
       restaurant: {
         id: string;
@@ -66,6 +70,19 @@ export const authApi = {
     }>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
+    });
+  },
+
+  me: async (token: string) => {
+    return fetchApi<{
+      success: boolean;
+      restaurant: {
+        id: string;
+        name: string;
+        email: string;
+      };
+    }>("/api/auth/me", {
+      authToken: token,
     });
   },
 };
