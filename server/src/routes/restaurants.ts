@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { Restaurant, GoogleIntegration } from "../models";
+import { Restaurant, GoogleIntegration, MetaIntegration } from "../models";
 import { requireAuth } from "../middleware/auth";
 
 const router = Router();
@@ -176,6 +176,73 @@ router.get("/google-integration", requireAuth, async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching Google integration:", error);
+    return res.status(500).json({ error: "Failed to fetch integration status" });
+  }
+});
+
+/**
+ * @swagger
+ * /api/restaurants/meta-integration:
+ *   get:
+ *     summary: Get Meta integration status for a restaurant
+ *     tags: [Restaurants]
+ *     parameters:
+ *       - in: query
+ *         name: restaurantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Restaurant ID
+ *     responses:
+ *       200:
+ *         description: Meta integration status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 connected:
+ *                   type: boolean
+ *                 status:
+ *                   type: string
+ *                 lastSyncedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 pageId:
+ *                   type: string
+ *                 instagramBusinessAccountId:
+ *                   type: string
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/meta-integration", requireAuth, async (req, res) => {
+  try {
+    const restaurantId = req.restaurantId as string;
+
+    const integrationRepo = AppDataSource.getRepository(MetaIntegration);
+    const integration = await integrationRepo.findOne({ where: { restaurantId } });
+
+    if (!integration) {
+      return res.json({
+        connected: false,
+        status: null,
+        lastSyncedAt: null,
+        pageId: null,
+        instagramBusinessAccountId: null,
+      });
+    }
+
+    return res.json({
+      connected: true,
+      status: integration.status,
+      lastSyncedAt: integration.lastSyncedAt || null,
+      pageId: integration.pageId,
+      instagramBusinessAccountId: integration.instagramBusinessAccountId || null,
+    });
+  } catch (error) {
+    console.error("Error fetching Meta integration:", error);
     return res.status(500).json({ error: "Failed to fetch integration status" });
   }
 });

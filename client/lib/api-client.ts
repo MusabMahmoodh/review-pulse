@@ -184,6 +184,16 @@ export const restaurantsApi = {
       lastSyncedAt: string | null;
     }>(`/api/restaurants/google-integration?restaurantId=${restaurantId}`);
   },
+
+  getMetaIntegration: async (restaurantId: string) => {
+    return fetchApi<{
+      connected: boolean;
+      status: "active" | "expired" | "revoked" | null;
+      lastSyncedAt: string | null;
+      pageId: string | null;
+      instagramBusinessAccountId: string | null;
+    }>(`/api/restaurants/meta-integration?restaurantId=${restaurantId}`);
+  },
 };
 
 // Admin API
@@ -265,6 +275,14 @@ export const googleAuthApi = {
   authorize: (restaurantId: string) => {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
     return `${backendUrl}/api/auth/google/authorize?restaurantId=${restaurantId}`;
+  },
+};
+
+// Meta OAuth API
+export const metaAuthApi = {
+  authorize: (restaurantId: string) => {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    return `${backendUrl}/api/auth/meta/authorize?restaurantId=${restaurantId}`;
   },
 };
 

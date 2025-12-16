@@ -46,36 +46,35 @@ export async function fetchGoogleReviews(
 
   const accessToken = await getValidAccessToken(restaurantId);
 
-  // Build API URL using Business Information API
+  // Build API URL using My Business API v4 (official endpoint per documentation)
+  // Official endpoint: GET https://mybusiness.googleapis.com/v4/accounts/{accountId}/locations/{locationId}/reviews
   // Location ID format: accounts/{accountId}/locations/{locationId}
-  // Reviews endpoint: /locations/{locationId}/reviews
   const locationId = integration.locationId;
   
-  // Extract just the location ID if it's in full format
-  let locationPath = locationId;
-  if (locationId.includes("/locations/")) {
-    // If format is "accounts/123/locations/456", use just the location part
-    const locationMatch = locationId.match(/locations\/([^\/]+)/);
-    if (locationMatch) {
-      locationPath = locationMatch[1];
-    }
-  }
+  // Construct the full location path if needed
+  let fullLocationPath = locationId;
   
-  // Try Business Information API first (v1)
-  let url = new URL(
-    `https://mybusinessbusinessinformation.googleapis.com/v1/${locationId}/reviews`
-  );
-  
-  // If locationId is full path, use it directly; otherwise construct it
+  // If locationId is just "locations/{locationId}", construct full path using accountId
   if (!locationId.startsWith("accounts/")) {
-    // Need to construct full path - locationId should be in format "locations/123456"
-    url = new URL(
-      `https://mybusinessbusinessinformation.googleapis.com/v1/${integration.googleAccountId}/locations/${locationPath}/reviews`
-    );
+    // Extract location ID from format "locations/123456" or just "123456"
+    let locationPath = locationId;
+    if (locationId.startsWith("locations/")) {
+      locationPath = locationId.replace("locations/", "");
+    }
+    
+    // Construct full path: accounts/{accountId}/locations/{locationId}
+    const accountId = integration.googleAccountId.replace("accounts/", "");
+    fullLocationPath = `accounts/${accountId}/locations/${locationPath}`;
   }
+  
+  // Use the official My Business API v4 endpoint for reviews
+  // Documentation: https://developers.google.com/my-business/content/review-data
+  const url = new URL(
+    `https://mybusiness.googleapis.com/v4/${fullLocationPath}/reviews`
+  );
 
   // Add filter for reviews updated since last sync (if provided)
-  // Note: Google API uses updateTime filter, but we'll fetch all and filter by createTime
+  // Note: Google API supports updateTime filter, but we'll fetch all and filter by createTime
   // since updateTime might not be available in all API versions
 
   // Fetch reviews
@@ -107,6 +106,25 @@ export async function fetchGoogleReviews(
 
   // Process and store reviews
   for (const review of reviews) {
+    // Extract review ID - v4 API may return it as reviewId or in name field
+    // Name format: accounts/{accountId}/locations/{locationId}/reviews/{reviewId}
+    let reviewId = review.reviewId;
+    if (!reviewId && review.name) {
+      // Extract reviewId from name field if reviewId is not present
+      const nameMatch = review.name.match(/\/reviews\/([^\/]+)$/);
+      if (nameMatch) {
+        reviewId = nameMatch[1];
+      } else {
+        // Fallback: use the last part of the name
+        reviewId = review.name.split("/").pop() || review.name;
+      }
+    }
+    
+    if (!reviewId) {
+      console.warn("Skipping review without ID:", review);
+      continue;
+    }
+
     // Check if we should skip this review (if sinceDate is provided)
     if (sinceDate) {
       const reviewDate = new Date(review.createTime);
@@ -118,7 +136,7 @@ export async function fetchGoogleReviews(
     // Check if review already exists (by review ID)
     const existingReview = await reviewRepo.findOne({
       where: {
-        id: review.reviewId,
+        id: reviewId,
         restaurantId,
         platform: "google",
       },
@@ -136,7 +154,7 @@ export async function fetchGoogleReviews(
     } else {
       // Create new review
       const newReview = reviewRepo.create({
-        id: review.reviewId,
+        id: reviewId,
         restaurantId,
         platform: "google",
         rating: mapStarRating(review.starRating),

@@ -4,6 +4,7 @@ import { ExternalReview } from "./ExternalReview";
 import { RestaurantAuth } from "./RestaurantAuth";
 import { Subscription } from "./Subscription";
 import { GoogleIntegration } from "./GoogleIntegration";
+import { MetaIntegration } from "./MetaIntegration";
 
 @Entity("restaurants")
 export class Restaurant {
@@ -43,6 +44,9 @@ export class Restaurant {
 
   @OneToOne(() => GoogleIntegration, (integration) => integration.restaurant)
   googleIntegration?: GoogleIntegration;
+
+  @OneToOne(() => MetaIntegration, (integration) => integration.restaurant)
+  metaIntegration?: MetaIntegration;
 
   @OneToMany(() => CustomerFeedback, (feedback) => feedback.restaurant)
   feedback!: CustomerFeedback[];

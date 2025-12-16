@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { ExternalReview, Restaurant, GoogleIntegration } from "../models";
+import { ExternalReview, Restaurant, GoogleIntegration, MetaIntegration } from "../models";
 import { fetchGoogleReviews } from "../utils/google-reviews";
+import { fetchMetaReviews } from "../utils/meta-posts";
 import { requireAuth } from "../middleware/auth";
 
 const router = Router();
@@ -99,20 +100,21 @@ router.post("/sync", requireAuth, async (req, res) => {
     const { platforms } = req.body;
 
     const restaurantRepo = AppDataSource.getRepository(Restaurant);
-    const integrationRepo = AppDataSource.getRepository(GoogleIntegration);
+    const googleIntegrationRepo = AppDataSource.getRepository(GoogleIntegration);
+    const metaIntegrationRepo = AppDataSource.getRepository(MetaIntegration);
 
     const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
     if (!restaurant) {
       return res.status(404).json({ error: "Restaurant not found" });
     }
 
-    const platformsToSync = platforms || ["google"];
+    const platformsToSync = platforms || ["google", "facebook"];
     const results: Record<string, { success: boolean; count: number; error?: string }> = {};
 
     // Sync Google Reviews
     if (platformsToSync.includes("google")) {
       try {
-        const integration = await integrationRepo.findOne({ where: { restaurantId } });
+        const integration = await googleIntegrationRepo.findOne({ where: { restaurantId } });
 
         if (!integration || integration.status !== "active") {
           results.google = {
@@ -140,7 +142,36 @@ router.post("/sync", requireAuth, async (req, res) => {
       }
     }
 
-    // TODO: Add Facebook and Instagram sync here
+    // Sync Facebook Reviews
+    if (platformsToSync.includes("facebook") || platformsToSync.includes("meta")) {
+      try {
+        const integration = await metaIntegrationRepo.findOne({ where: { restaurantId } });
+
+        if (!integration || integration.status !== "active") {
+          results.facebook = {
+            success: false,
+            count: 0,
+            error: "Meta integration not connected or inactive. Please connect your Meta account first.",
+          };
+        } else {
+          // Get last sync time for incremental sync
+          const sinceDate = integration.lastSyncedAt || undefined;
+          const count = await fetchMetaReviews(restaurantId, sinceDate);
+
+          results.facebook = {
+            success: true,
+            count,
+          };
+        }
+      } catch (error: any) {
+        console.error("Meta sync error:", error);
+        results.facebook = {
+          success: false,
+          count: 0,
+          error: error.message || "Failed to sync Meta reviews",
+        };
+      }
+    }
 
     // Check if any sync succeeded
     const hasSuccess = Object.values(results).some((r) => r.success);

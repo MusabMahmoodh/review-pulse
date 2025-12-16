@@ -1,11 +1,11 @@
 import { MigrationInterface, QueryRunner, Table, TableForeignKey } from "typeorm";
 
-export class AddGoogleIntegration1765725930807 implements MigrationInterface {
+export class AddMetaIntegration1765867003269 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Create google_integrations table
+    // Create meta_integrations table
     await queryRunner.createTable(
       new Table({
-        name: "google_integrations",
+        name: "meta_integrations",
         columns: [
           {
             name: "restaurantId",
@@ -13,14 +13,14 @@ export class AddGoogleIntegration1765725930807 implements MigrationInterface {
             isPrimary: true,
           },
           {
-            name: "googleAccountId",
+            name: "pageId",
             type: "varchar",
             isNullable: false,
           },
           {
-            name: "locationId",
+            name: "instagramBusinessAccountId",
             type: "varchar",
-            isNullable: false,
+            isNullable: true,
           },
           {
             name: "accessToken",
@@ -28,9 +28,9 @@ export class AddGoogleIntegration1765725930807 implements MigrationInterface {
             isNullable: false,
           },
           {
-            name: "refreshToken",
+            name: "userAccessToken",
             type: "text",
-            isNullable: false,
+            isNullable: true,
           },
           {
             name: "tokenExpiry",
@@ -62,9 +62,9 @@ export class AddGoogleIntegration1765725930807 implements MigrationInterface {
       true
     );
 
-    // Add foreign key for google_integrations
+    // Add foreign key for meta_integrations
     await queryRunner.createForeignKey(
-      "google_integrations",
+      "meta_integrations",
       new TableForeignKey({
         columnNames: ["restaurantId"],
         referencedColumnNames: ["id"],
@@ -76,22 +76,17 @@ export class AddGoogleIntegration1765725930807 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop foreign key first
-    const table = await queryRunner.getTable("google_integrations");
+    const table = await queryRunner.getTable("meta_integrations");
     const foreignKey = table?.foreignKeys.find(
       (fk) => fk.columnNames.indexOf("restaurantId") !== -1
     );
     if (foreignKey) {
-      await queryRunner.dropForeignKey("google_integrations", foreignKey);
+      await queryRunner.dropForeignKey("meta_integrations", foreignKey);
     }
 
     // Drop table
-    await queryRunner.dropTable("google_integrations");
+    await queryRunner.dropTable("meta_integrations");
   }
 }
-
-
-
-
-
 
 

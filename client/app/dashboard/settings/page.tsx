@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Facebook, Instagram, Chrome, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast-simple"
-import { restaurantsApi, externalReviewsApi, googleAuthApi } from "@/lib/api-client"
+import { restaurantsApi, externalReviewsApi, googleAuthApi, metaAuthApi } from "@/lib/api-client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 function SettingsPageContent() {
@@ -34,6 +34,14 @@ function SettingsPageContent() {
   const { data: googleIntegration, isLoading: googleLoading } = useQuery({
     queryKey: ["restaurants", "google-integration", restaurantId],
     queryFn: () => restaurantsApi.getGoogleIntegration(restaurantId),
+    enabled: !!restaurantId,
+    refetchInterval: 30000, // Refetch every 30 seconds to check status
+  })
+
+  // Fetch Meta integration status
+  const { data: metaIntegration, isLoading: metaLoading } = useQuery({
+    queryKey: ["restaurants", "meta-integration", restaurantId],
+    queryFn: () => restaurantsApi.getMetaIntegration(restaurantId),
     enabled: !!restaurantId,
     refetchInterval: 30000, // Refetch every 30 seconds to check status
   })
@@ -63,22 +71,43 @@ function SettingsPageContent() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["external-reviews", restaurantId] })
       queryClient.invalidateQueries({ queryKey: ["restaurants", "google-integration", restaurantId] })
+      queryClient.invalidateQueries({ queryKey: ["restaurants", "meta-integration", restaurantId] })
       
       const totalSynced = data.totalSynced || 0
       const googleResult = data.results?.google
+      const facebookResult = data.results?.facebook
+      
+      const successMessages: string[] = []
+      const errorMessages: string[] = []
       
       if (googleResult?.success) {
+        successMessages.push(`Google: ${googleResult.count} review${googleResult.count !== 1 ? "s" : ""}`)
+      } else if (googleResult?.error) {
+        errorMessages.push(`Google: ${googleResult.error}`)
+      }
+      
+      if (facebookResult?.success) {
+        successMessages.push(`Facebook: ${facebookResult.count} review${facebookResult.count !== 1 ? "s" : ""}`)
+      } else if (facebookResult?.error) {
+        errorMessages.push(`Facebook: ${facebookResult.error}`)
+      }
+      
+      if (successMessages.length > 0) {
         toast({
           title: "Sync Complete",
-          description: `Synced ${totalSynced} new review${totalSynced !== 1 ? "s" : ""} from Google`,
+          description: successMessages.join(", "),
         })
-      } else if (googleResult?.error) {
+      }
+      
+      if (errorMessages.length > 0) {
         toast({
-          title: "Sync Failed",
-          description: googleResult.error,
+          title: "Sync Issues",
+          description: errorMessages.join(", "),
           variant: "destructive",
         })
-      } else {
+      }
+      
+      if (successMessages.length === 0 && errorMessages.length === 0) {
         toast({
           title: "Sync Complete",
           description: "External reviews synced successfully",
@@ -98,6 +127,8 @@ function SettingsPageContent() {
   useEffect(() => {
     const googleConnected = searchParams.get("google_connected")
     const googleError = searchParams.get("google_error")
+    const metaConnected = searchParams.get("meta_connected")
+    const metaError = searchParams.get("meta_error")
 
     if (googleConnected === "true") {
       queryClient.invalidateQueries({ queryKey: ["restaurants", "google-integration", restaurantId] })
@@ -124,6 +155,34 @@ function SettingsPageContent() {
       toast({
         title: "Connection Failed",
         description: errorMessages[googleError] || "Failed to connect Google account",
+        variant: "destructive",
+      })
+      // Clean up URL
+      window.history.replaceState({}, "", "/dashboard/settings")
+    }
+
+    if (metaConnected === "true") {
+      queryClient.invalidateQueries({ queryKey: ["restaurants", "meta-integration", restaurantId] })
+      toast({
+        title: "Success",
+        description: "Meta (Facebook & Instagram) account connected successfully!",
+      })
+      // Clean up URL
+      window.history.replaceState({}, "", "/dashboard/settings")
+    }
+
+    if (metaError) {
+      const errorMessages: Record<string, string> = {
+        missing_params: "Missing authorization parameters",
+        token_exchange_failed: "Failed to obtain access token from Meta",
+        no_pages: "No Facebook pages found. Please create a Facebook Page first.",
+        invalid_account: "Unable to determine Facebook account ID",
+        unknown: "An unknown error occurred during Meta authorization",
+      }
+
+      toast({
+        title: "Connection Failed",
+        description: errorMessages[metaError] || "Failed to connect Meta account",
         variant: "destructive",
       })
       // Clean up URL
@@ -186,8 +245,16 @@ function SettingsPageContent() {
     window.location.href = authUrl
   }
 
+  const handleConnectMeta = () => {
+    const authUrl = metaAuthApi.authorize(restaurantId)
+    window.location.href = authUrl
+  }
+
   const handleSyncNow = async () => {
-    syncMutation.mutate(["google"])
+    const platforms: string[] = []
+    if (isGoogleConnected) platforms.push("google")
+    if (isMetaConnected) platforms.push("facebook")
+    syncMutation.mutate(platforms.length > 0 ? platforms : undefined)
   }
 
   const formatLastSync = (dateString: string | null) => {
@@ -207,6 +274,7 @@ function SettingsPageContent() {
   }
 
   const isGoogleConnected = googleIntegration?.connected && googleIntegration?.status === "active"
+  const isMetaConnected = metaIntegration?.connected && metaIntegration?.status === "active"
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -293,31 +361,61 @@ function SettingsPageContent() {
             <CardDescription>Manage your social media and review platform connections</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className={`flex items-center justify-between p-3 border rounded-lg ${isMetaConnected ? "bg-blue-50 dark:bg-blue-950/20" : "bg-muted/30"}`}>
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                  <Facebook className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                  isMetaConnected 
+                    ? "bg-blue-100 dark:bg-blue-900" 
+                    : "bg-gray-100 dark:bg-gray-800"
+                }`}>
+                  <Facebook className={`h-5 w-5 ${
+                    isMetaConnected 
+                      ? "text-blue-600 dark:text-blue-400" 
+                      : "text-gray-600 dark:text-gray-400"
+                  }`} />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">Facebook</p>
-                  <p className="text-xs text-muted-foreground">Scraping mentions</p>
+                  <p className="font-medium text-sm">Facebook & Instagram</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isMetaConnected 
+                      ? `Last synced: ${formatLastSync(metaIntegration?.lastSyncedAt || null)}`
+                      : "OAuth required"
+                    }
+                  </p>
                 </div>
               </div>
-              <Badge variant="secondary">Active</Badge>
+              <div className="flex items-center gap-2">
+                {isMetaConnected ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <Badge variant="default" className="bg-blue-600">Connected</Badge>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                    <Badge variant="outline">Not Connected</Badge>
+                  </>
+                )}
+              </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                  <Instagram className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">Instagram</p>
-                  <p className="text-xs text-muted-foreground">Scraping mentions</p>
-                </div>
-              </div>
-              <Badge variant="secondary">Active</Badge>
-            </div>
+            {!isMetaConnected && (
+              <Button 
+                onClick={handleConnectMeta} 
+                className="w-full" 
+                variant="outline"
+                disabled={metaLoading}
+              >
+                <Facebook className="h-4 w-4 mr-2" />
+                Connect Meta Account
+              </Button>
+            )}
+
+            {isMetaConnected && (
+              <p className="text-xs text-muted-foreground px-1">
+                Your Facebook Page{metaIntegration?.instagramBusinessAccountId ? " and Instagram Business Account" : ""} {metaIntegration?.instagramBusinessAccountId ? "are" : "is"} connected. Reviews will sync automatically every 24 hours.
+              </p>
+            )}
 
             <div className={`flex items-center justify-between p-3 border rounded-lg ${isGoogleConnected ? "bg-green-50 dark:bg-green-950/20" : "bg-muted/30"}`}>
               <div className="flex items-center gap-3">
@@ -389,15 +487,25 @@ function SettingsPageContent() {
                 <div>
                   <p className="font-medium text-sm">Last Sync</p>
                   <p className="text-xs text-muted-foreground">
-                    {isGoogleConnected 
-                      ? formatLastSync(googleIntegration?.lastSyncedAt || null)
-                      : "Not available - Connect Google first"
+                    {isGoogleConnected || isMetaConnected
+                      ? (() => {
+                          const googleSync = isGoogleConnected ? googleIntegration?.lastSyncedAt : null
+                          const metaSync = isMetaConnected ? metaIntegration?.lastSyncedAt : null
+                          if (googleSync && metaSync) {
+                            const googleDate = new Date(googleSync)
+                            const metaDate = new Date(metaSync)
+                            const latest = googleDate > metaDate ? googleDate : metaDate
+                            return formatLastSync(latest.toISOString())
+                          }
+                          return formatLastSync(googleSync || metaSync || null)
+                        })()
+                      : "Not available - Connect an account first"
                     }
                   </p>
                 </div>
                 <Button 
                   onClick={handleSyncNow} 
-                  disabled={syncMutation.isPending || !isGoogleConnected} 
+                  disabled={syncMutation.isPending || (!isGoogleConnected && !isMetaConnected)} 
                   size="sm" 
                   variant="outline"
                 >

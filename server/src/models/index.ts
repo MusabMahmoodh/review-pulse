@@ -6,4 +6,5 @@ export { AIInsight } from "./AIInsight";
 export { Admin } from "./Admin";
 export { Subscription } from "./Subscription";
 export { GoogleIntegration } from "./GoogleIntegration";
+export { MetaIntegration } from "./MetaIntegration";
 

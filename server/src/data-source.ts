@@ -9,6 +9,7 @@ import { AIInsight } from "./models/AIInsight";
 import { Admin } from "./models/Admin";
 import { Subscription } from "./models/Subscription";
 import { GoogleIntegration } from "./models/GoogleIntegration";
+import { MetaIntegration } from "./models/MetaIntegration";
 
 // Load environment variables before creating DataSource
 dotenv.config();
@@ -36,6 +37,7 @@ const connectionOptions: any = {
         Admin,
         Subscription,
         GoogleIntegration,
+        MetaIntegration,
     ],
     migrations: [__dirname + "/migrations/**/*.ts"],
     migrationsTableName: "migrations",

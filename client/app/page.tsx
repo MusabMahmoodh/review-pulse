@@ -3,6 +3,36 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChefHat, QrCode, Sparkles, TrendingUp, Brain } from "lucide-react"
 
+const PRICING_PLANS = [
+  {
+    id: "free",
+    name: "Free",
+    price: "LKR 0",
+    highlight: "Perfect for getting started",
+    features: ["Collect feedback with QR codes", "Basic dashboard", "Unlimited responses"],
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    price: "LKR 10,000 / month",
+    highlight: "AI + social media insights and consultations",
+    features: [
+      "Everything in Free",
+      "AI insights on all feedback",
+      "Google, Facebook & Instagram reviews",
+      "AI-powered strategy consultations",
+    ],
+    popular: true,
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    price: "Talk to us",
+    highlight: "For multi-location restaurant groups",
+    features: ["Custom onboarding", "Dedicated support", "Advanced reporting & integrations"],
+  },
+]
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
@@ -138,6 +168,66 @@ export default function HomePage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 py-16 md:py-24">
+        <div className="max-w-4xl mx-auto text-center space-y-4 mb-10">
+          <h2 className="text-3xl md:text-4xl font-bold text-balance">Choose the right plan for your restaurant</h2>
+          <p className="text-muted-foreground text-pretty max-w-2xl mx-auto">
+            Start free to collect feedback, upgrade to unlock AI and social media insights, or talk to us for
+            enterprise needs.
+          </p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
+          {PRICING_PLANS.map((plan) => (
+            <Card
+              key={plan.id}
+              className={`flex flex-col h-full ${
+                plan.popular ? "border-primary shadow-lg shadow-primary/10 relative" : ""
+              }`}
+            >
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="rounded-full bg-primary text-primary-foreground px-3 py-1 text-xs font-semibold shadow-sm">
+                    Most Popular
+                  </span>
+                </div>
+              )}
+              <CardHeader className="pt-6 pb-4 space-y-2">
+                <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                <p className="text-sm text-muted-foreground">{plan.highlight}</p>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col gap-4 pb-6">
+                <div className="text-left">
+                  <div className="text-2xl font-bold">{plan.price}</div>
+                </div>
+                <ul className="space-y-2 text-sm text-left text-muted-foreground">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="pt-4 mt-auto">
+                  {plan.id === "enterprise" ? (
+                    <Link href="/contact">
+                      <Button className="w-full" variant="outline">
+                        Talk to us
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link href="/register">
+                      <Button className="w-full" variant={plan.id === "premium" ? "default" : "outline"}>
+                        {plan.id === "free" ? "Get started free" : "Start Premium"}
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </section>
 
