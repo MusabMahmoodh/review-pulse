@@ -2,11 +2,20 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { feedbackApi } from "@/lib/api-client";
+import type { CustomerFeedback } from "@/lib/types";
 
 export function useFeedbackList(restaurantId: string | null) {
-  return useQuery({
+  return useQuery<{ feedback: CustomerFeedback[] }>({
     queryKey: ["feedback", restaurantId],
-    queryFn: () => feedbackApi.list(restaurantId!),
+    queryFn: async () => {
+      const response = await feedbackApi.list(restaurantId!);
+      return {
+        feedback: response.feedback.map((item) => ({
+          ...item,
+          createdAt: new Date(item.createdAt),
+        })) as CustomerFeedback[],
+      };
+    },
     enabled: !!restaurantId,
   });
 }

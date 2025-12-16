@@ -137,3 +137,43 @@
 .animate-shimmer {
   animation: shimmer 2s infinite;
 }
+
+@keyframes gradient-shift {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.05) rotate(2deg);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1) rotate(0deg);
+  }
+  75% {
+    opacity: 1;
+    transform: scale(1.05) rotate(-2deg);
+  }
+}
+
+.animate-gradient-shift {
+  animation: gradient-shift 6s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+.delay-1000 {
+  animation-delay: 1s;
+}

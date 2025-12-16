@@ -6,22 +6,54 @@ import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { AIInsightsContent } from "@/components/ai-insights-content"
 import { AIChatWidget } from "@/components/ai-chat-widget"
-import { useAIInsights } from "@/hooks"
+import { useAIInsights, useAuth } from "@/hooks"
 import { useIsMobile } from "@/hooks/use-mobile"
 import type { AIInsight } from "@/lib/types"
 
 export default function AIInsightsPage() {
-  const restaurantId = "rest_1765777607402_t8kmpnz"
+  const { user, isLoading: authLoading } = useAuth()
+  const restaurantId = user?.id || null
   const isMobile = useIsMobile()
   const { data: insightsData } = useAIInsights(restaurantId)
-  const [insight, setInsight] = useState<AIInsight | null>(insightsData?.insight || null)
+  
+  // Convert API response to AIInsight type (generatedAt is string from API, needs to be Date)
+  const convertInsight = (apiInsight: any): AIInsight | null => {
+    if (!apiInsight) return null
+    return {
+      ...apiInsight,
+      generatedAt: new Date(apiInsight.generatedAt)
+    }
+  }
+  
+  const [insight, setInsight] = useState<AIInsight | null>(
+    insightsData?.insight ? convertInsight(insightsData.insight) : null
+  )
 
   // Update insight when data changes
   useEffect(() => {
     if (insightsData?.insight) {
-      setInsight(insightsData.insight)
+      setInsight(convertInsight(insightsData.insight))
     }
   }, [insightsData])
+
+  // Show loading state while authenticating
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Redirect to login if not authenticated
+  if (!restaurantId) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/login"
+    }
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-background">
