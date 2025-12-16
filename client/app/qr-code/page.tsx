@@ -1,21 +1,37 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChefHat, Download, Share2, Copy, Check } from "lucide-react"
+import { ChefHat, Download, Share2, Copy, Check, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast-simple"
+import { useAuth } from "@/hooks"
+import { QRCodeSVG } from "qrcode.react"
 
 export default function QRCodePage() {
   const { toast } = useToast()
+  const { user, isLoading: authLoading } = useAuth()
   const [copied, setCopied] = useState(false)
-  // In production, get restaurant ID from auth session
-  const restaurantId = "rest_1765777607402_t8kmpnz"
-  const feedbackUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/feedback/${restaurantId}`
-  const qrCodeUrl = `https://chart.googleapis.com/chart?cht=qr&chs=400x400&chl=${encodeURIComponent(feedbackUrl)}&choe=UTF-8`
+  const qrCodeRef = useRef<HTMLDivElement>(null)
+  
+  const restaurantId = user?.id || null
+  const feedbackUrl = restaurantId 
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/feedback/${restaurantId}`
+    : ""
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !restaurantId) {
+      if (typeof window !== "undefined") {
+        window.location.href = "/login"
+      }
+    }
+  }, [authLoading, restaurantId])
 
   const handleCopyLink = async () => {
+    if (!feedbackUrl) return
+    
     try {
       await navigator.clipboard.writeText(feedbackUrl)
       setCopied(true)
@@ -33,20 +49,56 @@ export default function QRCodePage() {
     }
   }
 
-  const handleDownload = () => {
-    const link = document.createElement("a")
-    link.href = qrCodeUrl
-    link.download = "restaurant-feedback-qr.png"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    toast({
-      title: "Downloaded!",
-      description: "QR code saved to your device",
-    })
+  const handleDownload = async () => {
+    if (!qrCodeRef.current || !feedbackUrl) return
+
+    try {
+      const svg = qrCodeRef.current.querySelector("svg")
+      if (!svg) return
+
+      const svgData = new XMLSerializer().serializeToString(svg)
+      const canvas = document.createElement("canvas")
+      const ctx = canvas.getContext("2d")
+      const img = new Image()
+
+      img.onload = () => {
+        canvas.width = img.width
+        canvas.height = img.height
+        ctx?.drawImage(img, 0, 0)
+        
+        canvas.toBlob((blob) => {
+          if (!blob) return
+          const url = URL.createObjectURL(blob)
+          const link = document.createElement("a")
+          link.href = url
+          link.download = "restaurant-feedback-qr.png"
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+          
+          toast({
+            title: "Downloaded!",
+            description: "QR code saved to your device",
+          })
+        })
+      }
+
+      img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)))
+    } catch (error) {
+      console.error("Download error:", error)
+      toast({
+        title: "Error",
+        description: "Failed to download QR code",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleShare = async () => {
+    if (!feedbackUrl) return
+
+    // Use native share API if available (mobile)
     if (navigator.share) {
       try {
         await navigator.share({
@@ -54,12 +106,39 @@ export default function QRCodePage() {
           text: "Scan this QR code or use the link to share your feedback",
           url: feedbackUrl,
         })
-      } catch (error) {
-        console.error("[v0] Share error:", error)
+        toast({
+          title: "Shared!",
+          description: "Link shared successfully",
+        })
+      } catch (error: any) {
+        // User cancelled or error occurred
+        if (error.name !== "AbortError") {
+          console.error("Share error:", error)
+          // Fallback to copy if share fails
+          handleCopyLink()
+        }
       }
     } else {
+      // Fallback to copy on desktop
       handleCopyLink()
     }
+  }
+
+  // Show loading state while authenticating
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render if not authenticated (redirect will happen)
+  if (!restaurantId || !feedbackUrl) {
+    return null
   }
 
   return (
@@ -84,8 +163,14 @@ export default function QRCodePage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* QR Code Display */}
-            <div className="flex justify-center p-6 bg-white rounded-lg">
-              <img src={qrCodeUrl || "/placeholder.svg"} alt="Feedback QR Code" className="w-full max-w-sm" />
+            <div className="flex justify-center p-6 bg-white rounded-lg" ref={qrCodeRef}>
+              <QRCodeSVG
+                value={feedbackUrl}
+                size={300}
+                level="H"
+                includeMargin={true}
+                className="w-full max-w-sm"
+              />
             </div>
 
             {/* Feedback URL */}
@@ -105,7 +190,7 @@ export default function QRCodePage() {
                 <Download className="mr-2 h-4 w-4" />
                 Download QR Code
               </Button>
-              <Button onClick={handleShare} variant="outline" className="flex-1 bg-transparent">
+              <Button onClick={handleShare} variant="outline" className="flex-1">
                 <Share2 className="mr-2 h-4 w-4" />
                 Share Link
               </Button>
@@ -119,6 +204,7 @@ export default function QRCodePage() {
                 <li>Make sure the QR code is easy to scan (good lighting, flat surface)</li>
                 <li>Consider adding instructions like "Scan to leave feedback"</li>
                 <li>Test the QR code with your phone before displaying</li>
+                <li>Share the link directly via WhatsApp, email, or other messaging apps</li>
               </ul>
             </div>
           </CardContent>
