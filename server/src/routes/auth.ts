@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { Restaurant, RestaurantAuth, GoogleIntegration, MetaIntegration } from "../models";
+import { Restaurant, RestaurantAuth, GoogleIntegration, MetaIntegration, Subscription } from "../models";
 import { hashPassword, comparePassword } from "../utils/password";
 import { generateRestaurantId, generateQRCodeUrl } from "../utils/qr-generator";
 import { encrypt } from "../utils/encryption";
 import { exchangeForPageToken } from "../utils/meta-auth";
 import { signAccessToken, verifyAccessToken, extractTokenFromHeader } from "../utils/jwt";
+import { getActiveSubscription } from "../utils/subscription";
 import { isPremium } from "../utils/subscription";
 
 const router = Router();
@@ -264,12 +265,25 @@ router.get("/me", async (req, res) => {
       return res.status(404).json({ error: "Restaurant not found" });
     }
 
+    // Get active subscription
+    const subscription = await getActiveSubscription(restaurant.id);
+
     return res.json({
       success: true,
       restaurant: {
         id: restaurant.id,
         name: restaurant.name,
         email: restaurant.email,
+        subscription: subscription
+          ? {
+              id: subscription.id,
+              plan: subscription.plan,
+              status: subscription.status,
+              startDate: subscription.startDate,
+              endDate: subscription.endDate || null,
+              monthlyPrice: subscription.monthlyPrice,
+            }
+          : null,
       },
     });
   } catch (error) {

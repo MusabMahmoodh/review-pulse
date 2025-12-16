@@ -14,7 +14,8 @@ import { useToast } from "@/hooks/use-toast-simple"
 import { useAuth } from "@/hooks/use-auth"
 import { restaurantsApi, externalReviewsApi, googleAuthApi, metaAuthApi } from "@/lib/api-client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { isPremiumRequiredError } from "@/lib/premium"
+import { isPremiumRequiredError, isPremiumFromAuth } from "@/lib/premium"
+import { PremiumUpgrade } from "@/components/premium-upgrade"
 
 function SettingsPageContent() {
   const { toast } = useToast()
@@ -23,8 +24,10 @@ function SettingsPageContent() {
   const queryClient = useQueryClient()
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const [newKeyword, setNewKeyword] = useState("")
+  const [premiumError, setPremiumError] = useState<{ section?: string } | null>(null)
 
   const restaurantId = user?.id || null
+  const hasPremium = isPremiumFromAuth(user?.subscription)
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -70,6 +73,7 @@ function SettingsPageContent() {
     },
     onError: (error: any) => {
       if (isPremiumRequiredError(error)) {
+        setPremiumError({ section: "keywords" })
         toast({
           title: "Premium Required",
           description: "Social media features require a premium subscription. Please contact admin to upgrade.",
@@ -136,6 +140,7 @@ function SettingsPageContent() {
     },
     onError: (error: any) => {
       if (isPremiumRequiredError(error)) {
+        setPremiumError({ section: "sync" })
         toast({
           title: "Premium Required",
           description: "Social media sync requires a premium subscription. Please contact admin to upgrade.",
@@ -377,6 +382,11 @@ function SettingsPageContent() {
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-20 w-full" />
               </div>
+            ) : (!hasPremium || premiumError?.section === "keywords") ? (
+              <PremiumUpgrade 
+                feature="Social Media Keywords"
+                description="Track your restaurant mentions on Facebook and Instagram with custom keywords. This feature requires a premium subscription."
+              />
             ) : (
               <>
                 <div className="flex flex-col sm:flex-row gap-2">
@@ -479,7 +489,14 @@ function SettingsPageContent() {
             </div>
           </CardHeader>
           <CardContent className="pt-6 space-y-6">
-            {/* Meta Integration */}
+            {!hasPremium || premiumError?.section === "integrations" ? (
+              <PremiumUpgrade 
+                feature="Platform Integrations"
+                description="Connect your Google Business Profile and Meta (Facebook & Instagram) accounts to sync reviews automatically. This feature requires a premium subscription."
+              />
+            ) : (
+              <>
+                {/* Meta Integration */}
             <div className="space-y-3">
               <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-2 rounded-lg transition-all ${
                 isMetaConnected 
@@ -648,6 +665,8 @@ function SettingsPageContent() {
                 </div>
               )}
             </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -667,6 +686,12 @@ function SettingsPageContent() {
             </div>
           </CardHeader>
           <CardContent className="pt-6">
+            {!hasPremium || premiumError?.section === "sync" ? (
+              <PremiumUpgrade 
+                feature="Sync Settings"
+                description="Manually sync reviews from connected platforms. This feature requires a premium subscription."
+              />
+            ) : (
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border-2 rounded-lg bg-muted/20">
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm mb-1">Last Sync</p>
@@ -707,6 +732,7 @@ function SettingsPageContent() {
                 )}
               </Button>
             </div>
+            )}
           </CardContent>
         </Card>
       </main>

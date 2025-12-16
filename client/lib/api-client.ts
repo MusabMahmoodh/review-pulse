@@ -109,6 +109,14 @@ export const authApi = {
         id: string;
         name: string;
         email: string;
+        subscription?: {
+          id: string;
+          plan: "free" | "basic" | "premium" | "enterprise";
+          status: "active" | "cancelled" | "expired" | "trial";
+          startDate: string;
+          endDate: string | null;
+          monthlyPrice: number;
+        } | null;
       };
     }>("/api/auth/me", {
       authToken: token,

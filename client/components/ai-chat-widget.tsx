@@ -21,6 +21,9 @@ import {
 import { useToast } from "@/hooks/use-toast-simple"
 import { useAIChat } from "@/hooks"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useAuth } from "@/hooks/use-auth"
+import { isPremiumFromAuth } from "@/lib/premium"
+import { PremiumUpgrade } from "@/components/premium-upgrade"
 
 interface ChatMessage {
   role: "user" | "assistant"
@@ -35,15 +38,18 @@ interface AIChatWidgetProps {
 
 export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWidgetProps) {
   const { toast } = useToast()
+  const { user } = useAuth()
   const mobileHook = useIsMobile()
   const isMobile = useMemo(() => mobileHook || isMobileProp, [mobileHook, isMobileProp])
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [inputMessage, setInputMessage] = useState("")
   const [isOpen, setIsOpen] = useState(false)
+  const [premiumError, setPremiumError] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const chatMutation = useAIChat()
+  const hasPremium = isPremiumFromAuth(user?.subscription)
 
   useEffect(() => {
     if (scrollRef.current && isOpen) {
@@ -77,6 +83,7 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
         },
         onError: (error: any) => {
           if (error?.data?.requiresPremium || error?.requiresPremium) {
+            setPremiumError(true)
             toast({
               title: "Premium Required",
               description: "AI chat requires a premium subscription. Please contact admin to upgrade.",
@@ -126,6 +133,43 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setInputMessage(e.target.value)
   }, [])
+
+  // Show premium upgrade if premium error occurred or user doesn't have premium
+  if (premiumError || !hasPremium) {
+    const premiumContent = (
+      <div className="flex-1 overflow-y-auto p-4 min-h-0">
+        <PremiumUpgrade 
+          feature="AI Chat"
+          description="Ask AI questions about your feedback and get intelligent insights. This feature requires a premium subscription."
+          className="h-full"
+        />
+      </div>
+    )
+    
+    if (isMobile) {
+      return (
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetContent side="bottom" className="h-[90vh] p-0 flex flex-col">
+            <SheetHeader className="px-4 py-3 border-b">
+              <SheetTitle>AI Chat</SheetTitle>
+            </SheetHeader>
+            {premiumContent}
+          </SheetContent>
+        </Sheet>
+      )
+    }
+    
+    return (
+      <Card className="h-full flex flex-col">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">AI Chat</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-hidden p-0">
+          {premiumContent}
+        </CardContent>
+      </Card>
+    )
+  }
 
   const chatContent = (
     <>

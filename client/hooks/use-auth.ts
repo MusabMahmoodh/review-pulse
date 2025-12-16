@@ -31,6 +31,14 @@ export function useAuth() {
     id: string;
     name: string;
     email: string;
+    subscription?: {
+      id: string;
+      plan: "free" | "basic" | "premium" | "enterprise";
+      status: "active" | "cancelled" | "expired" | "trial";
+      startDate: string;
+      endDate: string | null;
+      monthlyPrice: number;
+    } | null;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 

@@ -4,6 +4,9 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { PremiumUpgrade } from "@/components/premium-upgrade"
+import { useAuth } from "@/hooks/use-auth"
+import { isPremiumFromAuth } from "@/lib/premium"
 import {
   Select,
   SelectContent,
@@ -52,11 +55,14 @@ const TIME_PERIOD_OPTIONS: { value: TimePeriod; label: string }[] = [
 
 export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AIInsightsContentProps) {
   const { toast } = useToast()
+  const { user } = useAuth()
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("month")
+  const [premiumError, setPremiumError] = useState(false)
   const generateInsightsMutation = useGenerateInsights()
   const { data: statsData } = useFeedbackStats(restaurantId)
 
   const stats = statsData?.stats
+  const hasPremium = isPremiumFromAuth(user?.subscription)
 
   const generateInsights = () => {
     generateInsightsMutation.mutate(
@@ -78,6 +84,7 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
         },
         onError: (error: any) => {
           if (error?.data?.requiresPremium || error?.requiresPremium) {
+            setPremiumError(true)
             toast({
               title: "Premium Required",
               description: "AI features require a premium subscription. Please contact admin to upgrade.",
@@ -296,6 +303,16 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
       current.rating > best.rating ? current : best
     )
   })() : null
+
+  // Show premium upgrade if premium error occurred or user doesn't have premium
+  if (premiumError || (!hasPremium && !insight)) {
+    return (
+      <PremiumUpgrade 
+        feature="AI Insights"
+        description="Unlock AI-powered insights and recommendations to understand your customer feedback better."
+      />
+    )
+  }
 
   return (
     <div className="space-y-6">
