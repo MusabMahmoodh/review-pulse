@@ -43,6 +43,23 @@ async function fetchApi<T>(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
+    
+    // Handle 401 Unauthorized - redirect to login
+    if (response.status === 401 && typeof window !== "undefined") {
+      // Clear invalid token
+      try {
+        window.localStorage.removeItem(TOKEN_KEY);
+      } catch {
+        // Ignore localStorage errors
+      }
+      
+      // Redirect to login page if not already there
+      const currentPath = window.location.pathname;
+      if (currentPath !== "/login" && currentPath !== "/register") {
+        window.location.href = "/login";
+      }
+    }
+    
     throw new ApiError(response.status, response.statusText, errorData);
   }
 
