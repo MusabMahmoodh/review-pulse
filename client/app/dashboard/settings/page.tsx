@@ -1,31 +1,42 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Facebook, Instagram, Chrome, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { ArrowLeft, Facebook, Instagram, Chrome, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle, Loader2, Hash } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast-simple"
+import { useAuth } from "@/hooks/use-auth"
 import { restaurantsApi, externalReviewsApi, googleAuthApi, metaAuthApi } from "@/lib/api-client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 function SettingsPageContent() {
   const { toast } = useToast()
   const searchParams = useSearchParams()
+  const router = useRouter()
   const queryClient = useQueryClient()
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const [newKeyword, setNewKeyword] = useState("")
 
-  const restaurantId = "rest_1765777607402_t8kmpnz"
+  const restaurantId = user?.id || null
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login")
+    }
+  }, [authLoading, isAuthenticated, router])
 
   // Fetch keywords
   const { data: keywordsData, isLoading: keywordsLoading } = useQuery({
     queryKey: ["restaurants", "keywords", restaurantId],
-    queryFn: () => restaurantsApi.getKeywords(restaurantId),
-    enabled: !!restaurantId,
+    queryFn: () => restaurantsApi.getKeywords(restaurantId!),
+    enabled: !!restaurantId && isAuthenticated,
   })
 
   const keywords = keywordsData?.keywords || []
@@ -33,22 +44,22 @@ function SettingsPageContent() {
   // Fetch Google integration status
   const { data: googleIntegration, isLoading: googleLoading } = useQuery({
     queryKey: ["restaurants", "google-integration", restaurantId],
-    queryFn: () => restaurantsApi.getGoogleIntegration(restaurantId),
-    enabled: !!restaurantId,
+    queryFn: () => restaurantsApi.getGoogleIntegration(restaurantId!),
+    enabled: !!restaurantId && isAuthenticated,
     refetchInterval: 30000, // Refetch every 30 seconds to check status
   })
 
   // Fetch Meta integration status
   const { data: metaIntegration, isLoading: metaLoading } = useQuery({
     queryKey: ["restaurants", "meta-integration", restaurantId],
-    queryFn: () => restaurantsApi.getMetaIntegration(restaurantId),
-    enabled: !!restaurantId,
+    queryFn: () => restaurantsApi.getMetaIntegration(restaurantId!),
+    enabled: !!restaurantId && isAuthenticated,
     refetchInterval: 30000, // Refetch every 30 seconds to check status
   })
 
   // Update keywords mutation
   const updateKeywordsMutation = useMutation({
-    mutationFn: (keywords: string[]) => restaurantsApi.updateKeywords(restaurantId, keywords),
+    mutationFn: (keywords: string[]) => restaurantsApi.updateKeywords(restaurantId!, keywords),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["restaurants", "keywords", restaurantId] })
       toast({
@@ -67,7 +78,7 @@ function SettingsPageContent() {
 
   // Sync reviews mutation
   const syncMutation = useMutation({
-    mutationFn: (platforms?: string[]) => externalReviewsApi.sync(restaurantId, platforms),
+    mutationFn: (platforms?: string[]) => externalReviewsApi.sync(restaurantId!, platforms),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["external-reviews", restaurantId] })
       queryClient.invalidateQueries({ queryKey: ["restaurants", "google-integration", restaurantId] })
@@ -241,11 +252,13 @@ function SettingsPageContent() {
   }
 
   const handleConnectGoogle = () => {
+    if (!restaurantId) return
     const authUrl = googleAuthApi.authorize(restaurantId)
     window.location.href = authUrl
   }
 
   const handleConnectMeta = () => {
+    if (!restaurantId) return
     const authUrl = metaAuthApi.authorize(restaurantId)
     window.location.href = authUrl
   }
@@ -276,247 +289,396 @@ function SettingsPageContent() {
   const isGoogleConnected = googleIntegration?.connected && googleIntegration?.status === "active"
   const isMetaConnected = metaIntegration?.connected && metaIntegration?.status === "active"
 
+  // Loading state
+  if (authLoading || !isAuthenticated || !restaurantId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="flex h-16 items-center gap-3">
+              <Skeleton className="h-9 w-9 rounded-md" />
+              <Skeleton className="h-6 w-24" />
+            </div>
+          </div>
+        </header>
+        <div className="container mx-auto px-4 sm:px-6 py-6 space-y-6">
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-48 w-full" />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="border-b bg-card sticky top-0 z-50 shadow-sm">
-        <div className="px-4 py-4">
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 pb-20">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex h-16 items-center gap-3">
             <Link href="/dashboard">
-              <Button variant="ghost" size="sm" className="h-10 w-10 p-0">
-                <ArrowLeft className="h-5 w-5" />
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <h1 className="font-bold text-lg">Settings</h1>
+            <div className="flex-1">
+              <h1 className="text-lg font-semibold leading-none">Settings</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Manage your integrations and preferences</p>
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="px-4 py-6 space-y-6">
+      {/* Main Content */}
+      <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Social Keywords Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Social Media Keywords</CardTitle>
-            <CardDescription>
-              Add 3-5 keywords to find your restaurant mentions on Facebook and Instagram. Include your restaurant name,
-              hashtags, and common variations.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
+        <Card className="overflow-hidden border-2">
+          <CardHeader className="bg-muted/30 pb-4">
+            <div className="flex items-center gap-2">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Hash className="h-5 w-5 text-primary" />
+              </div>
               <div className="flex-1">
-                <Input
-                  placeholder="e.g., #MyRestaurant or @restaurant_name"
-                  value={newKeyword}
-                  onChange={(e) => setNewKeyword(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleAddKeyword()}
-                  maxLength={50}
-                  disabled={keywordsLoading || updateKeywordsMutation.isPending}
-                />
+                <CardTitle className="text-lg">Social Media Keywords</CardTitle>
+                <CardDescription className="text-xs mt-1">
+                  Add 3-5 keywords to find your restaurant mentions on Facebook and Instagram
+                </CardDescription>
               </div>
-              <Button 
-                onClick={handleAddKeyword} 
-                disabled={keywords.length >= 5 || keywordsLoading || updateKeywordsMutation.isPending} 
-                size="sm"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Add
-              </Button>
             </div>
-
-            {keywords.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground">Current Keywords ({keywords.length}/5)</Label>
-                <div className="flex flex-wrap gap-2">
-                  {keywords.map((keyword, index) => (
-                    <Badge key={index} variant="secondary" className="pr-1 text-sm">
-                      {keyword}
-                      <button
-                        onClick={() => handleRemoveKeyword(index)}
-                        className="ml-2 hover:bg-destructive/20 rounded-full p-0.5"
-                        disabled={updateKeywordsMutation.isPending}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-4">
+            {keywordsLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-20 w-full" />
               </div>
-            )}
+            ) : (
+              <>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="e.g., #MyRestaurant or @restaurant_name"
+                      value={newKeyword}
+                      onChange={(e) => setNewKeyword(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && handleAddKeyword()}
+                      maxLength={50}
+                      disabled={updateKeywordsMutation.isPending}
+                      className="h-10"
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleAddKeyword} 
+                    disabled={keywords.length >= 5 || updateKeywordsMutation.isPending} 
+                    size="default"
+                    className="h-10 sm:w-auto w-full"
+                  >
+                    {updateKeywordsMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Plus className="h-4 w-4 mr-2" />
+                    )}
+                    Add
+                  </Button>
+                </div>
 
-            <Button 
-              onClick={handleSave} 
-              disabled={keywordsLoading || updateKeywordsMutation.isPending || keywords.length < 3} 
-              className="w-full"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {updateKeywordsMutation.isPending ? "Saving..." : "Save Keywords"}
-            </Button>
+                {keywords.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Current Keywords</Label>
+                      <span className="text-xs text-muted-foreground">{keywords.length}/5</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 min-h-[2.5rem]">
+                      {keywords.map((keyword, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="secondary" 
+                          className="pr-1 text-sm py-1.5 px-3 h-auto"
+                        >
+                          <span className="mr-1.5">{keyword}</span>
+                          <button
+                            onClick={() => handleRemoveKeyword(index)}
+                            className="ml-1 hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
+                            disabled={updateKeywordsMutation.isPending}
+                            aria-label={`Remove ${keyword}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Button 
+                  onClick={handleSave} 
+                  disabled={updateKeywordsMutation.isPending || keywords.length < 3} 
+                  className="w-full h-10"
+                  size="default"
+                >
+                  {updateKeywordsMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Keywords
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
 
         {/* Integration Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Integration Status</CardTitle>
-            <CardDescription>Manage your social media and review platform connections</CardDescription>
+        <Card className="overflow-hidden border-2">
+          <CardHeader className="bg-muted/30 pb-4">
+            <div className="flex items-center gap-2">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <CardTitle className="text-lg">Platform Integrations</CardTitle>
+                <CardDescription className="text-xs mt-1">
+                  Connect your social media and review platforms
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className={`flex items-center justify-between p-3 border rounded-lg ${isMetaConnected ? "bg-blue-50 dark:bg-blue-950/20" : "bg-muted/30"}`}>
-              <div className="flex items-center gap-3">
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                  isMetaConnected 
-                    ? "bg-blue-100 dark:bg-blue-900" 
-                    : "bg-gray-100 dark:bg-gray-800"
-                }`}>
-                  <Facebook className={`h-5 w-5 ${
+          <CardContent className="pt-6 space-y-6">
+            {/* Meta Integration */}
+            <div className="space-y-3">
+              <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-2 rounded-lg transition-all ${
+                isMetaConnected 
+                  ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800" 
+                  : "bg-muted/30 border-border"
+              }`}>
+                <div className="flex items-center gap-3 flex-1">
+                  <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
                     isMetaConnected 
-                      ? "text-blue-600 dark:text-blue-400" 
-                      : "text-gray-600 dark:text-gray-400"
-                  }`} />
+                      ? "bg-blue-100 dark:bg-blue-900" 
+                      : "bg-muted"
+                  }`}>
+                    <Facebook className={`h-6 w-6 ${
+                      isMetaConnected 
+                        ? "text-blue-600 dark:text-blue-400" 
+                        : "text-muted-foreground"
+                    }`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold text-sm">Facebook & Instagram</p>
+                      {isMetaConnected && (
+                        <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {metaLoading ? (
+                        <span className="flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Loading...
+                        </span>
+                      ) : isMetaConnected ? (
+                        `Last synced: ${formatLastSync(metaIntegration?.lastSyncedAt || null)}`
+                      ) : (
+                        "Connect to sync reviews from Facebook and Instagram"
+                      )}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-sm">Facebook & Instagram</p>
-                  <p className="text-xs text-muted-foreground">
-                    {isMetaConnected 
-                      ? `Last synced: ${formatLastSync(metaIntegration?.lastSyncedAt || null)}`
-                      : "OAuth required"
-                    }
+                <div className="flex items-center gap-2 shrink-0">
+                  {isMetaConnected ? (
+                    <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+                      Connected
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="border-muted-foreground/30">
+                      Not Connected
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {!isMetaConnected && (
+                <Button 
+                  onClick={handleConnectMeta} 
+                  className="w-full h-10" 
+                  variant="outline"
+                  disabled={metaLoading || !restaurantId}
+                >
+                  {metaLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Facebook className="h-4 w-4 mr-2" />
+                      Connect Meta Account
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {isMetaConnected && (
+                <div className="p-3 bg-blue-50/50 dark:bg-blue-950/10 rounded-lg border border-blue-200/50 dark:border-blue-800/50">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="font-medium text-foreground">Connected:</span> Your Facebook Page
+                    {metaIntegration?.instagramBusinessAccountId && " and Instagram Business Account"}
+                    {metaIntegration?.instagramBusinessAccountId ? " are" : " is"} connected. 
+                    Reviews will sync automatically every 24 hours.
                   </p>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {isMetaConnected ? (
-                  <>
-                    <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <Badge variant="default" className="bg-blue-600">Connected</Badge>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                    <Badge variant="outline">Not Connected</Badge>
-                  </>
-                )}
-              </div>
+              )}
             </div>
 
-            {!isMetaConnected && (
-              <Button 
-                onClick={handleConnectMeta} 
-                className="w-full" 
-                variant="outline"
-                disabled={metaLoading}
-              >
-                <Facebook className="h-4 w-4 mr-2" />
-                Connect Meta Account
-              </Button>
-            )}
-
-            {isMetaConnected && (
-              <p className="text-xs text-muted-foreground px-1">
-                Your Facebook Page{metaIntegration?.instagramBusinessAccountId ? " and Instagram Business Account" : ""} {metaIntegration?.instagramBusinessAccountId ? "are" : "is"} connected. Reviews will sync automatically every 24 hours.
-              </p>
-            )}
-
-            <div className={`flex items-center justify-between p-3 border rounded-lg ${isGoogleConnected ? "bg-green-50 dark:bg-green-950/20" : "bg-muted/30"}`}>
-              <div className="flex items-center gap-3">
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                  isGoogleConnected 
-                    ? "bg-green-100 dark:bg-green-900" 
-                    : "bg-gray-100 dark:bg-gray-800"
-                }`}>
-                  <Chrome className={`h-5 w-5 ${
+            {/* Google Integration */}
+            <div className="space-y-3">
+              <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-2 rounded-lg transition-all ${
+                isGoogleConnected 
+                  ? "bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-800" 
+                  : "bg-muted/30 border-border"
+              }`}>
+                <div className="flex items-center gap-3 flex-1">
+                  <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
                     isGoogleConnected 
-                      ? "text-green-600 dark:text-green-400" 
-                      : "text-gray-600 dark:text-gray-400"
-                  }`} />
+                      ? "bg-green-100 dark:bg-green-900" 
+                      : "bg-muted"
+                  }`}>
+                    <Chrome className={`h-6 w-6 ${
+                      isGoogleConnected 
+                        ? "text-green-600 dark:text-green-400" 
+                        : "text-muted-foreground"
+                    }`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold text-sm">Google Business Profile</p>
+                      {isGoogleConnected && (
+                        <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {googleLoading ? (
+                        <span className="flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Loading...
+                        </span>
+                      ) : isGoogleConnected ? (
+                        `Last synced: ${formatLastSync(googleIntegration?.lastSyncedAt || null)}`
+                      ) : (
+                        "Connect to sync reviews from Google Business Profile"
+                      )}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-sm">Google My Business</p>
-                  <p className="text-xs text-muted-foreground">
-                    {isGoogleConnected 
-                      ? `Last synced: ${formatLastSync(googleIntegration?.lastSyncedAt || null)}`
-                      : "OAuth required"
-                    }
+                <div className="flex items-center gap-2 shrink-0">
+                  {isGoogleConnected ? (
+                    <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                      Connected
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="border-muted-foreground/30">
+                      Not Connected
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {!isGoogleConnected && (
+                <Button 
+                  onClick={handleConnectGoogle} 
+                  className="w-full h-10" 
+                  variant="outline"
+                  disabled={googleLoading || !restaurantId}
+                >
+                  {googleLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    <>
+                      <Chrome className="h-4 w-4 mr-2" />
+                      Connect Google Account
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {isGoogleConnected && (
+                <div className="p-3 bg-green-50/50 dark:bg-green-950/10 rounded-lg border border-green-200/50 dark:border-green-800/50">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="font-medium text-foreground">Connected:</span> Your Google Business Profile is connected. 
+                    Reviews will sync automatically every 24 hours.
                   </p>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {isGoogleConnected ? (
-                  <>
-                    <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    <Badge variant="default" className="bg-green-600">Connected</Badge>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                    <Badge variant="outline">Not Connected</Badge>
-                  </>
-                )}
-              </div>
+              )}
             </div>
-
-            {!isGoogleConnected && (
-              <Button 
-                onClick={handleConnectGoogle} 
-                className="w-full" 
-                variant="outline"
-                disabled={googleLoading}
-              >
-                <Chrome className="h-4 w-4 mr-2" />
-                Connect Google Account
-              </Button>
-            )}
-
-            {isGoogleConnected && (
-              <p className="text-xs text-muted-foreground px-1">
-                Your Google Business Profile is connected. Reviews will sync automatically every 24 hours.
-              </p>
-            )}
           </CardContent>
         </Card>
 
         {/* Sync Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Sync Settings</CardTitle>
-            <CardDescription>External reviews are automatically synced every 24 hours</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="font-medium text-sm">Last Sync</p>
-                  <p className="text-xs text-muted-foreground">
-                    {isGoogleConnected || isMetaConnected
-                      ? (() => {
-                          const googleSync = isGoogleConnected ? googleIntegration?.lastSyncedAt : null
-                          const metaSync = isMetaConnected ? metaIntegration?.lastSyncedAt : null
-                          if (googleSync && metaSync) {
-                            const googleDate = new Date(googleSync)
-                            const metaDate = new Date(metaSync)
-                            const latest = googleDate > metaDate ? googleDate : metaDate
-                            return formatLastSync(latest.toISOString())
-                          }
-                          return formatLastSync(googleSync || metaSync || null)
-                        })()
-                      : "Not available - Connect an account first"
-                    }
-                  </p>
-                </div>
-                <Button 
-                  onClick={handleSyncNow} 
-                  disabled={syncMutation.isPending || (!isGoogleConnected && !isMetaConnected)} 
-                  size="sm" 
-                  variant="outline"
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? "animate-spin" : ""}`} />
-                  {syncMutation.isPending ? "Syncing..." : "Sync Now"}
-                </Button>
+        <Card className="overflow-hidden border-2">
+          <CardHeader className="bg-muted/30 pb-4">
+            <div className="flex items-center gap-2">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <RefreshCw className="h-5 w-5 text-primary" />
               </div>
+              <div className="flex-1">
+                <CardTitle className="text-lg">Sync Settings</CardTitle>
+                <CardDescription className="text-xs mt-1">
+                  External reviews are automatically synced every 24 hours
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border-2 rounded-lg bg-muted/20">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm mb-1">Last Sync</p>
+                <p className="text-xs text-muted-foreground">
+                  {isGoogleConnected || isMetaConnected
+                    ? (() => {
+                        const googleSync = isGoogleConnected ? googleIntegration?.lastSyncedAt : null
+                        const metaSync = isMetaConnected ? metaIntegration?.lastSyncedAt : null
+                        if (googleSync && metaSync) {
+                          const googleDate = new Date(googleSync)
+                          const metaDate = new Date(metaSync)
+                          const latest = googleDate > metaDate ? googleDate : metaDate
+                          return formatLastSync(latest.toISOString())
+                        }
+                        return formatLastSync(googleSync || metaSync || null)
+                      })()
+                    : "Not available - Connect an account first"
+                  }
+                </p>
+              </div>
+              <Button 
+                onClick={handleSyncNow} 
+                disabled={syncMutation.isPending || (!isGoogleConnected && !isMetaConnected) || !restaurantId} 
+                size="default"
+                variant="outline"
+                className="h-10 w-full sm:w-auto shrink-0"
+              >
+                {syncMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Sync Now
+                  </>
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   )
 }
