@@ -33,8 +33,30 @@ export function usePromoteToPremium() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ restaurantId, months }: { restaurantId: string; months?: number | null }) =>
-      adminApi.promoteToPremium(restaurantId, months),
+    mutationFn: ({ 
+      restaurantId, 
+      months, 
+      discount, 
+      amountPaid 
+    }: { 
+      restaurantId: string; 
+      months?: number | null;
+      discount?: number;
+      amountPaid?: number;
+    }) =>
+      adminApi.promoteToPremium(restaurantId, months, discount, amountPaid),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "restaurants"] });
+    },
+  });
+}
+
+export function useCancelSubscription() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (subscriptionId: string) =>
+      adminApi.cancelSubscription(subscriptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "restaurants"] });
     },

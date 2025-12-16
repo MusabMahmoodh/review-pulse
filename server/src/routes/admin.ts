@@ -186,6 +186,10 @@ router.get("/restaurants", async (req, res) => {
                 startDate: subscription.startDate,
                 endDate: subscription.endDate,
                 monthlyPrice: subscription.monthlyPrice,
+                defaultPrice: subscription.defaultPrice,
+                discount: subscription.discount,
+                finalPrice: subscription.finalPrice,
+                amountPaid: subscription.amountPaid,
               }
             : undefined,
         };
@@ -291,7 +295,7 @@ router.patch("/restaurants/status", async (req, res) => {
  */
 router.post("/restaurants/promote-premium", async (req, res) => {
   try {
-    const { restaurantId, months } = req.body;
+    const { restaurantId, months, discount, amountPaid } = req.body;
 
     if (!restaurantId) {
       return res.status(400).json({ error: "Restaurant ID required" });
@@ -318,13 +322,30 @@ router.post("/restaurants/promote-premium", async (req, res) => {
       await subscriptionRepo.save(sub);
     }
 
+    // Calculate pricing
+    const DEFAULT_PRICE = 15000; // LKR 15,000 per month
+    const numMonths = months && months > 0 ? months : null;
+    const totalMonths = numMonths || 1; // For calculation purposes, use 1 if forever
+    
+    // Calculate total price
+    const totalPrice = DEFAULT_PRICE * totalMonths;
+    
+    // Calculate discount (default to 0 if not provided)
+    const discountAmount = discount || 0;
+    
+    // Calculate final price
+    const finalPrice = totalPrice - discountAmount;
+    
+    // Use amountPaid if provided, otherwise use finalPrice
+    const paidAmount = amountPaid !== undefined && amountPaid !== null ? amountPaid : finalPrice;
+
     // Create new premium subscription
     const startDate = new Date();
     let endDate: Date | null = null;
 
-    if (months !== null && months !== undefined && months > 0) {
+    if (numMonths !== null && numMonths > 0) {
       endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + months);
+      endDate.setMonth(endDate.getMonth() + numMonths);
     }
     // If months is null/undefined/0, endDate remains null (forever)
 
@@ -335,7 +356,11 @@ router.post("/restaurants/promote-premium", async (req, res) => {
       status: "active",
       startDate,
       endDate: endDate || undefined,
-      monthlyPrice: 0, // Admin promotion is free
+      monthlyPrice: DEFAULT_PRICE,
+      defaultPrice: DEFAULT_PRICE,
+      discount: discountAmount > 0 ? discountAmount : undefined,
+      finalPrice: finalPrice,
+      amountPaid: paidAmount,
     });
 
     await subscriptionRepo.save(subscription);
@@ -348,14 +373,83 @@ router.post("/restaurants/promote-premium", async (req, res) => {
         plan: subscription.plan,
         status: subscription.status,
         startDate: subscription.startDate,
-        endDate: subscription.endDate,
+        endDate: subscription.endDate || null,
         monthlyPrice: subscription.monthlyPrice,
+        defaultPrice: subscription.defaultPrice,
+        discount: subscription.discount || null,
+        finalPrice: subscription.finalPrice,
+        amountPaid: subscription.amountPaid || null,
       },
-      message: months ? `Premium enabled for ${months} months` : "Premium enabled forever",
+      message: numMonths ? `Premium enabled for ${numMonths} months` : "Premium enabled forever",
     });
   } catch (error) {
     console.error("Error promoting restaurant to premium:", error);
     return res.status(500).json({ error: "Failed to promote restaurant to premium" });
+  }
+});
+
+/**
+ * @swagger
+ * /api/admin/restaurants/cancel-subscription:
+ *   post:
+ *     summary: Cancel a restaurant subscription (admin only)
+ *     tags: [Admin]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - subscriptionId
+ *             properties:
+ *               subscriptionId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Subscription cancelled
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Subscription not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/restaurants/cancel-subscription", async (req, res) => {
+  try {
+    const { subscriptionId } = req.body;
+
+    if (!subscriptionId) {
+      return res.status(400).json({ error: "Subscription ID required" });
+    }
+
+    const subscriptionRepo = AppDataSource.getRepository(Subscription);
+
+    const subscription = await subscriptionRepo.findOne({ where: { id: subscriptionId } });
+    if (!subscription) {
+      return res.status(404).json({ error: "Subscription not found" });
+    }
+
+    if (subscription.status === "cancelled") {
+      return res.status(400).json({ error: "Subscription is already cancelled" });
+    }
+
+    subscription.status = "cancelled";
+    await subscriptionRepo.save(subscription);
+
+    return res.json({
+      success: true,
+      subscription: {
+        id: subscription.id,
+        restaurantId: subscription.restaurantId,
+        plan: subscription.plan,
+        status: subscription.status,
+      },
+      message: "Subscription cancelled successfully",
+    });
+  } catch (error) {
+    console.error("Error cancelling subscription:", error);
+    return res.status(500).json({ error: "Failed to cancel subscription" });
   }
 });
 

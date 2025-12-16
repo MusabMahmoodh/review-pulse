@@ -84,6 +84,10 @@ export interface Subscription {
   startDate: Date
   endDate: Date | null // null means forever
   monthlyPrice: number
+  defaultPrice?: number
+  discount?: number
+  finalPrice?: number
+  amountPaid?: number
 }
 
 export interface RestaurantWithDetails extends Restaurant {

@@ -274,7 +274,12 @@ export const adminApi = {
     });
   },
 
-  promoteToPremium: async (restaurantId: string, months?: number | null) => {
+  promoteToPremium: async (
+    restaurantId: string,
+    months?: number | null,
+    discount?: number,
+    amountPaid?: number
+  ) => {
     return fetchApi<{
       success: boolean;
       subscription: {
@@ -285,11 +290,31 @@ export const adminApi = {
         startDate: string;
         endDate: string | null;
         monthlyPrice: number;
+        defaultPrice: number;
+        discount?: number;
+        finalPrice: number;
+        amountPaid?: number;
       };
       message: string;
     }>("/api/admin/restaurants/promote-premium", {
       method: "POST",
-      body: JSON.stringify({ restaurantId, months }),
+      body: JSON.stringify({ restaurantId, months, discount, amountPaid }),
+    });
+  },
+
+  cancelSubscription: async (subscriptionId: string) => {
+    return fetchApi<{
+      success: boolean;
+      subscription: {
+        id: string;
+        restaurantId: string;
+        plan: string;
+        status: "cancelled";
+      };
+      message: string;
+    }>("/api/admin/restaurants/cancel-subscription", {
+      method: "POST",
+      body: JSON.stringify({ subscriptionId }),
     });
   },
 };
