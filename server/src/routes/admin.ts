@@ -63,11 +63,23 @@ router.post("/login", async (req, res) => {
 
     const admin = await adminRepo.findOne({ where: { email } });
     if (!admin) {
+      console.log(`Admin not found for email: ${email}`);
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    // Check if password hash exists
+    if (!admin.passwordHash || admin.passwordHash.length === 0) {
+      console.error(`Admin ${admin.email} exists but has no password hash!`);
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    console.log(`Admin found: ${admin.email}, passwordHash length: ${admin.passwordHash.length}`);
+    
     const isValid = await comparePassword(password, admin.passwordHash);
+    console.log(`Password comparison result: ${isValid}`);
+    
     if (!isValid) {
+      console.log(`Password mismatch for admin ${admin.email}`);
       return res.status(401).json({ error: "Invalid credentials" });
     }
 

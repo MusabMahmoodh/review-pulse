@@ -213,7 +213,7 @@ export const adminApi = {
   },
 
   getRestaurants: async () => {
-    return fetchApi<{
+    const data = await fetchApi<{
       restaurants: Array<{
         id: string;
         name: string;
@@ -227,6 +227,16 @@ export const adminApi = {
         updatedAt: string;
       }>;
     }>("/api/admin/restaurants");
+    
+    // Map backend response to include optional fields that might be missing
+    return {
+      restaurants: (data.restaurants || []).map((r: any) => ({
+        ...r,
+        socialKeywords: r.socialKeywords || [],
+        subscription: r.subscription || undefined,
+        lastActivity: r.lastActivity || undefined,
+      })),
+    };
   },
 
   updateRestaurantStatus: async (restaurantId: string, status: "active" | "blocked") => {

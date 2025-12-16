@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Sparkles, TrendingUp, Lightbulb, Tag, Loader2 } from "lucide-react"
 import type { AIInsight } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast-simple"
+import { useAIInsights, useGenerateInsights } from "@/hooks/use-ai"
 
 interface AIInsightsProps {
   restaurantId: string
@@ -15,38 +15,24 @@ interface AIInsightsProps {
 
 export function AIInsights({ restaurantId, initialInsight }: AIInsightsProps) {
   const { toast } = useToast()
-  const [insight, setInsight] = useState<AIInsight | null>(initialInsight || null)
-  const [loading, setLoading] = useState(false)
+  const { data: insightsData, isLoading: isLoadingInsights } = useAIInsights(restaurantId)
+  const generateMutation = useGenerateInsights()
+  
+  const insight = insightsData?.insight || initialInsight || null
 
   const generateInsights = async () => {
-    setLoading(true)
     try {
-      const response = await fetch("/api/ai/generate-insights", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ restaurantId }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Failed to generate insights")
-      }
-
-      const data = await response.json()
-      setInsight(data.insight)
-
+      const result = await generateMutation.mutateAsync({ restaurantId })
       toast({
         title: "Insights Generated",
         description: "AI has analyzed your feedback and created new insights",
       })
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate insights",
+        description: error?.data?.error || error?.message || "Failed to generate insights",
         variant: "destructive",
       })
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -70,8 +56,8 @@ export function AIInsights({ restaurantId, initialInsight }: AIInsightsProps) {
           <CardDescription>Let AI analyze your feedback and provide actionable recommendations</CardDescription>
         </CardHeader>
         <CardContent className="text-center">
-          <Button onClick={generateInsights} disabled={loading} size="lg">
-            {loading ? (
+          <Button onClick={generateInsights} disabled={generateMutation.isPending} size="lg">
+            {generateMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Analyzing Feedback...
@@ -155,8 +141,8 @@ export function AIInsights({ restaurantId, initialInsight }: AIInsightsProps) {
       </Card>
 
       {/* Regenerate Button */}
-      <Button onClick={generateInsights} disabled={loading} variant="outline" className="w-full bg-transparent">
-        {loading ? (
+      <Button onClick={generateInsights} disabled={generateMutation.isPending} variant="outline" className="w-full bg-transparent">
+        {generateMutation.isPending ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Regenerating...

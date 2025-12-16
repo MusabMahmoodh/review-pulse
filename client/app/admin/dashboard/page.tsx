@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,46 +8,34 @@ import { Input } from "@/components/ui/input"
 import { Building2, Search, DollarSign, AlertCircle, Check, X } from "lucide-react"
 import type { RestaurantWithDetails } from "@/lib/types"
 import Link from "next/link"
+import { useAdminRestaurants, useUpdateRestaurantStatus } from "@/hooks/use-admin"
+import { useToast } from "@/hooks/use-toast-simple"
 
 export default function AdminDashboardPage() {
-  const [restaurants, setRestaurants] = useState<RestaurantWithDetails[]>([])
-  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "blocked">("all")
   const [filterPlan, setFilterPlan] = useState<"all" | "free" | "basic" | "premium" | "enterprise">("all")
-
-  useEffect(() => {
-    fetchRestaurants()
-  }, [])
-
-  const fetchRestaurants = async () => {
-    try {
-      const response = await fetch("/api/admin/restaurants")
-      const data = await response.json()
-      setRestaurants(data.restaurants)
-    } catch (error) {
-      console.error("Failed to fetch restaurants:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { toast } = useToast()
+  
+  const { data, isLoading, error } = useAdminRestaurants()
+  const updateStatusMutation = useUpdateRestaurantStatus()
+  
+  const restaurants: RestaurantWithDetails[] = data?.restaurants || []
 
   const handleStatusToggle = async (restaurantId: string, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "blocked" : "active"
     try {
-      const response = await fetch("/api/admin/restaurants/status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ restaurantId, status: newStatus }),
+      await updateStatusMutation.mutateAsync({ restaurantId, status: newStatus as "active" | "blocked" })
+      toast({
+        title: "Status Updated",
+        description: `Restaurant ${newStatus === "active" ? "activated" : "blocked"} successfully`,
       })
-
-      if (response.ok) {
-        setRestaurants((prev) =>
-          prev.map((r) => (r.id === restaurantId ? { ...r, status: newStatus as "active" | "blocked" } : r)),
-        )
-      }
-    } catch (error) {
-      console.error("Failed to update status:", error)
+    } catch (error: any) {
+      toast({
+        title: "Update Failed",
+        description: error?.data?.error || error?.message || "Failed to update restaurant status",
+        variant: "destructive",
+      })
     }
   }
 
@@ -67,10 +55,18 @@ export default function AdminDashboardPage() {
     totalRevenue: restaurants.reduce((sum, r) => sum + (r.subscription?.monthlyPrice || 0), 0),
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-muted-foreground">Loading dashboard...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-destructive">Failed to load restaurants. Please try again.</p>
       </div>
     )
   }
@@ -219,6 +215,7 @@ export default function AdminDashboardPage() {
                       size="sm"
                       variant={restaurant.status === "active" ? "destructive" : "default"}
                       onClick={() => handleStatusToggle(restaurant.id, restaurant.status)}
+                      disabled={updateStatusMutation.isPending}
                     >
                       {restaurant.status === "active" ? (
                         <>

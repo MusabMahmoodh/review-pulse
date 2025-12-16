@@ -10,48 +10,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast-simple"
 import { ShieldCheck } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useAdminLogin } from "@/hooks/use-admin"
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+  const loginMutation = useAdminLogin()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
 
     try {
-      const response = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
+      const result = await loginMutation.mutateAsync({ email, password })
+      
+      if (result.success) {
         toast({
           title: "Login Successful",
           description: "Welcome to the admin dashboard",
         })
         router.push("/admin/dashboard")
-      } else {
-        toast({
-          title: "Login Failed",
-          description: data.error || "Invalid credentials",
-          variant: "destructive",
-        })
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to login. Please try again.",
+        title: "Login Failed",
+        description: error?.data?.error || error?.message || "Invalid credentials",
         variant: "destructive",
       })
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -89,8 +75,8 @@ export default function AdminLoginPage() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
+            <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+              {loginMutation.isPending ? "Logging in..." : "Login"}
             </Button>
             <p className="text-xs text-center text-muted-foreground mt-4">
               Demo: admin@feedbackhub.com / admin_password
