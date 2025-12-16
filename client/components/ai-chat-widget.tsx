@@ -75,12 +75,20 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
           }
           setChatMessages((prev) => [...prev, assistantMessage])
         },
-        onError: () => {
-          toast({
-            title: "Error",
-            description: "Failed to get AI response",
-            variant: "destructive",
-          })
+        onError: (error: any) => {
+          if (error?.data?.requiresPremium || error?.requiresPremium) {
+            toast({
+              title: "Premium Required",
+              description: "AI chat requires a premium subscription. Please contact admin to upgrade.",
+              variant: "destructive",
+            })
+          } else {
+            toast({
+              title: "Error",
+              description: error?.data?.error || "Failed to get AI response",
+              variant: "destructive",
+            })
+          }
         },
       }
     )

@@ -29,6 +29,18 @@ export function useUpdateRestaurantStatus() {
   });
 }
 
+export function usePromoteToPremium() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ restaurantId, months }: { restaurantId: string; months?: number | null }) =>
+      adminApi.promoteToPremium(restaurantId, months),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "restaurants"] });
+    },
+  });
+}
+
 
 
 

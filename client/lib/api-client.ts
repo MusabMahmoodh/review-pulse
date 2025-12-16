@@ -265,6 +265,25 @@ export const adminApi = {
       body: JSON.stringify({ restaurantId, status }),
     });
   },
+
+  promoteToPremium: async (restaurantId: string, months?: number | null) => {
+    return fetchApi<{
+      success: boolean;
+      subscription: {
+        id: string;
+        restaurantId: string;
+        plan: "premium" | "enterprise";
+        status: "active";
+        startDate: string;
+        endDate: string | null;
+        monthlyPrice: number;
+      };
+      message: string;
+    }>("/api/admin/restaurants/promote-premium", {
+      method: "POST",
+      body: JSON.stringify({ restaurantId, months }),
+    });
+  },
 };
 
 // External Reviews API

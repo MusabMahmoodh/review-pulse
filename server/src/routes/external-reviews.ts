@@ -4,6 +4,7 @@ import { ExternalReview, Restaurant, GoogleIntegration, MetaIntegration } from "
 import { fetchGoogleReviews } from "../utils/google-reviews";
 import { fetchMetaReviews } from "../utils/meta-posts";
 import { requireAuth } from "../middleware/auth";
+import { isPremium } from "../utils/subscription";
 
 const router = Router();
 
@@ -98,6 +99,15 @@ router.post("/sync", requireAuth, async (req, res) => {
   try {
     const restaurantId = req.restaurantId as string;
     const { platforms } = req.body;
+
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId);
+    if (!hasPremium) {
+      return res.status(403).json({ 
+        error: "Premium subscription required",
+        requiresPremium: true,
+      });
+    }
 
     const restaurantRepo = AppDataSource.getRepository(Restaurant);
     const googleIntegrationRepo = AppDataSource.getRepository(GoogleIntegration);

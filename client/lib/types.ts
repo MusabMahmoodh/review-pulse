@@ -82,7 +82,7 @@ export interface Subscription {
   plan: "free" | "basic" | "premium" | "enterprise"
   status: "active" | "cancelled" | "expired" | "trial"
   startDate: Date
-  endDate: Date
+  endDate: Date | null // null means forever
   monthlyPrice: number
 }
 

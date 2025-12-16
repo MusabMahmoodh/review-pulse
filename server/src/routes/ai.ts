@@ -4,6 +4,7 @@ import { AIInsight, Restaurant, CustomerFeedback, ExternalReview } from "../mode
 import { generateInsights, chatAboutFeedback } from "../utils/openai";
 import { MoreThanOrEqual } from "typeorm";
 import { requireAuth } from "../middleware/auth";
+import { isPremium } from "../utils/subscription";
 
 const router = Router();
 
@@ -114,6 +115,15 @@ router.get("/insights", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Restaurant ID required" });
     }
 
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId);
+    if (!hasPremium) {
+      return res.status(403).json({ 
+        error: "Premium subscription required",
+        requiresPremium: true,
+      });
+    }
+
     const insightRepo = AppDataSource.getRepository(AIInsight);
 
     let query = insightRepo
@@ -204,6 +214,15 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
 
     if (!restaurantId) {
       return res.status(400).json({ error: "Restaurant ID required" });
+    }
+
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId);
+    if (!hasPremium) {
+      return res.status(403).json({ 
+        error: "Premium subscription required",
+        requiresPremium: true,
+      });
     }
 
     // Validate time period
@@ -340,6 +359,15 @@ router.post("/chat", requireAuth, async (req, res) => {
 
     if (!restaurantId || !message) {
       return res.status(400).json({ error: "Message required" });
+    }
+
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId);
+    if (!hasPremium) {
+      return res.status(403).json({ 
+        error: "Premium subscription required",
+        requiresPremium: true,
+      });
     }
 
     const restaurantRepo = AppDataSource.getRepository(Restaurant);

@@ -18,8 +18,8 @@ export class Subscription {
   @Column()
   startDate!: Date;
 
-  @Column()
-  endDate!: Date;
+  @Column({ type: "timestamp", nullable: true })
+  endDate?: Date; // null/undefined means forever
 
   @Column("decimal", { precision: 10, scale: 2 })
   monthlyPrice!: number;

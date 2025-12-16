@@ -2,6 +2,7 @@ import { Router } from "express";
 import { AppDataSource } from "../data-source";
 import { Restaurant, GoogleIntegration, MetaIntegration } from "../models";
 import { requireAuth } from "../middleware/auth";
+import { isPremium } from "../utils/subscription";
 
 const router = Router();
 
@@ -40,6 +41,15 @@ const router = Router();
 router.get("/keywords", requireAuth, async (req, res) => {
   try {
     const restaurantId = req.restaurantId as string;
+
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId);
+    if (!hasPremium) {
+      return res.status(403).json({ 
+        error: "Premium subscription required",
+        requiresPremium: true,
+      });
+    }
 
     const restaurantRepo = AppDataSource.getRepository(Restaurant);
 
@@ -91,6 +101,15 @@ router.put("/keywords", requireAuth, async (req, res) => {
   try {
     const restaurantId = req.restaurantId as string;
     const { keywords } = req.body;
+
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId);
+    if (!hasPremium) {
+      return res.status(403).json({ 
+        error: "Premium subscription required",
+        requiresPremium: true,
+      });
+    }
 
     if (!keywords || !Array.isArray(keywords)) {
       return res.status(400).json({ error: "Keywords array required" });
@@ -158,6 +177,15 @@ router.get("/google-integration", requireAuth, async (req, res) => {
   try {
     const restaurantId = req.restaurantId as string;
 
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId);
+    if (!hasPremium) {
+      return res.status(403).json({ 
+        error: "Premium subscription required",
+        requiresPremium: true,
+      });
+    }
+
     const integrationRepo = AppDataSource.getRepository(GoogleIntegration);
     const integration = await integrationRepo.findOne({ where: { restaurantId } });
 
@@ -220,6 +248,15 @@ router.get("/google-integration", requireAuth, async (req, res) => {
 router.get("/meta-integration", requireAuth, async (req, res) => {
   try {
     const restaurantId = req.restaurantId as string;
+
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId);
+    if (!hasPremium) {
+      return res.status(403).json({ 
+        error: "Premium subscription required",
+        requiresPremium: true,
+      });
+    }
 
     const integrationRepo = AppDataSource.getRepository(MetaIntegration);
     const integration = await integrationRepo.findOne({ where: { restaurantId } });

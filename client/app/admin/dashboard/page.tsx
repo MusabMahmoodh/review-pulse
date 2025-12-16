@@ -5,20 +5,24 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Building2, Search, DollarSign, AlertCircle, Check, X } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Building2, Search, DollarSign, AlertCircle, Check, X, Crown } from "lucide-react"
 import type { RestaurantWithDetails } from "@/lib/types"
 import Link from "next/link"
-import { useAdminRestaurants, useUpdateRestaurantStatus } from "@/hooks/use-admin"
+import { useAdminRestaurants, useUpdateRestaurantStatus, usePromoteToPremium } from "@/hooks/use-admin"
 import { useToast } from "@/hooks/use-toast-simple"
 
 export default function AdminDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "blocked">("all")
   const [filterPlan, setFilterPlan] = useState<"all" | "free" | "basic" | "premium" | "enterprise">("all")
+  const [promoteDialogOpen, setPromoteDialogOpen] = useState<string | null>(null)
+  const [promoteMonths, setPromoteMonths] = useState<string>("")
   const { toast } = useToast()
   
   const { data, isLoading, error } = useAdminRestaurants()
   const updateStatusMutation = useUpdateRestaurantStatus()
+  const promoteMutation = usePromoteToPremium()
   
   const restaurants: RestaurantWithDetails[] = data?.restaurants || []
 
@@ -34,6 +38,34 @@ export default function AdminDashboardPage() {
       toast({
         title: "Update Failed",
         description: error?.data?.error || error?.message || "Failed to update restaurant status",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handlePromoteToPremium = async (restaurantId: string) => {
+    try {
+      const months = promoteMonths.trim() === "" || promoteMonths === "0" ? null : parseInt(promoteMonths)
+      if (months !== null && (isNaN(months) || months < 1)) {
+        toast({
+          title: "Invalid Input",
+          description: "Please enter a valid number of months or leave empty for forever",
+          variant: "destructive",
+        })
+        return
+      }
+      
+      await promoteMutation.mutateAsync({ restaurantId, months })
+      toast({
+        title: "Premium Enabled",
+        description: months ? `Premium enabled for ${months} months` : "Premium enabled forever",
+      })
+      setPromoteDialogOpen(null)
+      setPromoteMonths("")
+    } catch (error: any) {
+      toast({
+        title: "Promotion Failed",
+        description: error?.data?.error || error?.message || "Failed to promote restaurant to premium",
         variant: "destructive",
       })
     }
@@ -211,6 +243,58 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <Dialog open={promoteDialogOpen === restaurant.id} onOpenChange={(open) => {
+                      setPromoteDialogOpen(open ? restaurant.id : null)
+                      if (!open) setPromoteMonths("")
+                    }}>
+                      <DialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={promoteMutation.isPending}
+                        >
+                          <Crown className="w-4 h-4 mr-1" />
+                          Promote
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Promote to Premium</DialogTitle>
+                          <DialogDescription>
+                            Promote {restaurant.name} to premium. Leave months empty for forever.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Months (leave empty for forever)</label>
+                            <Input
+                              type="number"
+                              placeholder="e.g., 3, 6, 12"
+                              value={promoteMonths}
+                              onChange={(e) => setPromoteMonths(e.target.value)}
+                              min="1"
+                            />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setPromoteDialogOpen(null)
+                              setPromoteMonths("")
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={() => handlePromoteToPremium(restaurant.id)}
+                            disabled={promoteMutation.isPending}
+                          >
+                            {promoteMutation.isPending ? "Promoting..." : "Promote"}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                     <Button
                       size="sm"
                       variant={restaurant.status === "active" ? "destructive" : "default"}

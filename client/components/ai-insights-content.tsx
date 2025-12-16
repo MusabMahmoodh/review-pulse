@@ -77,11 +77,19 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
           })
         },
         onError: (error: any) => {
-          toast({
-            title: "Error",
-            description: error?.data?.error || "Failed to generate insights",
-            variant: "destructive",
-          })
+          if (error?.data?.requiresPremium || error?.requiresPremium) {
+            toast({
+              title: "Premium Required",
+              description: "AI features require a premium subscription. Please contact admin to upgrade.",
+              variant: "destructive",
+            })
+          } else {
+            toast({
+              title: "Error",
+              description: error?.data?.error || "Failed to generate insights",
+              variant: "destructive",
+            })
+          }
         },
       }
     )

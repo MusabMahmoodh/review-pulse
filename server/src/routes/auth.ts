@@ -6,6 +6,7 @@ import { generateRestaurantId, generateQRCodeUrl } from "../utils/qr-generator";
 import { encrypt } from "../utils/encryption";
 import { exchangeForPageToken } from "../utils/meta-auth";
 import { signAccessToken, verifyAccessToken, extractTokenFromHeader } from "../utils/jwt";
+import { isPremium } from "../utils/subscription";
 
 const router = Router();
 
@@ -309,6 +310,12 @@ router.get("/google/authorize", async (req, res) => {
     const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId as string } });
     if (!restaurant) {
       return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId as string);
+    if (!hasPremium) {
+      return res.redirect(`/dashboard/settings?google_error=premium_required`);
     }
 
     // Build Google OAuth authorization URL
@@ -615,6 +622,12 @@ router.get("/meta/authorize", async (req, res) => {
     const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId as string } });
     if (!restaurant) {
       return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId as string);
+    if (!hasPremium) {
+      return res.redirect(`/dashboard/settings?meta_error=premium_required`);
     }
 
     // Build Meta OAuth authorization URL

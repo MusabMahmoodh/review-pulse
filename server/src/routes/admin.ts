@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { Admin, Restaurant, CustomerFeedback } from "../models";
+import { Admin, Restaurant, CustomerFeedback, Subscription } from "../models";
 import { comparePassword } from "../utils/password";
 
 const router = Router();
@@ -139,6 +139,7 @@ router.get("/restaurants", async (req, res) => {
   try {
     const restaurantRepo = AppDataSource.getRepository(Restaurant);
     const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
+    const subscriptionRepo = AppDataSource.getRepository(Subscription);
 
     const restaurants = await restaurantRepo.find({
       order: { createdAt: "DESC" },
@@ -157,6 +158,15 @@ router.get("/restaurants", async (req, res) => {
             ? feedback.reduce((sum, f) => sum + f.overallRating, 0) / feedbackCount
             : 0;
 
+        // Get active subscription
+        const subscription = await subscriptionRepo.findOne({
+          where: {
+            restaurantId: restaurant.id,
+            status: "active",
+          },
+          order: { startDate: "DESC" },
+        });
+
         return {
           id: restaurant.id,
           name: restaurant.name,
@@ -168,6 +178,16 @@ router.get("/restaurants", async (req, res) => {
           averageRating: Math.round(averageRating * 100) / 100,
           createdAt: restaurant.createdAt,
           updatedAt: restaurant.updatedAt,
+          subscription: subscription
+            ? {
+                id: subscription.id,
+                plan: subscription.plan,
+                status: subscription.status,
+                startDate: subscription.startDate,
+                endDate: subscription.endDate,
+                monthlyPrice: subscription.monthlyPrice,
+              }
+            : undefined,
         };
       })
     );
@@ -236,6 +256,106 @@ router.patch("/restaurants/status", async (req, res) => {
   } catch (error) {
     console.error("Error updating restaurant status:", error);
     return res.status(500).json({ error: "Failed to update restaurant status" });
+  }
+});
+
+/**
+ * @swagger
+ * /api/admin/restaurants/promote-premium:
+ *   post:
+ *     summary: Promote a restaurant to premium (admin only)
+ *     tags: [Admin]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - restaurantId
+ *             properties:
+ *               restaurantId:
+ *                 type: string
+ *               months:
+ *                 type: number
+ *                 description: Number of months for premium (null or undefined means forever)
+ *     responses:
+ *       200:
+ *         description: Restaurant promoted to premium
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Restaurant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/restaurants/promote-premium", async (req, res) => {
+  try {
+    const { restaurantId, months } = req.body;
+
+    if (!restaurantId) {
+      return res.status(400).json({ error: "Restaurant ID required" });
+    }
+
+    const restaurantRepo = AppDataSource.getRepository(Restaurant);
+    const subscriptionRepo = AppDataSource.getRepository(Subscription);
+
+    const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    // Cancel any existing active subscriptions
+    const existingSubscriptions = await subscriptionRepo.find({
+      where: {
+        restaurantId,
+        status: "active",
+      },
+    });
+
+    for (const sub of existingSubscriptions) {
+      sub.status = "cancelled";
+      await subscriptionRepo.save(sub);
+    }
+
+    // Create new premium subscription
+    const startDate = new Date();
+    let endDate: Date | null = null;
+
+    if (months !== null && months !== undefined && months > 0) {
+      endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + months);
+    }
+    // If months is null/undefined/0, endDate remains null (forever)
+
+    const subscription = subscriptionRepo.create({
+      id: `sub_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      restaurantId,
+      plan: "premium",
+      status: "active",
+      startDate,
+      endDate: endDate || undefined,
+      monthlyPrice: 0, // Admin promotion is free
+    });
+
+    await subscriptionRepo.save(subscription);
+
+    return res.json({
+      success: true,
+      subscription: {
+        id: subscription.id,
+        restaurantId: subscription.restaurantId,
+        plan: subscription.plan,
+        status: subscription.status,
+        startDate: subscription.startDate,
+        endDate: subscription.endDate,
+        monthlyPrice: subscription.monthlyPrice,
+      },
+      message: months ? `Premium enabled for ${months} months` : "Premium enabled forever",
+    });
+  } catch (error) {
+    console.error("Error promoting restaurant to premium:", error);
+    return res.status(500).json({ error: "Failed to promote restaurant to premium" });
   }
 });
 

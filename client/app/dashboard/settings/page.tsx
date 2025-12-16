@@ -8,12 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ArrowLeft, Facebook, Instagram, Chrome, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle, Loader2, Hash } from "lucide-react"
+import { ArrowLeft, Facebook, Instagram, Chrome, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle, Loader2, Hash, Crown, Lock } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useAuth } from "@/hooks/use-auth"
 import { restaurantsApi, externalReviewsApi, googleAuthApi, metaAuthApi } from "@/lib/api-client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { isPremiumRequiredError } from "@/lib/premium"
 
 function SettingsPageContent() {
   const { toast } = useToast()
@@ -68,11 +69,19 @@ function SettingsPageContent() {
       })
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error?.data?.error || "Failed to update keywords",
-        variant: "destructive",
-      })
+      if (isPremiumRequiredError(error)) {
+        toast({
+          title: "Premium Required",
+          description: "Social media features require a premium subscription. Please contact admin to upgrade.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: error?.data?.error || "Failed to update keywords",
+          variant: "destructive",
+        })
+      }
     },
   })
 
@@ -126,11 +135,19 @@ function SettingsPageContent() {
       }
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error?.data?.error || "Failed to sync reviews",
-        variant: "destructive",
-      })
+      if (isPremiumRequiredError(error)) {
+        toast({
+          title: "Premium Required",
+          description: "Social media sync requires a premium subscription. Please contact admin to upgrade.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: error?.data?.error || "Failed to sync reviews",
+          variant: "destructive",
+        })
+      }
     },
   })
 
@@ -160,6 +177,7 @@ function SettingsPageContent() {
       location_failed: "Failed to fetch business locations",
       no_location: "No business location found. Please ensure your Google Business Profile has at least one location.",
       quota_exceeded: "API quota exceeded. Your Google Business Profile API access may still be pending approval, or quota hasn't been allocated. Please request quota increase in Google Cloud Console.",
+      premium_required: "Premium subscription required. Please contact admin to upgrade.",
       unknown: "An unknown error occurred during Google authorization",
     }
 
@@ -188,6 +206,7 @@ function SettingsPageContent() {
         token_exchange_failed: "Failed to obtain access token from Meta",
         no_pages: "No Facebook pages found. Please create a Facebook Page first.",
         invalid_account: "Unable to determine Facebook account ID",
+        premium_required: "Premium subscription required. Please contact admin to upgrade.",
         unknown: "An unknown error occurred during Meta authorization",
       }
 
@@ -339,7 +358,13 @@ function SettingsPageContent() {
                 <Hash className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
-                <CardTitle className="text-lg">Social Media Keywords</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-lg">Social Media Keywords</CardTitle>
+                  <Badge variant="outline" className="text-xs">
+                    <Crown className="h-3 w-3 mr-1" />
+                    Premium
+                  </Badge>
+                </div>
                 <CardDescription className="text-xs mt-1">
                   Add 3-5 keywords to find your restaurant mentions on Facebook and Instagram
                 </CardDescription>
@@ -440,7 +465,13 @@ function SettingsPageContent() {
                 <CheckCircle2 className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
-                <CardTitle className="text-lg">Platform Integrations</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-lg">Platform Integrations</CardTitle>
+                  <Badge variant="outline" className="text-xs">
+                    <Crown className="h-3 w-3 mr-1" />
+                    Premium
+                  </Badge>
+                </div>
                 <CardDescription className="text-xs mt-1">
                   Connect your social media and review platforms
                 </CardDescription>
