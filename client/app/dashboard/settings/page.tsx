@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ArrowLeft, Facebook, Instagram, Chrome, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle, Loader2, Hash, Crown, Lock } from "lucide-react"
+import { ArrowLeft, Facebook, Instagram, Chrome, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle, Loader2, Hash, Crown, Lock, Palette, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useAuth } from "@/hooks/use-auth"
@@ -61,6 +61,34 @@ function SettingsPageContent() {
     refetchInterval: 30000, // Refetch every 30 seconds to check status
   })
 
+  // Fetch review page settings
+  const { data: reviewPageSettings, isLoading: reviewSettingsLoading } = useQuery({
+    queryKey: ["restaurants", "review-page-settings", restaurantId],
+    queryFn: () => restaurantsApi.getReviewPageSettings(restaurantId!),
+    enabled: !!restaurantId && isAuthenticated,
+  })
+
+  const [reviewSettings, setReviewSettings] = useState({
+    welcomeMessage: "",
+    primaryColor: "#3b82f6",
+    secondaryColor: "#1e40af",
+    backgroundColor: "#f3f4f6",
+    designVariation: "default" as "default" | "modern" | "minimal" | "elegant",
+  })
+
+  // Update review settings when data loads
+  useEffect(() => {
+    if (reviewPageSettings) {
+      setReviewSettings({
+        welcomeMessage: reviewPageSettings.welcomeMessage || "We Value Your Feedback",
+        primaryColor: reviewPageSettings.primaryColor || "#3b82f6",
+        secondaryColor: reviewPageSettings.secondaryColor || "#1e40af",
+        backgroundColor: reviewPageSettings.backgroundColor || "#f3f4f6",
+        designVariation: (reviewPageSettings.designVariation || "default") as "default" | "modern" | "minimal" | "elegant",
+      })
+    }
+  }, [reviewPageSettings])
+
   // Update keywords mutation
   const updateKeywordsMutation = useMutation({
     mutationFn: (keywords: string[]) => restaurantsApi.updateKeywords(restaurantId!, keywords),
@@ -83,6 +111,35 @@ function SettingsPageContent() {
         toast({
           title: "Error",
           description: error?.data?.error || "Failed to update keywords",
+          variant: "destructive",
+        })
+      }
+    },
+  })
+
+  // Update review page settings mutation
+  const updateReviewSettingsMutation = useMutation({
+    mutationFn: (settings: typeof reviewSettings) => 
+      restaurantsApi.updateReviewPageSettings(restaurantId!, settings),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["restaurants", "review-page-settings", restaurantId] })
+      toast({
+        title: "Success",
+        description: "Review page settings updated successfully",
+      })
+    },
+    onError: (error: any) => {
+      if (isPremiumRequiredError(error)) {
+        setPremiumError({ section: "review-page" })
+        toast({
+          title: "Premium Required",
+          description: "Review page customization requires a premium subscription. Please contact admin to upgrade.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: error?.data?.error || "Failed to update review page settings",
           variant: "destructive",
         })
       }
@@ -732,6 +789,222 @@ function SettingsPageContent() {
                 )}
               </Button>
             </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Review Page Customization */}
+        <Card className="overflow-hidden border-2">
+          <CardHeader className="bg-muted/30 pb-4">
+            <div className="flex items-center gap-2">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Palette className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-lg">Review Page Customization</CardTitle>
+                  <Badge variant="outline" className="text-xs">
+                    <Crown className="h-3 w-3 mr-1" />
+                    Premium
+                  </Badge>
+                </div>
+                <CardDescription className="text-xs mt-1">
+                  Customize the welcome message, colors, and design of your review page
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-6">
+            {reviewSettingsLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            ) : (!hasPremium || premiumError?.section === "review-page") ? (
+              <PremiumUpgrade 
+                feature="Review Page Customization"
+                description="Customize your review page with personalized welcome messages, colors, and design variations. This feature requires a premium subscription."
+              />
+            ) : (
+              <>
+                {/* Welcome Message */}
+                <div className="space-y-2">
+                  <Label htmlFor="welcomeMessage" className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Welcome Message
+                  </Label>
+                  <Input
+                    id="welcomeMessage"
+                    placeholder="We Value Your Feedback"
+                    value={reviewSettings.welcomeMessage}
+                    onChange={(e) => setReviewSettings(prev => ({ ...prev, welcomeMessage: e.target.value }))}
+                    maxLength={100}
+                    className="h-10"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This message will be displayed at the top of your review page
+                  </p>
+                </div>
+
+                {/* Design Variation */}
+                <div className="space-y-2">
+                  <Label>Design Variation</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {(["default", "modern", "minimal", "elegant"] as const).map((variation) => (
+                      <button
+                        key={variation}
+                        type="button"
+                        onClick={() => setReviewSettings(prev => ({ ...prev, designVariation: variation }))}
+                        className={`p-3 border-2 rounded-lg text-sm font-medium transition-all ${
+                          reviewSettings.designVariation === variation
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        {variation.charAt(0).toUpperCase() + variation.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Choose a design style for your review page
+                  </p>
+                </div>
+
+                {/* Colors */}
+                <div className="space-y-4">
+                  <Label>Color Customization</Label>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Primary Color */}
+                    <div className="space-y-2">
+                      <Label htmlFor="primaryColor" className="text-sm">Primary Color</Label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          id="primaryColor"
+                          value={reviewSettings.primaryColor}
+                          onChange={(e) => setReviewSettings(prev => ({ ...prev, primaryColor: e.target.value }))}
+                          className="h-10 w-20 rounded border cursor-pointer"
+                        />
+                        <Input
+                          type="text"
+                          value={reviewSettings.primaryColor}
+                          onChange={(e) => {
+                            if (/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value)) {
+                              setReviewSettings(prev => ({ ...prev, primaryColor: e.target.value }))
+                            }
+                          }}
+                          placeholder="#3b82f6"
+                          className="flex-1 h-10 font-mono text-sm"
+                          maxLength={7}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Secondary Color */}
+                    <div className="space-y-2">
+                      <Label htmlFor="secondaryColor" className="text-sm">Secondary Color</Label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          id="secondaryColor"
+                          value={reviewSettings.secondaryColor}
+                          onChange={(e) => setReviewSettings(prev => ({ ...prev, secondaryColor: e.target.value }))}
+                          className="h-10 w-20 rounded border cursor-pointer"
+                        />
+                        <Input
+                          type="text"
+                          value={reviewSettings.secondaryColor}
+                          onChange={(e) => {
+                            if (/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value)) {
+                              setReviewSettings(prev => ({ ...prev, secondaryColor: e.target.value }))
+                            }
+                          }}
+                          placeholder="#1e40af"
+                          className="flex-1 h-10 font-mono text-sm"
+                          maxLength={7}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Background Color */}
+                    <div className="space-y-2">
+                      <Label htmlFor="backgroundColor" className="text-sm">Background Color</Label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          id="backgroundColor"
+                          value={reviewSettings.backgroundColor}
+                          onChange={(e) => setReviewSettings(prev => ({ ...prev, backgroundColor: e.target.value }))}
+                          className="h-10 w-20 rounded border cursor-pointer"
+                        />
+                        <Input
+                          type="text"
+                          value={reviewSettings.backgroundColor}
+                          onChange={(e) => {
+                            if (/^#[0-9A-Fa-f]{0,6}$/.test(e.target.value)) {
+                              setReviewSettings(prev => ({ ...prev, backgroundColor: e.target.value }))
+                            }
+                          }}
+                          placeholder="#f3f4f6"
+                          className="flex-1 h-10 font-mono text-sm"
+                          maxLength={7}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preview */}
+                <div className="p-4 border-2 rounded-lg bg-muted/20">
+                  <Label className="text-sm mb-2 block">Preview</Label>
+                  <div 
+                    className="p-4 rounded-lg border"
+                    style={{ backgroundColor: reviewSettings.backgroundColor }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <div 
+                        className="h-6 w-6 rounded"
+                        style={{ backgroundColor: reviewSettings.primaryColor }}
+                      />
+                      <h3 className="font-semibold">{reviewSettings.welcomeMessage}</h3>
+                    </div>
+                    <div className="flex gap-2">
+                      <div 
+                        className="h-4 w-4 rounded"
+                        style={{ backgroundColor: reviewSettings.primaryColor }}
+                      />
+                      <div 
+                        className="h-4 w-4 rounded"
+                        style={{ backgroundColor: reviewSettings.secondaryColor }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Design: {reviewSettings.designVariation.charAt(0).toUpperCase() + reviewSettings.designVariation.slice(1)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <Button 
+                  onClick={() => updateReviewSettingsMutation.mutate(reviewSettings)}
+                  disabled={updateReviewSettingsMutation.isPending}
+                  className="w-full h-10"
+                  size="default"
+                >
+                  {updateReviewSettingsMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Review Page Settings
+                    </>
+                  )}
+                </Button>
+              </>
             )}
           </CardContent>
         </Card>

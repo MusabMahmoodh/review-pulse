@@ -11,6 +11,15 @@ export function useRestaurantKeywords(restaurantId: string | null) {
   });
 }
 
+export function useReviewPageSettings(restaurantId: string | null) {
+  return useQuery({
+    queryKey: ["restaurants", "review-page-settings", restaurantId],
+    queryFn: () => restaurantsApi.getReviewPageSettings(restaurantId!),
+    enabled: !!restaurantId,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+}
+
 
 
 

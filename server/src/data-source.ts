@@ -10,6 +10,7 @@ import { Admin } from "./models/Admin";
 import { Subscription } from "./models/Subscription";
 import { GoogleIntegration } from "./models/GoogleIntegration";
 import { MetaIntegration } from "./models/MetaIntegration";
+import { ReviewPageSettings } from "./models/ReviewPageSettings";
 
 // Load environment variables before creating DataSource
 dotenv.config();
@@ -38,6 +39,7 @@ const connectionOptions: any = {
         Subscription,
         GoogleIntegration,
         MetaIntegration,
+        ReviewPageSettings,
     ],
     migrations: [__dirname + "/migrations/**/*.ts"],
     migrationsTableName: "migrations",

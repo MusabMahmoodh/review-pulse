@@ -5,6 +5,7 @@ import { RestaurantAuth } from "./RestaurantAuth";
 import { Subscription } from "./Subscription";
 import { GoogleIntegration } from "./GoogleIntegration";
 import { MetaIntegration } from "./MetaIntegration";
+import { ReviewPageSettings } from "./ReviewPageSettings";
 
 @Entity("restaurants")
 export class Restaurant {
@@ -56,5 +57,8 @@ export class Restaurant {
 
   @OneToMany(() => Subscription, (subscription) => subscription.restaurant)
   subscriptions!: Subscription[];
+
+  @OneToOne(() => ReviewPageSettings, (settings) => settings.restaurant)
+  reviewPageSettings?: ReviewPageSettings;
 }
 

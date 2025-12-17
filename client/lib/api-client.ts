@@ -219,6 +219,42 @@ export const restaurantsApi = {
       instagramBusinessAccountId: string | null;
     }>(`/api/restaurants/meta-integration?restaurantId=${restaurantId}`);
   },
+
+  getReviewPageSettings: async (restaurantId: string) => {
+    return fetchApi<{
+      welcomeMessage: string;
+      primaryColor: string;
+      secondaryColor: string;
+      backgroundColor: string;
+      designVariation: string;
+    }>(`/api/restaurants/review-page-settings?restaurantId=${restaurantId}`);
+  },
+
+  updateReviewPageSettings: async (
+    restaurantId: string,
+    settings: {
+      welcomeMessage?: string;
+      primaryColor?: string;
+      secondaryColor?: string;
+      backgroundColor?: string;
+      designVariation?: string;
+    }
+  ) => {
+    return fetchApi<{
+      success: boolean;
+      message: string;
+      settings: {
+        welcomeMessage: string;
+        primaryColor: string;
+        secondaryColor: string;
+        backgroundColor: string;
+        designVariation: string;
+      };
+    }>("/api/restaurants/review-page-settings", {
+      method: "PUT",
+      body: JSON.stringify({ restaurantId, ...settings }),
+    });
+  },
 };
 
 // Admin API
