@@ -8,4 +8,5 @@ export { Subscription } from "./Subscription";
 export { GoogleIntegration } from "./GoogleIntegration";
 export { MetaIntegration } from "./MetaIntegration";
 export { ReviewPageSettings } from "./ReviewPageSettings";
+export { ActionableItem } from "./ActionableItem";
 

@@ -97,3 +97,16 @@ export interface RestaurantWithDetails extends Restaurant {
   status: "active" | "blocked"
   lastActivity?: Date
 }
+
+export interface ActionableItem {
+  id: string
+  restaurantId: string
+  title: string
+  description?: string
+  completed: boolean
+  sourceType: "comment" | "ai_suggestion"
+  sourceId: string
+  sourceText?: string
+  createdAt: Date
+  updatedAt: Date
+}

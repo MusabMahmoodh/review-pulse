@@ -11,6 +11,7 @@ import restaurantRoutes from "./routes/restaurants";
 import adminRoutes from "./routes/admin";
 import externalReviewsRoutes from "./routes/external-reviews";
 import aiRoutes from "./routes/ai";
+import actionableItemsRoutes from "./routes/actionable-items";
 
 // Load environment variables
 dotenv.config();
@@ -36,6 +37,7 @@ app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/external-reviews", externalReviewsRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/actionable-items", actionableItemsRoutes);
 
 // Health check
 /**

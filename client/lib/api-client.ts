@@ -547,3 +547,89 @@ export const aiApi = {
   },
 };
 
+// Actionable Items API
+export const actionableItemsApi = {
+  list: async (restaurantId: string, completed?: boolean) => {
+    const params = new URLSearchParams({ restaurantId });
+    if (completed !== undefined) {
+      params.append("completed", String(completed));
+    }
+    return fetchApi<{
+      items: Array<{
+        id: string;
+        restaurantId: string;
+        title: string;
+        description?: string;
+        completed: boolean;
+        sourceType: "comment" | "ai_suggestion";
+        sourceId: string;
+        sourceText?: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    }>(`/api/actionable-items?${params.toString()}`);
+  },
+
+  create: async (data: {
+    restaurantId: string;
+    title: string;
+    description?: string;
+    sourceType: "comment" | "ai_suggestion";
+    sourceId: string;
+    sourceText?: string;
+  }) => {
+    return fetchApi<{
+      success: boolean;
+      item: {
+        id: string;
+        restaurantId: string;
+        title: string;
+        description?: string;
+        completed: boolean;
+        sourceType: "comment" | "ai_suggestion";
+        sourceId: string;
+        sourceText?: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>("/api/actionable-items", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (id: string, data: {
+    title?: string;
+    description?: string;
+    completed?: boolean;
+  }) => {
+    return fetchApi<{
+      success: boolean;
+      item: {
+        id: string;
+        restaurantId: string;
+        title: string;
+        description?: string;
+        completed: boolean;
+        sourceType: "comment" | "ai_suggestion";
+        sourceId: string;
+        sourceText?: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>(`/api/actionable-items/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (id: string) => {
+    return fetchApi<{
+      success: boolean;
+      message: string;
+    }>(`/api/actionable-items/${id}`, {
+      method: "DELETE",
+    });
+  },
+};
+

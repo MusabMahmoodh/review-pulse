@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChefHat, QrCode, LogOut, ChevronRight, Settings, Sparkles, BarChart3, MessageSquare, Star } from "lucide-react"
+import { ChefHat, QrCode, LogOut, ChevronRight, Settings, Sparkles, BarChart3, MessageSquare, Star, CheckSquare } from "lucide-react"
 import Link from "next/link"
 import { FeedbackList } from "@/components/feedback-list"
 import { StatsCards } from "@/components/stats-cards"
@@ -65,9 +65,11 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* AI Insights Card */}
-        <Link href="/dashboard/ai-insights" className="block">
-          <Card className="group relative overflow-hidden border-2 border-purple-200/50 dark:border-purple-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-purple-300/70 dark:hover:border-purple-700/70">
+        {/* Quick Actions */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* AI Insights Card */}
+          <Link href="/dashboard/ai-insights" className="block">
+            <Card className="group relative overflow-hidden border-2 border-purple-200/50 dark:border-purple-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-purple-300/70 dark:hover:border-purple-700/70">
             {/* Main highlighted gradient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-purple-100/80 via-pink-100/80 via-blue-100/60 to-indigo-100/80 dark:from-purple-950/80 dark:via-pink-950/80 dark:via-blue-950/60 dark:to-indigo-950/80 animate-gradient-shift" />
             
@@ -108,7 +110,35 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-        </Link>
+          </Link>
+
+          {/* Actionable Items Card */}
+          <Link href="/dashboard/actionable-items" className="block">
+            <Card className="group relative overflow-hidden border-2 border-blue-200/50 dark:border-blue-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-blue-300/70 dark:hover:border-blue-700/70">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-100/80 via-cyan-100/80 to-indigo-100/80 dark:from-blue-950/80 dark:via-cyan-950/80 dark:to-indigo-950/80" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-blue-200/40 via-transparent to-cyan-200/40 dark:from-blue-800/40 dark:to-cyan-800/40" />
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent dark:via-white/10" />
+              <CardContent className="relative p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="p-2 rounded-lg bg-blue-500/20 dark:bg-blue-400/20">
+                        <CheckSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <span className="font-bold text-lg text-blue-900 dark:text-blue-100">
+                        Actionable Items
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-1">
+                      Track and manage improvement tasks
+                    </p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-blue-600 dark:text-blue-400 transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110 shrink-0" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
 
         {/* Charts and Analytics Section */}
         <div className="grid gap-6 md:grid-cols-2">
@@ -145,7 +175,7 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="px-0 pb-0">
-              <FeedbackList feedback={feedback.slice(0, 3)} loading={loading} compact />
+              <FeedbackList feedback={feedback.slice(0, 3)} loading={loading} compact restaurantId={restaurantId} />
               {feedback.length > 3 && (
                 <Link href="/dashboard/feedback">
                   <div className="px-6 py-4 border-t text-center hover:bg-muted/50 transition-colors">

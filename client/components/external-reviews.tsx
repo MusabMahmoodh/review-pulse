@@ -8,6 +8,7 @@ import { RefreshCw, Star, Calendar, Loader2 } from "lucide-react"
 import type { ExternalReview } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useExternalReviews, useSyncExternalReviews } from "@/hooks"
+import { ConvertToActionable } from "@/components/convert-to-actionable"
 
 interface ExternalReviewsProps {
   restaurantId: string
@@ -143,6 +144,17 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2">{review.comment}</p>
+                {restaurantId && review.comment && (
+                  <div className="flex justify-end pt-2">
+                    <ConvertToActionable
+                      restaurantId={restaurantId}
+                      sourceType="comment"
+                      sourceId={review.id}
+                      sourceText={review.comment}
+                      defaultTitle={review.comment.substring(0, 50) + (review.comment.length > 50 ? "..." : "")}
+                    />
+                  </div>
+                )}
               </div>
             ))
           )}
@@ -246,8 +258,19 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <p className="text-sm leading-relaxed">{review.comment}</p>
+                {restaurantId && review.comment && (
+                  <div className="flex justify-end pt-2 border-t">
+                    <ConvertToActionable
+                      restaurantId={restaurantId}
+                      sourceType="comment"
+                      sourceId={review.id}
+                      sourceText={review.comment}
+                      defaultTitle={review.comment.substring(0, 50) + (review.comment.length > 50 ? "..." : "")}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))

@@ -11,6 +11,7 @@ import { Subscription } from "./models/Subscription";
 import { GoogleIntegration } from "./models/GoogleIntegration";
 import { MetaIntegration } from "./models/MetaIntegration";
 import { ReviewPageSettings } from "./models/ReviewPageSettings";
+import { ActionableItem } from "./models/ActionableItem";
 
 // Load environment variables before creating DataSource
 dotenv.config();
@@ -40,6 +41,7 @@ const connectionOptions: any = {
         GoogleIntegration,
         MetaIntegration,
         ReviewPageSettings,
+        ActionableItem,
     ],
     migrations: [__dirname + "/migrations/**/*.ts"],
     migrationsTableName: "migrations",

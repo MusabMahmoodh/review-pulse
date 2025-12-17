@@ -8,7 +8,6 @@ import Link from "next/link"
 import { FeedbackList } from "@/components/feedback-list"
 import { RatingsTrendChart } from "@/components/ratings-trend-chart"
 import { useFeedbackList } from "@/hooks"
-import type { CustomerFeedback } from "@/lib/types"
 
 export default function FeedbackPage() {
   const restaurantId = "rest_1765777607402_t8kmpnz"
@@ -64,7 +63,6 @@ export default function FeedbackPage() {
       </header>
 
       <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-20">
-       
         {/* Trend Chart Section */}
         <Card>
           <CardHeader className="pb-4">
@@ -211,7 +209,7 @@ export default function FeedbackPage() {
             <CardTitle className="text-lg">Feedback List</CardTitle>
           </CardHeader>
           <CardContent>
-            <FeedbackList feedback={filteredFeedback} loading={loading} />
+            <FeedbackList feedback={filteredFeedback} loading={loading} restaurantId={restaurantId} />
           </CardContent>
         </Card>
       </main>

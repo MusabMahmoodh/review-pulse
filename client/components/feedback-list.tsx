@@ -1,15 +1,19 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Star, User, Phone, Calendar } from "lucide-react"
 import type { CustomerFeedback } from "@/lib/types"
+import { ConvertToActionable } from "@/components/convert-to-actionable"
 
 interface FeedbackListProps {
   feedback: CustomerFeedback[]
   loading: boolean
   compact?: boolean
+  restaurantId?: string
 }
 
-export function FeedbackList({ feedback, loading, compact = false }: FeedbackListProps) {
+export function FeedbackList({ feedback, loading, compact = false, restaurantId }: FeedbackListProps) {
   if (loading) {
     return (
       <div className="space-y-3">
@@ -98,8 +102,19 @@ export function FeedbackList({ feedback, loading, compact = false }: FeedbackLis
                 </div>
 
                 {item.suggestions && (
-                  <div className="bg-muted/50 rounded-lg p-3">
+                  <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                     <p className="text-sm">{item.suggestions}</p>
+                    {restaurantId && (
+                      <div className="flex justify-end pt-2">
+                        <ConvertToActionable
+                          restaurantId={restaurantId}
+                          sourceType="comment"
+                          sourceId={item.id}
+                          sourceText={item.suggestions}
+                          defaultTitle={item.suggestions.substring(0, 50) + (item.suggestions.length > 50 ? "..." : "")}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>

@@ -35,6 +35,7 @@ import type { AIInsight } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useGenerateInsights, useFeedbackStats } from "@/hooks"
 import type { TimePeriod } from "@/lib/api-client"
+import { ConvertToActionable } from "@/components/convert-to-actionable"
 
 interface AIInsightsContentProps {
   restaurantId: string
@@ -665,7 +666,20 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                     <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold">
                       {index + 1}
                     </div>
-                    <p className="text-sm text-foreground flex-1">{rec}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-foreground">{rec}</p>
+                      {hasPremium && (
+                        <div className="flex justify-end mt-2 pt-2 border-t">
+                          <ConvertToActionable
+                            restaurantId={restaurantId}
+                            sourceType="ai_suggestion"
+                            sourceId={insight.id}
+                            sourceText={rec}
+                            defaultTitle={rec.substring(0, 50) + (rec.length > 50 ? "..." : "")}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </CardContent>
