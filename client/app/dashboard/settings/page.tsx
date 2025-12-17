@@ -422,8 +422,8 @@ function SettingsPageContent() {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-lg">Social Media Keywords</CardTitle>
-                  <Badge variant="outline" className="text-xs">
-                    <Crown className="h-3 w-3 mr-1" />
+                  <Badge className="text-xs bg-gradient-to-r from-yellow-500 to-yellow-600 text-yellow-950 border-yellow-400 shadow-sm font-semibold">
+                    <Crown className="h-3 w-3 mr-1 fill-yellow-900 text-yellow-900" />
                     Premium
                   </Badge>
                 </div>
@@ -534,8 +534,8 @@ function SettingsPageContent() {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-lg">Platform Integrations</CardTitle>
-                  <Badge variant="outline" className="text-xs">
-                    <Crown className="h-3 w-3 mr-1" />
+                  <Badge className="text-xs bg-gradient-to-r from-yellow-500 to-yellow-600 text-yellow-950 border-yellow-400 shadow-sm font-semibold">
+                    <Crown className="h-3 w-3 mr-1 fill-yellow-900 text-yellow-900" />
                     Premium
                   </Badge>
                 </div>
@@ -803,8 +803,8 @@ function SettingsPageContent() {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-lg">Review Page Customization</CardTitle>
-                  <Badge variant="outline" className="text-xs">
-                    <Crown className="h-3 w-3 mr-1" />
+                  <Badge className="text-xs bg-gradient-to-r from-yellow-500 to-yellow-600 text-yellow-950 border-yellow-400 shadow-sm font-semibold">
+                    <Crown className="h-3 w-3 mr-1 fill-yellow-900 text-yellow-900" />
                     Premium
                   </Badge>
                 </div>
