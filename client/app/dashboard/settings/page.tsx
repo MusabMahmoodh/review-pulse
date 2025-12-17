@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ArrowLeft, Facebook, Instagram, Chrome, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle, Loader2, Hash, Crown, Lock, Palette, MessageSquare } from "lucide-react"
+import { ArrowLeft, Facebook, Instagram, Chrome, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle, Loader2, Hash, Crown, Lock, Palette, MessageSquare, Star, ChefHat } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useAuth } from "@/hooks/use-auth"
@@ -956,32 +956,116 @@ function SettingsPageContent() {
                 </div>
 
                 {/* Preview */}
-                <div className="p-4 border-2 rounded-lg bg-muted/20">
-                  <Label className="text-sm mb-2 block">Preview</Label>
-                  <div 
-                    className="p-4 rounded-lg border"
-                    style={{ backgroundColor: reviewSettings.backgroundColor }}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
+                <div className="space-y-2">
+                  <Label className="text-sm">Preview</Label>
+                  <div className="p-4 border-2 rounded-lg bg-muted/20">
+                    <div 
+                      className="rounded-lg border overflow-hidden"
+                      style={{ 
+                        backgroundColor: reviewSettings.backgroundColor,
+                        minHeight: '200px'
+                      }}
+                    >
+                      {/* Header Preview */}
                       <div 
-                        className="h-6 w-6 rounded"
-                        style={{ backgroundColor: reviewSettings.primaryColor }}
-                      />
-                      <h3 className="font-semibold">{reviewSettings.welcomeMessage}</h3>
+                        className={`px-4 py-3 border-b ${
+                          reviewSettings.designVariation === 'modern' 
+                            ? 'bg-gradient-to-r text-white' 
+                            : reviewSettings.designVariation === 'minimal'
+                            ? 'bg-transparent border-b-2'
+                            : 'bg-card/50'
+                        }`}
+                        style={
+                          reviewSettings.designVariation === 'modern'
+                            ? {
+                                background: `linear-gradient(to right, ${reviewSettings.primaryColor}, ${reviewSettings.secondaryColor})`,
+                                borderColor: reviewSettings.primaryColor
+                              }
+                            : reviewSettings.designVariation === 'minimal'
+                            ? {
+                                borderColor: reviewSettings.primaryColor
+                              }
+                            : {}
+                        }
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <ChefHat 
+                            className="h-5 w-5" 
+                            style={{ 
+                              color: reviewSettings.designVariation === 'modern' 
+                                ? 'white' 
+                                : reviewSettings.primaryColor 
+                            }}
+                          />
+                          <span 
+                            className="text-sm font-bold"
+                            style={{ 
+                              color: reviewSettings.designVariation === 'modern' 
+                                ? 'white' 
+                                : 'inherit' 
+                            }}
+                          >
+                            Share Your Experience
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Card Preview */}
+                      <div className="p-4">
+                        <div className="text-center mb-4">
+                          <h3 
+                            className="text-lg font-semibold mb-1"
+                            style={{ color: reviewSettings.designVariation === 'modern' ? reviewSettings.primaryColor : 'inherit' }}
+                          >
+                            {reviewSettings.welcomeMessage}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">Help us improve by rating your experience</p>
+                        </div>
+
+                        {/* Star Rating Preview */}
+                        <div className="flex items-center justify-center gap-1 mb-4">
+                          {[1, 2, 3, 4, 5].map((rating) => (
+                            <Star
+                              key={rating}
+                              className="h-6 w-6"
+                              style={{ 
+                                fill: rating <= 4 ? reviewSettings.primaryColor : 'transparent',
+                                color: rating <= 4 ? reviewSettings.primaryColor : '#d1d5db',
+                                strokeWidth: rating <= 4 ? 0 : 1
+                              }}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Button Preview */}
+                        <div className="flex justify-center">
+                          <div
+                            className={`px-4 py-2 rounded-md text-sm font-medium text-white ${
+                              reviewSettings.designVariation === 'modern'
+                                ? 'bg-gradient-to-r'
+                                : ''
+                            }`}
+                            style={
+                              reviewSettings.designVariation === 'modern'
+                                ? {
+                                    background: `linear-gradient(to right, ${reviewSettings.primaryColor}, ${reviewSettings.secondaryColor})`
+                                  }
+                                : {
+                                    backgroundColor: reviewSettings.designVariation === 'elegant' 
+                                      ? reviewSettings.secondaryColor 
+                                      : reviewSettings.primaryColor
+                                  }
+                            }
+                          >
+                            Submit Feedback
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-muted-foreground text-center mt-3">
+                          Design: {reviewSettings.designVariation.charAt(0).toUpperCase() + reviewSettings.designVariation.slice(1)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <div 
-                        className="h-4 w-4 rounded"
-                        style={{ backgroundColor: reviewSettings.primaryColor }}
-                      />
-                      <div 
-                        className="h-4 w-4 rounded"
-                        style={{ backgroundColor: reviewSettings.secondaryColor }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Design: {reviewSettings.designVariation.charAt(0).toUpperCase() + reviewSettings.designVariation.slice(1)}
-                    </p>
                   </div>
                 </div>
 
