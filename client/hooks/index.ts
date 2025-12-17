@@ -5,6 +5,7 @@ export * from "./use-admin";
 export * from "./use-external-reviews";
 export * from "./use-ai";
 export * from "./use-actionable-items";
+export * from "./use-team-members";
 
 
 

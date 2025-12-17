@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { ActionableItem, Restaurant, CustomerFeedback, ExternalReview, AIInsight } from "../models";
+import { ActionableItem, Restaurant, CustomerFeedback, ExternalReview, AIInsight, TeamMember } from "../models";
 import { requireAuth } from "../middleware/auth";
 import { isPremium } from "../utils/subscription";
 
@@ -189,7 +189,7 @@ router.get("/by-source", requireAuth, async (req, res) => {
  */
 router.post("/", requireAuth, async (req, res) => {
   try {
-    const { title, description, sourceType, sourceId, sourceText } = req.body;
+    const { title, description, sourceType, sourceId, sourceText, assignedTo, deadline } = req.body;
     const restaurantId = req.restaurantId as string;
 
     if (!restaurantId || !title || !sourceType || !sourceId) {
@@ -231,6 +231,17 @@ router.post("/", requireAuth, async (req, res) => {
 
     const actionableItemRepo = AppDataSource.getRepository(ActionableItem);
 
+    // Verify assignedTo team member exists if provided
+    if (assignedTo) {
+      const teamMemberRepo = AppDataSource.getRepository(TeamMember);
+      const teamMember = await teamMemberRepo.findOne({
+        where: { id: assignedTo, restaurantId },
+      });
+      if (!teamMember) {
+        return res.status(404).json({ error: "Team member not found" });
+      }
+    }
+
     const item = actionableItemRepo.create({
       id: `actionable_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       restaurantId,
@@ -239,6 +250,8 @@ router.post("/", requireAuth, async (req, res) => {
       sourceType,
       sourceId,
       sourceText: sourceText || undefined,
+      assignedTo: assignedTo || undefined,
+      deadline: deadline ? new Date(deadline) : undefined,
       completed: false,
     });
 
@@ -293,7 +306,7 @@ router.post("/", requireAuth, async (req, res) => {
 router.patch("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, completed } = req.body;
+    const { title, description, completed, assignedTo, deadline } = req.body;
     const restaurantId = req.restaurantId as string;
 
     if (!restaurantId) {
@@ -319,9 +332,24 @@ router.patch("/:id", requireAuth, async (req, res) => {
       return res.status(404).json({ error: "Actionable item not found" });
     }
 
+    // Verify assignedTo team member exists if provided
+    if (assignedTo !== undefined) {
+      if (assignedTo) {
+        const teamMemberRepo = AppDataSource.getRepository(TeamMember);
+        const teamMember = await teamMemberRepo.findOne({
+          where: { id: assignedTo, restaurantId },
+        });
+        if (!teamMember) {
+          return res.status(404).json({ error: "Team member not found" });
+        }
+      }
+      item.assignedTo = assignedTo || undefined;
+    }
+
     if (title !== undefined) item.title = title;
     if (description !== undefined) item.description = description;
     if (completed !== undefined) item.completed = completed;
+    if (deadline !== undefined) item.deadline = deadline ? new Date(deadline) : undefined;
 
     await actionableItemRepo.save(item);
 

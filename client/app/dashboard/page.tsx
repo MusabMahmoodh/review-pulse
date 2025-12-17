@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChefHat, QrCode, LogOut, ChevronRight, Settings, Sparkles, BarChart3, MessageSquare, Star, CheckSquare } from "lucide-react"
+import { ChefHat, QrCode, LogOut, ChevronRight, Settings, Sparkles, BarChart3, MessageSquare, Star, CheckSquare, Users } from "lucide-react"
 import Link from "next/link"
 import { FeedbackList } from "@/components/feedback-list"
 import { StatsCards } from "@/components/stats-cards"
@@ -140,6 +140,33 @@ export default function DashboardPage() {
             </Card>
           </Link>
         </div>
+
+        {/* Team Members Card */}
+        <Link href="/dashboard/team-members" className="block">
+          <Card className="group relative overflow-hidden border-2 border-green-200/50 dark:border-green-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-green-300/70 dark:hover:border-green-700/70">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-100/80 via-emerald-100/80 to-teal-100/80 dark:from-green-950/80 dark:via-emerald-950/80 dark:to-teal-950/80" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-green-200/40 via-transparent to-emerald-200/40 dark:from-green-800/40 dark:to-emerald-800/40" />
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent dark:via-white/10" />
+            <CardContent className="relative p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-2 rounded-lg bg-green-500/20 dark:bg-green-400/20">
+                      <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <span className="font-bold text-lg text-green-900 dark:text-green-100">
+                      Team Members
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground line-clamp-1">
+                    Manage your team and assign tasks
+                  </p>
+                </div>
+                <ChevronRight className="h-5 w-5 text-green-600 dark:text-green-400 transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110 shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
 
         {/* Charts and Analytics Section */}
         <div className="grid gap-6 md:grid-cols-2">

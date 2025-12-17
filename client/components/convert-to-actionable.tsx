@@ -16,10 +16,18 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { CheckSquare, Loader2, Link2, CheckCircle2, XCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast-simple"
-import { useCreateActionableItem, useActionableItemBySource } from "@/hooks"
+import { useCreateActionableItem, useActionableItemBySource, useTeamMembers } from "@/hooks"
+import { User, Calendar } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { isPremiumFromAuth } from "@/lib/premium"
 import { PremiumUpgrade } from "@/components/premium-upgrade"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import Link from "next/link"
 
 interface ConvertToActionableProps {
@@ -45,7 +53,12 @@ export function ConvertToActionable({
   const [showLinkedDialog, setShowLinkedDialog] = useState(false)
   const [title, setTitle] = useState(defaultTitle || "")
   const [description, setDescription] = useState("")
+  const [assignedTo, setAssignedTo] = useState("")
+  const [deadline, setDeadline] = useState("")
   const createMutation = useCreateActionableItem()
+  
+  const { data: teamMembersData } = useTeamMembers(restaurantId)
+  const teamMembers = teamMembersData?.members || []
   
   // Check if this source is already linked to an actionable item
   const { data: linkedItemData, isLoading: checkingLink } = useActionableItemBySource(
@@ -56,6 +69,10 @@ export function ConvertToActionable({
   
   const linkedItem = linkedItemData?.item
   const hasPremium = isPremiumFromAuth(user?.subscription)
+  
+  // Fetch team members for showing assigned member name
+  const { data: teamMembersDataForLinked } = useTeamMembers(restaurantId)
+  const teamMembersForLinked = teamMembersDataForLinked?.members || []
 
   const handleConvert = async () => {
     if (!title.trim()) {
@@ -75,6 +92,8 @@ export function ConvertToActionable({
         sourceType,
         sourceId,
         sourceText,
+        assignedTo: assignedTo || undefined,
+        deadline: deadline ? new Date(deadline).toISOString() : undefined,
       },
       {
         onSuccess: () => {
@@ -85,6 +104,8 @@ export function ConvertToActionable({
           setOpen(false)
           setTitle(defaultTitle || "")
           setDescription("")
+          setAssignedTo("")
+          setDeadline("")
           // The query will automatically refetch and show "Linked" button
         },
         onError: (error: any) => {
@@ -190,6 +211,34 @@ export function ConvertToActionable({
                 <p className="text-xs text-muted-foreground mb-1">Source:</p>
                 <p className="line-clamp-2">{linkedItem.sourceText || sourceText}</p>
               </div>
+              {linkedItem.assignedTo && (
+                <div className="flex items-center gap-2">
+                  <Label>Assigned To:</Label>
+                  <Badge variant="outline" className="text-xs gap-1">
+                    <User className="h-3 w-3" />
+                    {(() => {
+                      const member = teamMembersForLinked.find((m) => m.id === linkedItem.assignedTo)
+                      return member ? member.name : "Unknown"
+                    })()}
+                  </Badge>
+                </div>
+              )}
+              {linkedItem.deadline && (
+                <div className="flex items-center gap-2">
+                  <Label>Deadline:</Label>
+                  <Badge
+                    variant={
+                      new Date(linkedItem.deadline) < new Date() && !linkedItem.completed
+                        ? "destructive"
+                        : "outline"
+                    }
+                    className="text-xs gap-1"
+                  >
+                    <Calendar className="h-3 w-3" />
+                    {new Date(linkedItem.deadline).toLocaleDateString()}
+                  </Badge>
+                </div>
+              )}
               <div className="text-xs text-muted-foreground">
                 Created: {new Date(linkedItem.createdAt).toLocaleDateString()}
               </div>
@@ -253,6 +302,39 @@ export function ConvertToActionable({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Optional description"
                 rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="assignedTo">Assign To (Optional)</Label>
+              <Select value={assignedTo || "unassigned"} onValueChange={(value) => setAssignedTo(value === "unassigned" ? "" : value)}>
+                <SelectTrigger id="assignedTo">
+                  <SelectValue placeholder="Select team member" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {teamMembers.map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name} {member.role && `(${member.role})`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {teamMembers.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  <Link href="/dashboard/team-members" className="text-primary hover:underline">
+                    Add team members
+                  </Link>{" "}
+                  to assign tasks
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="deadline">Deadline (Optional)</Label>
+              <Input
+                id="deadline"
+                type="date"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
               />
             </div>
             <div className="rounded-lg bg-muted p-3 text-sm">

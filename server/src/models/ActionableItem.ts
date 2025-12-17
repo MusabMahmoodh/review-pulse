@@ -27,6 +27,12 @@ export class ActionableItem {
   @Column({ nullable: true })
   sourceText?: string; // Store the original text for reference
 
+  @Column({ nullable: true })
+  assignedTo?: string; // ID of TeamMember
+
+  @Column({ type: "timestamp", nullable: true })
+  deadline?: Date;
+
   @CreateDateColumn()
   createdAt!: Date;
 

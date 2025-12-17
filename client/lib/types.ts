@@ -107,6 +107,19 @@ export interface ActionableItem {
   sourceType: "comment" | "ai_suggestion"
   sourceId: string
   sourceText?: string
+  assignedTo?: string
+  deadline?: Date
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface TeamMember {
+  id: string
+  restaurantId: string
+  name: string
+  email?: string
+  phone?: string
+  role?: string
   createdAt: Date
   updatedAt: Date
 }

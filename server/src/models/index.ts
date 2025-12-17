@@ -9,4 +9,5 @@ export { GoogleIntegration } from "./GoogleIntegration";
 export { MetaIntegration } from "./MetaIntegration";
 export { ReviewPageSettings } from "./ReviewPageSettings";
 export { ActionableItem } from "./ActionableItem";
+export { TeamMember } from "./TeamMember";
 

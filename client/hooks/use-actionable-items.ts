@@ -10,11 +10,12 @@ export function useActionableItems(restaurantId: string | null, completed?: bool
     queryFn: async () => {
       const response = await actionableItemsApi.list(restaurantId!, completed);
       return {
-        items: response.items.map((item) => ({
-          ...item,
-          createdAt: new Date(item.createdAt),
-          updatedAt: new Date(item.updatedAt),
-        })) as ActionableItem[],
+      items: response.items.map((item) => ({
+        ...item,
+        deadline: item.deadline ? new Date(item.deadline) : undefined,
+        createdAt: new Date(item.createdAt),
+        updatedAt: new Date(item.updatedAt),
+      })) as ActionableItem[],
       };
     },
     enabled: !!restaurantId,
@@ -45,6 +46,8 @@ export function useUpdateActionableItem() {
     onSuccess: (data, variables) => {
       // Invalidate all actionable items queries to refresh the list
       queryClient.invalidateQueries({ queryKey: ["actionable-items"] });
+      // Also invalidate by-source queries
+      queryClient.invalidateQueries({ queryKey: ["actionable-item", "by-source"] });
     },
   });
 }
@@ -56,6 +59,7 @@ export function useDeleteActionableItem() {
     mutationFn: actionableItemsApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["actionable-items"] });
+      queryClient.invalidateQueries({ queryKey: ["actionable-item", "by-source"] });
     },
   });
 }
@@ -71,11 +75,12 @@ export function useActionableItemBySource(
       try {
         const response = await actionableItemsApi.getBySource(restaurantId!, sourceType, sourceId!);
         return {
-          item: {
-            ...response.item,
-            createdAt: new Date(response.item.createdAt),
-            updatedAt: new Date(response.item.updatedAt),
-          } as ActionableItem,
+        item: {
+          ...response.item,
+          deadline: response.item.deadline ? new Date(response.item.deadline) : undefined,
+          createdAt: new Date(response.item.createdAt),
+          updatedAt: new Date(response.item.updatedAt),
+        } as ActionableItem,
         };
       } catch (error: any) {
         // 404 means no item is linked, which is fine - return null

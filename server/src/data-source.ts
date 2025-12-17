@@ -12,6 +12,7 @@ import { GoogleIntegration } from "./models/GoogleIntegration";
 import { MetaIntegration } from "./models/MetaIntegration";
 import { ReviewPageSettings } from "./models/ReviewPageSettings";
 import { ActionableItem } from "./models/ActionableItem";
+import { TeamMember } from "./models/TeamMember";
 
 // Load environment variables before creating DataSource
 dotenv.config();
@@ -42,6 +43,7 @@ const connectionOptions: any = {
         MetaIntegration,
         ReviewPageSettings,
         ActionableItem,
+        TeamMember,
     ],
     migrations: [__dirname + "/migrations/**/*.ts"],
     migrationsTableName: "migrations",

@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast-simple"
 import { isPremiumFromAuth } from "@/lib/premium"
 import { PremiumUpgrade } from "@/components/premium-upgrade"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
+import { ActionableItemEditor } from "@/components/actionable-item-editor"
 import type { ActionableItem } from "@/lib/types"
 
 export default function ActionableItemsPage() {
@@ -285,6 +286,7 @@ export default function ActionableItemsPage() {
                             {new Date(item.createdAt).toLocaleDateString()}
                           </span>
                         </div>
+                        <ActionableItemEditor item={item} restaurantId={restaurantId} />
                       </div>
                     </div>
                   </CardContent>

@@ -564,6 +564,8 @@ export const actionableItemsApi = {
         sourceType: "comment" | "ai_suggestion";
         sourceId: string;
         sourceText?: string;
+        assignedTo?: string;
+        deadline?: string;
         createdAt: string;
         updatedAt: string;
       }>;
@@ -577,6 +579,8 @@ export const actionableItemsApi = {
     sourceType: "comment" | "ai_suggestion";
     sourceId: string;
     sourceText?: string;
+    assignedTo?: string;
+    deadline?: string;
   }) => {
     return fetchApi<{
       success: boolean;
@@ -589,6 +593,8 @@ export const actionableItemsApi = {
         sourceType: "comment" | "ai_suggestion";
         sourceId: string;
         sourceText?: string;
+        assignedTo?: string;
+        deadline?: string;
         createdAt: string;
         updatedAt: string;
       };
@@ -602,6 +608,8 @@ export const actionableItemsApi = {
     title?: string;
     description?: string;
     completed?: boolean;
+    assignedTo?: string | null;
+    deadline?: string | null;
   }) => {
     return fetchApi<{
       success: boolean;
@@ -614,6 +622,8 @@ export const actionableItemsApi = {
         sourceType: "comment" | "ai_suggestion";
         sourceId: string;
         sourceText?: string;
+        assignedTo?: string;
+        deadline?: string;
         createdAt: string;
         updatedAt: string;
       };
@@ -648,10 +658,89 @@ export const actionableItemsApi = {
         sourceType: "comment" | "ai_suggestion";
         sourceId: string;
         sourceText?: string;
+        assignedTo?: string;
+        deadline?: string;
         createdAt: string;
         updatedAt: string;
       };
     }>(`/api/actionable-items/by-source?${params.toString()}`);
+  },
+};
+
+// Team Members API
+export const teamMembersApi = {
+  list: async (restaurantId: string) => {
+    const params = new URLSearchParams({ restaurantId });
+    return fetchApi<{
+      members: Array<{
+        id: string;
+        restaurantId: string;
+        name: string;
+        email?: string;
+        phone?: string;
+        role?: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    }>(`/api/team-members?${params.toString()}`);
+  },
+
+  create: async (data: {
+    restaurantId: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    role?: string;
+  }) => {
+    return fetchApi<{
+      success: boolean;
+      member: {
+        id: string;
+        restaurantId: string;
+        name: string;
+        email?: string;
+        phone?: string;
+        role?: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>("/api/team-members", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (id: string, data: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    role?: string;
+  }) => {
+    return fetchApi<{
+      success: boolean;
+      member: {
+        id: string;
+        restaurantId: string;
+        name: string;
+        email?: string;
+        phone?: string;
+        role?: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>(`/api/team-members/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (id: string) => {
+    return fetchApi<{
+      success: boolean;
+      message: string;
+    }>(`/api/team-members/${id}`, {
+      method: "DELETE",
+    });
   },
 };
 
