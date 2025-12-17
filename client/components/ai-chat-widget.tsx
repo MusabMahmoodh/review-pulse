@@ -51,6 +51,23 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
   const chatMutation = useAIChat()
   const hasPremium = isPremiumFromAuth(user?.subscription)
 
+  // Initialize with welcome message
+  useEffect(() => {
+    if (hasPremium) {
+      setChatMessages((prev) => {
+        if (prev.length === 0) {
+          const welcomeMessage: ChatMessage = {
+            role: "assistant",
+            content: "👋 Welcome! I'm your AI assistant for Review Pulse. I'm here to help you understand your customer feedback better.\n\nYou can ask me questions like:\n• What are customers saying about our food quality?\n• How can we improve our service?\n• What are the main complaints we're receiving?\n• What trends do you see in our reviews?\n\nFeel free to ask me anything about your feedback data!",
+            timestamp: new Date(),
+          }
+          return [welcomeMessage]
+        }
+        return prev
+      })
+    }
+  }, [hasPremium]) // Only run when premium status is determined
+
   useEffect(() => {
     if (scrollRef.current && isOpen) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight

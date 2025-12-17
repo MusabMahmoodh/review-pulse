@@ -132,7 +132,7 @@ export default function FeedbackPage({ params }: PageProps) {
         className="min-h-screen flex items-center justify-center p-4"
         style={{ backgroundColor: pageSettings.backgroundColor }}
       >
-        <Card className="w-full max-w-md text-center" style={designStyles.cardClass}>
+        <Card className={`w-full max-w-md text-center ${designStyles.cardClass}`}>
           <CardContent className="pt-12 pb-12">
             <CheckCircle 
               className="h-16 w-16 mx-auto mb-4" 
