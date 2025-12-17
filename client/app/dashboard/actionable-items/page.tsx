@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { useToast } from "@/hooks/use-toast-simple"
 import { isPremiumFromAuth } from "@/lib/premium"
 import { PremiumUpgrade } from "@/components/premium-upgrade"
+import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 import type { ActionableItem } from "@/lib/types"
 
 export default function ActionableItemsPage() {
@@ -143,7 +144,7 @@ export default function ActionableItemsPage() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -293,6 +294,9 @@ export default function ActionableItemsPage() {
           )}
         </div>
       </div>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { ChefHat, Download, Share2, Copy, Check, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useAuth } from "@/hooks"
+import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 import { QRCodeSVG } from "qrcode.react"
 
 export default function QRCodePage() {
@@ -155,7 +156,7 @@ export default function QRCodePage() {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="container mx-auto px-4 py-8 max-w-2xl pb-24 md:pb-8">
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Your Feedback QR Code</CardTitle>
@@ -210,6 +211,9 @@ export default function QRCodePage() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   )
 }

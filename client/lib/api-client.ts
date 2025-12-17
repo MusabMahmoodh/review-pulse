@@ -631,5 +631,27 @@ export const actionableItemsApi = {
       method: "DELETE",
     });
   },
+
+  getBySource: async (restaurantId: string, sourceType: "comment" | "ai_suggestion", sourceId: string) => {
+    const params = new URLSearchParams({
+      restaurantId,
+      sourceType,
+      sourceId,
+    });
+    return fetchApi<{
+      item: {
+        id: string;
+        restaurantId: string;
+        title: string;
+        description?: string;
+        completed: boolean;
+        sourceType: "comment" | "ai_suggestion";
+        sourceId: string;
+        sourceText?: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>(`/api/actionable-items/by-source?${params.toString()}`);
+  },
 };
 

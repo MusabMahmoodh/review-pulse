@@ -28,6 +28,10 @@ export function useCreateActionableItem() {
     mutationFn: actionableItemsApi.create,
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["actionable-items", variables.restaurantId] });
+      // Also invalidate the by-source query so it shows "Linked" instead of "Convert"
+      queryClient.invalidateQueries({ 
+        queryKey: ["actionable-item", "by-source", variables.restaurantId, variables.sourceType, variables.sourceId] 
+      });
     },
   });
 }
@@ -53,6 +57,37 @@ export function useDeleteActionableItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["actionable-items"] });
     },
+  });
+}
+
+export function useActionableItemBySource(
+  restaurantId: string | null,
+  sourceType: "comment" | "ai_suggestion",
+  sourceId: string | null
+) {
+  return useQuery<{ item: ActionableItem } | null>({
+    queryKey: ["actionable-item", "by-source", restaurantId, sourceType, sourceId],
+    queryFn: async () => {
+      try {
+        const response = await actionableItemsApi.getBySource(restaurantId!, sourceType, sourceId!);
+        return {
+          item: {
+            ...response.item,
+            createdAt: new Date(response.item.createdAt),
+            updatedAt: new Date(response.item.updatedAt),
+          } as ActionableItem,
+        };
+      } catch (error: any) {
+        // 404 means no item is linked, which is fine - return null
+        if (error?.status === 404) {
+          return null;
+        }
+        // Re-throw other errors
+        throw error;
+      }
+    },
+    enabled: !!restaurantId && !!sourceId,
+    retry: false, // Don't retry on 404
   });
 }
 

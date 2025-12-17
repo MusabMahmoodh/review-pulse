@@ -16,6 +16,7 @@ import { restaurantsApi, externalReviewsApi, googleAuthApi, metaAuthApi } from "
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { isPremiumRequiredError, isPremiumFromAuth } from "@/lib/premium"
 import { PremiumUpgrade } from "@/components/premium-upgrade"
+import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 
 function SettingsPageContent() {
   const { toast } = useToast()
@@ -411,7 +412,7 @@ function SettingsPageContent() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-24 md:pb-6">
         {/* Social Keywords Section */}
         <Card className="overflow-hidden border-2">
           <CardHeader className="bg-muted/30 pb-4">
@@ -1093,6 +1094,9 @@ function SettingsPageContent() {
           </CardContent>
         </Card>
       </main>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   )
 }

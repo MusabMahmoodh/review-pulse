@@ -7,6 +7,7 @@ import { ChevronLeft, Star, Filter } from "lucide-react"
 import Link from "next/link"
 import { FeedbackList } from "@/components/feedback-list"
 import { RatingsTrendChart } from "@/components/ratings-trend-chart"
+import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 import { useFeedbackList } from "@/hooks"
 
 export default function FeedbackPage() {
@@ -62,7 +63,7 @@ export default function FeedbackPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-20">
+      <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-24 md:pb-6">
         {/* Trend Chart Section */}
         <Card>
           <CardHeader className="pb-4">
@@ -213,6 +214,9 @@ export default function FeedbackPage() {
           </CardContent>
         </Card>
       </main>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   )
 }

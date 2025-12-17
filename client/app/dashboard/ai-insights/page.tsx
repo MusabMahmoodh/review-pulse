@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { AIInsightsContent } from "@/components/ai-insights-content"
 import { AIChatWidget } from "@/components/ai-chat-widget"
+import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 import { useAIInsights, useAuth } from "@/hooks"
 import { useIsMobile } from "@/hooks/use-mobile"
 import type { AIInsight } from "@/lib/types"
@@ -75,7 +76,7 @@ export default function AIInsightsPage() {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
         {isMobile ? (
           // Mobile: Single column with floating chat
           <div className="max-w-4xl mx-auto">
@@ -107,6 +108,9 @@ export default function AIInsightsPage() {
           </div>
         )}
       </div>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   )
 }

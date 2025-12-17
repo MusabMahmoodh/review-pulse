@@ -72,6 +72,84 @@ router.get("/", requireAuth, async (req, res) => {
 
 /**
  * @swagger
+ * /api/actionable-items/by-source:
+ *   get:
+ *     summary: Get actionable item by source ID and type
+ *     tags: [ActionableItems]
+ *     parameters:
+ *       - in: query
+ *         name: restaurantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Restaurant ID
+ *       - in: query
+ *         name: sourceType
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [comment, ai_suggestion]
+ *         description: Source type
+ *       - in: query
+ *         name: sourceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Source ID
+ *     responses:
+ *       200:
+ *         description: Actionable item if found
+ *       404:
+ *         description: No actionable item found for this source
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/by-source", requireAuth, async (req, res) => {
+  try {
+    const restaurantId = req.restaurantId as string;
+    const sourceType = req.query.sourceType as string;
+    const sourceId = req.query.sourceId as string;
+
+    if (!restaurantId || !sourceType || !sourceId) {
+      return res.status(400).json({ error: "Restaurant ID, sourceType, and sourceId are required" });
+    }
+
+    if (sourceType !== "comment" && sourceType !== "ai_suggestion") {
+      return res.status(400).json({ error: "Invalid sourceType. Must be 'comment' or 'ai_suggestion'" });
+    }
+
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId);
+    if (!hasPremium) {
+      return res.status(403).json({ 
+        error: "Premium subscription required",
+        requiresPremium: true,
+      });
+    }
+
+    const actionableItemRepo = AppDataSource.getRepository(ActionableItem);
+
+    const item = await actionableItemRepo.findOne({
+      where: {
+        restaurantId,
+        sourceType: sourceType as "comment" | "ai_suggestion",
+        sourceId,
+      },
+    });
+
+    if (!item) {
+      return res.status(404).json({ error: "No actionable item found for this source" });
+    }
+
+    return res.json({ item });
+  } catch (error) {
+    console.error("Error fetching actionable item by source:", error);
+    return res.status(500).json({ error: "Failed to fetch actionable item" });
+  }
+});
+
+/**
+ * @swagger
  * /api/actionable-items:
  *   post:
  *     summary: Create a new actionable item

@@ -8,6 +8,7 @@ import { FeedbackList } from "@/components/feedback-list"
 import { StatsCards } from "@/components/stats-cards"
 import { RatingsChart } from "@/components/ratings-chart"
 import { ExternalReviews } from "@/components/external-reviews"
+import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 import { useFeedbackList, useFeedbackStats, useAIInsights } from "@/hooks"
 
 export default function DashboardPage() {
@@ -57,7 +58,7 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-20">
+      <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-24 md:pb-6">
         {/* Stats Cards */}
         {stats && (
           <div className="w-full overflow-hidden">
@@ -200,6 +201,9 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </main>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   )
 }

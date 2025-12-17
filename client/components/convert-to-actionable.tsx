@@ -13,12 +13,14 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { CheckSquare, Loader2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { CheckSquare, Loader2, Link2, CheckCircle2, XCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast-simple"
-import { useCreateActionableItem } from "@/hooks"
+import { useCreateActionableItem, useActionableItemBySource } from "@/hooks"
 import { useAuth } from "@/hooks/use-auth"
 import { isPremiumFromAuth } from "@/lib/premium"
 import { PremiumUpgrade } from "@/components/premium-upgrade"
+import Link from "next/link"
 
 interface ConvertToActionableProps {
   restaurantId: string
@@ -40,10 +42,19 @@ export function ConvertToActionable({
   const { user } = useAuth()
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
+  const [showLinkedDialog, setShowLinkedDialog] = useState(false)
   const [title, setTitle] = useState(defaultTitle || "")
   const [description, setDescription] = useState("")
   const createMutation = useCreateActionableItem()
-
+  
+  // Check if this source is already linked to an actionable item
+  const { data: linkedItemData, isLoading: checkingLink } = useActionableItemBySource(
+    restaurantId,
+    sourceType,
+    sourceId
+  )
+  
+  const linkedItem = linkedItemData?.item
   const hasPremium = isPremiumFromAuth(user?.subscription)
 
   const handleConvert = async () => {
@@ -74,6 +85,7 @@ export function ConvertToActionable({
           setOpen(false)
           setTitle(defaultTitle || "")
           setDescription("")
+          // The query will automatically refetch and show "Linked" button
         },
         onError: (error: any) => {
           toast({
@@ -98,6 +110,107 @@ export function ConvertToActionable({
     )
   }
 
+  // Show loading state while checking if linked
+  if (checkingLink) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        disabled
+        className="gap-2"
+      >
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Checking...
+      </Button>
+    )
+  }
+
+  // If already linked, show "Linked" button
+  if (linkedItem) {
+    return (
+      <>
+        {trigger ? (
+          <div onClick={() => setShowLinkedDialog(true)}>{trigger}</div>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowLinkedDialog(true)}
+            className="gap-2"
+          >
+            <Link2 className="h-4 w-4" />
+            Linked
+          </Button>
+        )}
+
+        {/* Dialog showing linked actionable item */}
+        <Dialog open={showLinkedDialog} onOpenChange={setShowLinkedDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Linked Actionable Item</DialogTitle>
+              <DialogDescription>
+                This {sourceType === "comment" ? "comment" : "AI suggestion"} is already linked to an actionable item.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Title</Label>
+                <div className="p-3 rounded-lg border bg-muted/30">
+                  <p className="font-semibold">{linkedItem.title}</p>
+                </div>
+              </div>
+              {linkedItem.description && (
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <p className="text-sm">{linkedItem.description}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Label>Status:</Label>
+                <Badge
+                  variant={linkedItem.completed ? "default" : "secondary"}
+                  className="gap-1"
+                >
+                  {linkedItem.completed ? (
+                    <>
+                      <CheckCircle2 className="h-3 w-3" />
+                      Completed
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-3 w-3" />
+                      Pending
+                    </>
+                  )}
+                </Badge>
+              </div>
+              <div className="rounded-lg bg-muted p-3 text-sm">
+                <p className="text-xs text-muted-foreground mb-1">Source:</p>
+                <p className="line-clamp-2">{linkedItem.sourceText || sourceText}</p>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Created: {new Date(linkedItem.createdAt).toLocaleDateString()}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowLinkedDialog(false)}>
+                Close
+              </Button>
+              <Button asChild>
+                <Link href="/dashboard/actionable-items">
+                  View All Items
+                </Link>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
+    )
+  }
+
+  // Not linked, show "Convert" button
   return (
     <>
       {trigger ? (
