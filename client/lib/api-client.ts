@@ -25,45 +25,62 @@ function getBrowserToken(): string | null {
 
 async function fetchApi<T>(
   endpoint: string,
-  options?: RequestInit & { authToken?: string }
+  options?: RequestInit & { authToken?: string; timeout?: number }
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  const { authToken, ...fetchOptions } = options || {};
+  const { authToken, timeout, ...fetchOptions } = options || {};
   const token = authToken ?? getBrowserToken();
 
-  const response = await fetch(url, {
-    ...fetchOptions,
-    headers: {
-      "Content-Type": "application/json",
-      ...(fetchOptions as RequestInit | undefined)?.headers,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
+  // Create AbortController for timeout if specified
+  const controller = timeout ? new AbortController() : undefined;
+  const timeoutId = timeout
+    ? setTimeout(() => controller!.abort(), timeout)
+    : undefined;
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    
-    // Handle 401 Unauthorized - redirect to login
-    if (response.status === 401 && typeof window !== "undefined") {
-      // Clear invalid token
-      try {
-        window.localStorage.removeItem(TOKEN_KEY);
-      } catch {
-        // Ignore localStorage errors
+  try {
+    const response = await fetch(url, {
+      ...fetchOptions,
+      signal: controller?.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(fetchOptions as RequestInit | undefined)?.headers,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (timeoutId) clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      
+      // Handle 401 Unauthorized - redirect to login
+      if (response.status === 401 && typeof window !== "undefined") {
+        // Clear invalid token
+        try {
+          window.localStorage.removeItem(TOKEN_KEY);
+        } catch {
+          // Ignore localStorage errors
+        }
+        
+        // Redirect to login page if not already there
+        const currentPath = window.location.pathname;
+        if (currentPath !== "/login" && currentPath !== "/register") {
+          window.location.href = "/login";
+        }
       }
       
-      // Redirect to login page if not already there
-      const currentPath = window.location.pathname;
-      if (currentPath !== "/login" && currentPath !== "/register") {
-        window.location.href = "/login";
-      }
+      throw new ApiError(response.status, response.statusText, errorData);
     }
-    
-    throw new ApiError(response.status, response.statusText, errorData);
-  }
 
-  return response.json();
+    return response.json();
+  } catch (error) {
+    if (timeoutId) clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new ApiError(408, "Request Timeout", { message: "Request timed out" });
+    }
+    throw error;
+  }
 }
 
 // Auth API
@@ -441,7 +458,92 @@ export const aiApi = {
     }>("/api/ai/chat", {
       method: "POST",
       body: JSON.stringify({ restaurantId, message }),
+      timeout: 120000, // 2 minutes timeout for AI chat
     });
+  },
+
+  /**
+   * Stream chat response from AI
+   * @param restaurantId - Restaurant ID
+   * @param message - User message
+   * @param onChunk - Callback for each chunk of the stream
+   * @returns Promise that resolves when stream completes
+   */
+  chatStream: async (
+    restaurantId: string,
+    message: string,
+    onChunk: (chunk: string) => void
+  ): Promise<void> => {
+    const url = `${API_BASE_URL}/api/ai/chat/stream`;
+    const token = getBrowserToken();
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ restaurantId, message }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      
+      // Handle 401 Unauthorized - redirect to login
+      if (response.status === 401 && typeof window !== "undefined") {
+        try {
+          window.localStorage.removeItem(TOKEN_KEY);
+        } catch {
+          // Ignore localStorage errors
+        }
+        
+        const currentPath = window.location.pathname;
+        if (currentPath !== "/login" && currentPath !== "/register") {
+          window.location.href = "/login";
+        }
+      }
+      
+      throw new ApiError(response.status, response.statusText, errorData);
+    }
+
+    if (!response.body) {
+      throw new Error("Response body is null");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6);
+            if (data === "[DONE]") {
+              return;
+            }
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.content) {
+                onChunk(parsed.content);
+              }
+            } catch (e) {
+              // Ignore JSON parse errors for incomplete chunks
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
   },
 };
 

@@ -19,7 +19,7 @@ import {
   Minimize2,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast-simple"
-import { useAIChat } from "@/hooks"
+import { useAIChatStream } from "@/hooks"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useAuth } from "@/hooks/use-auth"
 import { isPremiumFromAuth } from "@/lib/premium"
@@ -47,8 +47,10 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
   const [premiumError, setPremiumError] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const streamingContentRef = useRef<string>("")
 
-  const chatMutation = useAIChat()
+  const { chatStream } = useAIChatStream()
+  const [isStreaming, setIsStreaming] = useState(false)
   const hasPremium = isPremiumFromAuth(user?.subscription)
 
   // Initialize with welcome message
@@ -74,8 +76,8 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
     }
   }, [chatMessages, isOpen])
 
-  const sendChatMessage = useCallback(() => {
-    if (!inputMessage.trim()) return
+  const sendChatMessage = useCallback(async () => {
+    if (!inputMessage.trim() || isStreaming) return
 
     const userMessage: ChatMessage = {
       role: "user",
@@ -87,36 +89,58 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
     const messageToSend = inputMessage
     setInputMessage("")
 
-    chatMutation.mutate(
-      { restaurantId, message: messageToSend },
-      {
-        onSuccess: (data) => {
-          const assistantMessage: ChatMessage = {
-            role: "assistant",
-            content: data.response,
-            timestamp: new Date(),
+    // Create a placeholder assistant message that we'll update as chunks arrive
+    const assistantMessage: ChatMessage = {
+      role: "assistant",
+      content: "",
+      timestamp: new Date(),
+    }
+    setChatMessages((prev) => [...prev, assistantMessage])
+    setIsStreaming(true)
+    streamingContentRef.current = "" // Reset streaming content
+
+    try {
+      await chatStream(restaurantId, messageToSend, (chunk: string) => {
+        // Accumulate chunks in ref to avoid state update issues
+        streamingContentRef.current += chunk
+        
+        // Update the last message (assistant message) with accumulated chunks
+        setChatMessages((prev) => {
+          const newMessages = [...prev]
+          const lastIndex = newMessages.length - 1
+          const lastMessage = newMessages[lastIndex]
+          if (lastMessage && lastMessage.role === "assistant") {
+            // Create a new message object with the accumulated content
+            newMessages[lastIndex] = {
+              ...lastMessage,
+              content: streamingContentRef.current,
+            }
           }
-          setChatMessages((prev) => [...prev, assistantMessage])
-        },
-        onError: (error: any) => {
-          if (error?.data?.requiresPremium || error?.requiresPremium) {
-            setPremiumError(true)
-            toast({
-              title: "Premium Required",
-              description: "AI chat requires a premium subscription. Please contact admin to upgrade.",
-              variant: "destructive",
-            })
-          } else {
-            toast({
-              title: "Error",
-              description: error?.data?.error || "Failed to get AI response",
-              variant: "destructive",
-            })
-          }
-        },
+          return newMessages
+        })
+      })
+    } catch (error: any) {
+      // Remove the empty assistant message on error
+      setChatMessages((prev) => prev.slice(0, -1))
+      
+      if (error?.data?.requiresPremium || error?.requiresPremium) {
+        setPremiumError(true)
+        toast({
+          title: "Premium Required",
+          description: "AI chat requires a premium subscription. Please contact admin to upgrade.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: error?.data?.error || error?.message || "Failed to get AI response",
+          variant: "destructive",
+        })
       }
-    )
-  }, [inputMessage, restaurantId, chatMutation, toast])
+    } finally {
+      setIsStreaming(false)
+    }
+  }, [inputMessage, restaurantId, chatStream, isStreaming, toast])
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -229,7 +253,7 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
                 </div>
               </div>
             ))}
-            {chatMutation.isPending && (
+            {isStreaming && chatMessages[chatMessages.length - 1]?.role === "assistant" && chatMessages[chatMessages.length - 1]?.content === "" && (
               <div className="flex justify-start">
                 <div className="bg-muted rounded-2xl px-4 py-3">
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -248,16 +272,16 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
             value={inputMessage}
             onChange={handleInputChange}
             onKeyDown={handleKeyPress}
-            disabled={chatMutation.isPending}
+            disabled={isStreaming}
             className="flex-1"
             autoFocus={!isMobile}
           />
           <Button
             onClick={sendChatMessage}
-            disabled={chatMutation.isPending || !inputMessage.trim()}
+            disabled={isStreaming || !inputMessage.trim()}
             size="icon"
           >
-            {chatMutation.isPending ? (
+            {isStreaming ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Send className="h-4 w-4" />

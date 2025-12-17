@@ -153,19 +153,13 @@ Requirements:
 }
 
 /**
- * Chat with AI about restaurant feedback
+ * Build context for chat (shared between streaming and non-streaming)
  */
-export async function chatAboutFeedback(
-  message: string,
+function buildChatContext(
   feedback: CustomerFeedback[],
   reviews: ExternalReview[],
   restaurantName?: string
-): Promise<string> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is not configured");
-  }
-
-  // Prepare summary data for context
+): string {
   const feedbackData = feedback.map((f) => ({
     foodRating: f.foodRating,
     staffRating: f.staffRating,
@@ -182,7 +176,6 @@ export async function chatAboutFeedback(
     date: r.reviewDate.toISOString(),
   }));
 
-  // Calculate average ratings
   const avgFoodRating =
     feedbackData.length > 0
       ? feedbackData.reduce((sum, f) => sum + f.foodRating, 0) / feedbackData.length
@@ -199,14 +192,12 @@ export async function chatAboutFeedback(
     feedbackData.length > 0
       ? feedbackData.reduce((sum, f) => sum + f.overallRating, 0) / feedbackData.length
       : 0;
-
   const avgExternalRating =
     reviewData.length > 0
       ? reviewData.reduce((sum, r) => sum + r.rating, 0) / reviewData.length
       : 0;
 
-  // Build context for the AI
-  const context = `You are an AI assistant helping a restaurant owner${restaurantName ? ` of "${restaurantName}"` : ""} understand their customer feedback.
+  return `You are an AI assistant helping a restaurant owner${restaurantName ? ` of "${restaurantName}"` : ""} understand their customer feedback.
 
 **Current Feedback Summary:**
 - Total Internal Feedback: ${feedbackData.length} entries
@@ -235,6 +226,22 @@ Format your response using Markdown:
 - Use bullet points (- or *) for lists
 - Use headings (##) to organize sections if needed
 - Keep paragraphs concise and readable`;
+}
+
+/**
+ * Chat with AI about restaurant feedback
+ */
+export async function chatAboutFeedback(
+  message: string,
+  feedback: CustomerFeedback[],
+  reviews: ExternalReview[],
+  restaurantName?: string
+): Promise<string> {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is not configured");
+  }
+
+  const context = buildChatContext(feedback, reviews, restaurantName);
 
   try {
     const completion = await openai.chat.completions.create({
@@ -262,6 +269,52 @@ Format your response using Markdown:
   } catch (error) {
     console.error("OpenAI chat error:", error);
     throw new Error(`Failed to process chat: ${error instanceof Error ? error.message : "Unknown error"}`);
+  }
+}
+
+/**
+ * Chat with AI about restaurant feedback (streaming version)
+ * Returns an async generator that yields chunks of the response
+ */
+export async function* chatAboutFeedbackStream(
+  message: string,
+  feedback: CustomerFeedback[],
+  reviews: ExternalReview[],
+  restaurantName?: string
+): AsyncGenerator<string, void, unknown> {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OPENAI_API_KEY is not configured");
+  }
+
+  const context = buildChatContext(feedback, reviews, restaurantName);
+
+  try {
+    const stream = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: context,
+        },
+        {
+          role: "user",
+          content: message,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 1000,
+      stream: true,
+    });
+
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content;
+      if (content) {
+        yield content;
+      }
+    }
+  } catch (error) {
+    console.error("OpenAI streaming chat error:", error);
+    throw new Error(`Failed to process chat stream: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
 }
 

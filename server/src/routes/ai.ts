@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
 import { AIInsight, Restaurant, CustomerFeedback, ExternalReview } from "../models";
-import { generateInsights, chatAboutFeedback } from "../utils/openai";
+import { generateInsights, chatAboutFeedback, chatAboutFeedbackStream } from "../utils/openai";
 import { MoreThanOrEqual } from "typeorm";
 import { requireAuth } from "../middleware/auth";
 import { isPremium } from "../utils/subscription";
@@ -419,6 +419,121 @@ router.post("/chat", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Error in AI chat:", error);
     return res.status(500).json({ error: "Failed to process chat message" });
+  }
+});
+
+/**
+ * @swagger
+ * /api/ai/chat/stream:
+ *   post:
+ *     summary: AI chat with streaming response - Ask questions about restaurant feedback
+ *     tags: [AI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - restaurantId
+ *               - message
+ *             properties:
+ *               restaurantId:
+ *                 type: string
+ *               message:
+ *                 type: string
+ *                 description: User's question about their feedback
+ *     responses:
+ *       200:
+ *         description: Streaming AI response (Server-Sent Events)
+ *         content:
+ *           text/event-stream:
+ *             schema:
+ *               type: string
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/chat/stream", requireAuth, async (req, res) => {
+  try {
+    const { message } = req.body;
+    const restaurantId = req.restaurantId as string;
+
+    if (!restaurantId || !message) {
+      return res.status(400).json({ error: "Message required" });
+    }
+
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId);
+    if (!hasPremium) {
+      return res.status(403).json({ 
+        error: "Premium subscription required",
+        requiresPremium: true,
+      });
+    }
+
+    const restaurantRepo = AppDataSource.getRepository(Restaurant);
+    const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
+    const reviewRepo = AppDataSource.getRepository(ExternalReview);
+
+    const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    // Get recent feedback and reviews for context (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const feedback = await feedbackRepo.find({
+      where: {
+        restaurantId,
+        createdAt: MoreThanOrEqual(thirtyDaysAgo),
+      },
+      order: { createdAt: "DESC" },
+      take: 50, // Limit to recent 50 for context
+    });
+
+    const reviews = await reviewRepo.find({
+      where: {
+        restaurantId,
+        reviewDate: MoreThanOrEqual(thirtyDaysAgo),
+      },
+      order: { reviewDate: "DESC" },
+      take: 50, // Limit to recent 50 for context
+    });
+
+    // Set headers for Server-Sent Events
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no"); // Disable nginx buffering
+
+    // Generate streaming AI response
+    try {
+      const stream = chatAboutFeedbackStream(message, feedback, reviews, restaurant.name);
+      
+      for await (const chunk of stream) {
+        // Send chunk as SSE data
+        res.write(`data: ${JSON.stringify({ content: chunk })}\n\n`);
+      }
+      
+      // Send completion marker
+      res.write("data: [DONE]\n\n");
+      res.end();
+    } catch (error: any) {
+      console.error("OpenAI streaming chat error:", error);
+      res.write(`data: ${JSON.stringify({ error: error.message || "Failed to process chat message with AI" })}\n\n`);
+      res.end();
+    }
+  } catch (error) {
+    console.error("Error in AI chat stream:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Failed to process chat message" });
+    } else {
+      res.end();
+    }
   }
 });
 

@@ -30,3 +30,19 @@ export function useAIChat() {
   });
 }
 
+/**
+ * Hook for streaming AI chat
+ * @param onChunk - Callback function called with each chunk of the stream
+ */
+export function useAIChatStream() {
+  return {
+    chatStream: async (
+      restaurantId: string,
+      message: string,
+      onChunk: (chunk: string) => void
+    ): Promise<void> => {
+      return aiApi.chatStream(restaurantId, message, onChunk);
+    },
+  };
+}
+
