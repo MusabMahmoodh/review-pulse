@@ -333,9 +333,13 @@ router.get("/google/authorize", async (req, res) => {
     }
 
     // Build Google OAuth authorization URL
+    // Use CLIENT_URL to construct redirect URI dynamically (works for both dev and prod)
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+    const redirectUri = `${clientUrl}/api/auth/google/callback`;
+    
     const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
     authUrl.searchParams.set("client_id", process.env.GOOGLE_CLIENT_ID!);
-    authUrl.searchParams.set("redirect_uri", process.env.GOOGLE_REDIRECT_URI!);
+    authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("scope", "https://www.googleapis.com/auth/business.manage");
     authUrl.searchParams.set("access_type", "offline"); // Required for refresh token
@@ -385,6 +389,9 @@ router.get("/google/callback", async (req, res) => {
     }
 
     // 1. Exchange authorization code for tokens
+    // Use CLIENT_URL to construct redirect URI dynamically (must match the one used in authorize)
+    const redirectUri = `${clientUrl}/api/auth/google/callback`;
+    
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -392,7 +399,7 @@ router.get("/google/callback", async (req, res) => {
         code: code as string,
         client_id: process.env.GOOGLE_CLIENT_ID!,
         client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-        redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+        redirect_uri: redirectUri,
         grant_type: "authorization_code",
       }),
     });
