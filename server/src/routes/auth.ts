@@ -334,7 +334,7 @@ router.get("/google/authorize", async (req, res) => {
 
     // Build Google OAuth authorization URL
     // Use CLIENT_URL to construct redirect URI dynamically (works for both dev and prod)
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:3001";
     const redirectUri = `${clientUrl}/api/auth/google/callback`;
     
     const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
