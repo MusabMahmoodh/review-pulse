@@ -10,7 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ChefHat, Loader2, Plus, X } from "lucide-react"
+import { Loader2, Plus, X } from "lucide-react"
+import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast-simple"
 import { Badge } from "@/components/ui/badge"
 import { useRegister } from "@/hooks/use-auth"
@@ -119,7 +120,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <ChefHat className="h-10 w-10 text-primary" />
+            <Logo width={40} height={40} />
             <span className="text-2xl font-bold">Guestra</span>
           </Link>
         </div>

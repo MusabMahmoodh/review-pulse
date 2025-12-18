@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChefHat, Download, Share2, Copy, Check, Loader2 } from "lucide-react"
+import { Download, Share2, Copy, Check, Loader2 } from "lucide-react"
+import { Logo } from "@/components/logo"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useAuth } from "@/hooks"
@@ -147,7 +148,7 @@ export default function QRCodePage() {
       <header className="border-b bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <ChefHat className="h-8 w-8 text-primary" />
+            <Logo width={32} height={32} />
             <span className="text-xl font-bold">Guestra</span>
           </Link>
           <Link href="/dashboard">

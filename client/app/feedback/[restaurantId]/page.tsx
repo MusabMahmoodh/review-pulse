@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ChefHat, Send, CheckCircle, Star } from "lucide-react"
+import { Send, CheckCircle, Star } from "lucide-react"
+import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useSubmitFeedback, useReviewPageSettings } from "@/hooks"
 
@@ -158,10 +159,7 @@ export default function FeedbackPage({ params }: PageProps) {
     >
       <header className={designStyles.headerClass}>
         <div className="container mx-auto px-4 py-4 flex items-center justify-center gap-2">
-          <ChefHat 
-            className="h-8 w-8" 
-            style={{ color: pageSettings.designVariation === 'modern' ? 'white' : pageSettings.primaryColor }}
-          />
+          <Logo width={32} height={32} />
           <span className="text-xl font-bold">Share Your Experience</span>
         </div>
       </header>

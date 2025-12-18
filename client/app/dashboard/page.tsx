@@ -2,7 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChefHat, QrCode, LogOut, ChevronRight, Settings, Sparkles, BarChart3, MessageSquare, Star, CheckSquare, Users } from "lucide-react"
+import { QrCode, LogOut, ChevronRight, Settings, Sparkles, BarChart3, MessageSquare, Star, CheckSquare, Users } from "lucide-react"
+import { Logo } from "@/components/logo"
 import Link from "next/link"
 import { FeedbackList } from "@/components/feedback-list"
 import { StatsCards } from "@/components/stats-cards"
@@ -30,9 +31,7 @@ export default function DashboardPage() {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <ChefHat className="h-5 w-5 text-primary" />
-              </div>
+              <Logo width={40} height={40} />
               <div>
                 <h1 className="text-lg font-semibold leading-none">The Culinary Corner</h1>
                 <p className="text-xs text-muted-foreground mt-0.5">Dashboard Overview</p>

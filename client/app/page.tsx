@@ -4,7 +4,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  ChefHat,
   QrCode,
   Sparkles,
   Brain,
@@ -23,6 +22,7 @@ import {
   Briefcase,
   Shield,
 } from "lucide-react"
+import { Logo } from "@/components/logo"
 import { useEffect, useState } from "react"
 
 export default function HomePage() {
@@ -43,12 +43,8 @@ export default function HomePage() {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50 animate-in fade-in slide-in-from-top duration-500">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ChefHat className="h-8 w-8 text-primary animate-in zoom-in duration-700" />
-            <div className="animate-in slide-in-from-left duration-700 delay-100">
-              <span className="text-xl font-bold">Guestra</span>
-              <p className="text-xs text-muted-foreground">every review is a growth opportunity</p>
-            </div>
+          <div className="animate-in slide-in-from-left duration-700 delay-100">
+            <Logo width={32} height={32} showText className="animate-in zoom-in duration-700" />
           </div>
           <nav className="flex items-center gap-4 animate-in slide-in-from-right duration-700 delay-200">
             <Link href="/login">

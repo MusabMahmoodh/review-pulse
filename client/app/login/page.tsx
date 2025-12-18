@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ChefHat, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
+import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useLogin } from "@/hooks/use-auth"
 
@@ -58,7 +59,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <ChefHat className="h-10 w-10 text-primary" />
+            <Logo width={40} height={40} />
             <span className="text-2xl font-bold">Guestra</span>
           </Link>
         </div>

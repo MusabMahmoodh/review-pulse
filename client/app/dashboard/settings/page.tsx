@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ArrowLeft, Facebook, Instagram, Chrome, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle, Loader2, Hash, Crown, Lock, Palette, MessageSquare, Star, ChefHat } from "lucide-react"
+import { ArrowLeft, Facebook, Instagram, Chrome, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle, Loader2, Hash, Crown, Lock, Palette, MessageSquare, Star } from "lucide-react"
+import { Logo } from "@/components/logo"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useAuth } from "@/hooks/use-auth"
@@ -991,13 +992,9 @@ function SettingsPageContent() {
                         }
                       >
                         <div className="flex items-center justify-center gap-2">
-                          <ChefHat 
-                            className="h-5 w-5" 
-                            style={{ 
-                              color: reviewSettings.designVariation === 'modern' 
-                                ? 'white' 
-                                : reviewSettings.primaryColor 
-                            }}
+                          <Logo 
+                            width={20} 
+                            height={20}
                           />
                           <span 
                             className="text-sm font-bold"
