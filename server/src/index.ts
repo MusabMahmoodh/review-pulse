@@ -14,7 +14,7 @@ import aiRoutes from "./routes/ai";
 import actionableItemsRoutes from "./routes/actionable-items";
 import teamMembersRoutes from "./routes/team-members";
 
-// Load environment variables
+// Load environment variables 222
 dotenv.config();
 
 const app = express();
