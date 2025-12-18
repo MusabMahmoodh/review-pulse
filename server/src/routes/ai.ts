@@ -389,7 +389,6 @@ router.post("/chat", requireAuth, async (req, res) => {
         createdAt: MoreThanOrEqual(thirtyDaysAgo),
       },
       order: { createdAt: "DESC" },
-      take: 50, // Limit to recent 50 for context
     });
 
     const reviews = await reviewRepo.find({
@@ -398,7 +397,6 @@ router.post("/chat", requireAuth, async (req, res) => {
         reviewDate: MoreThanOrEqual(thirtyDaysAgo),
       },
       order: { reviewDate: "DESC" },
-      take: 50, // Limit to recent 50 for context
     });
 
     // Generate AI response using OpenAI
@@ -492,7 +490,6 @@ router.post("/chat/stream", requireAuth, async (req, res) => {
         createdAt: MoreThanOrEqual(thirtyDaysAgo),
       },
       order: { createdAt: "DESC" },
-      take: 50, // Limit to recent 50 for context
     });
 
     const reviews = await reviewRepo.find({
@@ -501,7 +498,6 @@ router.post("/chat/stream", requireAuth, async (req, res) => {
         reviewDate: MoreThanOrEqual(thirtyDaysAgo),
       },
       order: { reviewDate: "DESC" },
-      take: 50, // Limit to recent 50 for context
     });
 
     // Set headers for Server-Sent Events
