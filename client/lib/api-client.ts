@@ -389,7 +389,7 @@ export const externalReviewsApi = {
     }>(`/api/external-reviews/list?restaurantId=${restaurantId}`);
   },
 
-  sync: async (restaurantId: string, platforms?: string[]) => {
+  sync: async (restaurantId: string, platforms?: string[], placeId?: string) => {
     return fetchApi<{
       success: boolean;
       results: Record<string, { success: boolean; count: number; error?: string }>;
@@ -397,8 +397,20 @@ export const externalReviewsApi = {
       syncedAt: string;
     }>("/api/external-reviews/sync", {
       method: "POST",
-      body: JSON.stringify({ restaurantId, platforms }),
+      body: JSON.stringify({ restaurantId, platforms, placeId }),
     });
+  },
+
+  searchPlace: async (query: string) => {
+    return fetchApi<{
+      places: Array<{
+        place_id: string;
+        name: string;
+        formatted_address: string;
+        rating?: number;
+        user_ratings_total?: number;
+      }>;
+    }>(`/api/external-reviews/search-place?query=${encodeURIComponent(query)}`);
   },
 };
 
