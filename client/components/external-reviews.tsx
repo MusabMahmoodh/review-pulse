@@ -102,7 +102,7 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
           >
             Google ({googleCount})
           </Button>
-          <Button
+          {/* <Button
             variant={selectedPlatform === "facebook" ? "default" : "outline"}
             size="sm"
             onClick={() => setSelectedPlatform("facebook")}
@@ -117,7 +117,7 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
             className="flex-shrink-0"
           >
             IG ({instagramCount})
-          </Button>
+          </Button> */}
         </div>
 
         <div className="space-y-0 divide-y">
@@ -171,7 +171,7 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg">External Reviews</CardTitle>
-              <CardDescription>Reviews from Google, Facebook, and Instagram</CardDescription>
+              <CardDescription>Reviews from Google{/*, Facebook, and Instagram*/}</CardDescription>
             </div>
             <Button onClick={() => syncReviews()} disabled={syncMutation.isPending} size="sm">
               <RefreshCw className={`h-4 w-4 mr-2 ${syncMutation.isPending ? "animate-spin" : ""}`} />
@@ -198,7 +198,7 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
         >
           Google ({googleCount})
         </Button>
-        <Button
+        {/* <Button
           variant={selectedPlatform === "facebook" ? "default" : "outline"}
           size="sm"
           onClick={() => setSelectedPlatform("facebook")}
@@ -213,7 +213,7 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
           className="flex-shrink-0"
         >
           Instagram ({instagramCount})
-        </Button>
+        </Button> */}
       </div>
 
       <div className="space-y-3">

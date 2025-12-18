@@ -148,7 +148,7 @@ export default function QRCodePage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2">
             <ChefHat className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">FeedbackHub</span>
+            <span className="text-xl font-bold">Guestra</span>
           </Link>
           <Link href="/dashboard">
             <Button variant="ghost">Back to Dashboard</Button>

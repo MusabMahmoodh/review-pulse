@@ -34,7 +34,7 @@ export function PremiumUpgrade({
           </div>
           <div className="flex items-center justify-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span>Social media integration (Google, Facebook, Instagram)</span>
+            <span>Social media integration (Google{/*, Facebook, Instagram*/})</span>
           </div>
           <div className="flex items-center justify-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -54,4 +54,6 @@ export function PremiumUpgrade({
     </Card>
   )
 }
+
+
 

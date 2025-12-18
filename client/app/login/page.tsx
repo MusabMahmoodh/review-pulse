@@ -59,7 +59,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
             <ChefHat className="h-10 w-10 text-primary" />
-            <span className="text-2xl font-bold">FeedbackHub</span>
+            <span className="text-2xl font-bold">Guestra</span>
           </Link>
         </div>
 

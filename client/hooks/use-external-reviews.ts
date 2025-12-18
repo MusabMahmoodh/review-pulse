@@ -15,12 +15,15 @@ export function useSyncExternalReviews() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: externalReviewsApi.sync,
+    mutationFn: (params: { restaurantId: string; platforms?: string[] }) => 
+      externalReviewsApi.sync(params.restaurantId, params.platforms),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["external-reviews", variables.restaurantId] });
     },
   });
 }
+
+
 
 
 

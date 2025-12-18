@@ -49,7 +49,7 @@ export default function AdminLoginPage() {
             <ShieldCheck className="w-6 h-6 text-orange-600" />
           </div>
           <CardTitle className="text-2xl">Admin Login</CardTitle>
-          <CardDescription>Access the FeedbackHub admin dashboard</CardDescription>
+          <CardDescription>Access the Guestra admin dashboard</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
@@ -58,7 +58,7 @@ export default function AdminLoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@feedbackhub.com"
+                placeholder="admin@guestra.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -79,7 +79,7 @@ export default function AdminLoginPage() {
               {loginMutation.isPending ? "Logging in..." : "Login"}
             </Button>
             <p className="text-xs text-center text-muted-foreground mt-4">
-              Demo: admin@feedbackhub.com / admin_password
+              Demo: admin@guestra.com / admin_password
             </p>
           </form>
         </CardContent>

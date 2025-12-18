@@ -157,7 +157,7 @@ function SettingsPageContent() {
       
       const totalSynced = data.totalSynced || 0
       const googleResult = data.results?.google
-      const facebookResult = data.results?.facebook
+      // const facebookResult = data.results?.facebook
       
       const successMessages: string[] = []
       const errorMessages: string[] = []
@@ -168,11 +168,11 @@ function SettingsPageContent() {
         errorMessages.push(`Google: ${googleResult.error}`)
       }
       
-      if (facebookResult?.success) {
-        successMessages.push(`Facebook: ${facebookResult.count} review${facebookResult.count !== 1 ? "s" : ""}`)
-      } else if (facebookResult?.error) {
-        errorMessages.push(`Facebook: ${facebookResult.error}`)
-      }
+      // if (facebookResult?.success) {
+      //   successMessages.push(`Facebook: ${facebookResult.count} review${facebookResult.count !== 1 ? "s" : ""}`)
+      // } else if (facebookResult?.error) {
+      //   errorMessages.push(`Facebook: ${facebookResult.error}`)
+      // }
       
       if (successMessages.length > 0) {
         toast({
@@ -253,34 +253,34 @@ function SettingsPageContent() {
       window.history.replaceState({}, "", "/dashboard/settings")
     }
 
-    if (metaConnected === "true") {
-      queryClient.invalidateQueries({ queryKey: ["restaurants", "meta-integration", restaurantId] })
-      toast({
-        title: "Success",
-        description: "Meta (Facebook & Instagram) account connected successfully!",
-      })
-      // Clean up URL
-      window.history.replaceState({}, "", "/dashboard/settings")
-    }
+    // if (metaConnected === "true") {
+    //   queryClient.invalidateQueries({ queryKey: ["restaurants", "meta-integration", restaurantId] })
+    //   toast({
+    //     title: "Success",
+    //     description: "Meta (Facebook & Instagram) account connected successfully!",
+    //   })
+    //   // Clean up URL
+    //   window.history.replaceState({}, "", "/dashboard/settings")
+    // }
 
-    if (metaError) {
-      const errorMessages: Record<string, string> = {
-        missing_params: "Missing authorization parameters",
-        token_exchange_failed: "Failed to obtain access token from Meta",
-        no_pages: "No Facebook pages found. Please create a Facebook Page first.",
-        invalid_account: "Unable to determine Facebook account ID",
-        premium_required: "Premium subscription required. Please contact admin to upgrade.",
-        unknown: "An unknown error occurred during Meta authorization",
-      }
+    // if (metaError) {
+    //   const errorMessages: Record<string, string> = {
+    //     missing_params: "Missing authorization parameters",
+    //     token_exchange_failed: "Failed to obtain access token from Meta",
+    //     no_pages: "No Facebook pages found. Please create a Facebook Page first.",
+    //     invalid_account: "Unable to determine Facebook account ID",
+    //     premium_required: "Premium subscription required. Please contact admin to upgrade.",
+    //     unknown: "An unknown error occurred during Meta authorization",
+    //   }
 
-      toast({
-        title: "Connection Failed",
-        description: errorMessages[metaError] || "Failed to connect Meta account",
-        variant: "destructive",
-      })
-      // Clean up URL
-      window.history.replaceState({}, "", "/dashboard/settings")
-    }
+    //   toast({
+    //     title: "Connection Failed",
+    //     description: errorMessages[metaError] || "Failed to connect Meta account",
+    //     variant: "destructive",
+    //   })
+    //   // Clean up URL
+    //   window.history.replaceState({}, "", "/dashboard/settings")
+    // }
   }, [searchParams, queryClient, restaurantId, toast])
 
   const handleAddKeyword = () => {
@@ -348,7 +348,7 @@ function SettingsPageContent() {
   const handleSyncNow = async () => {
     const platforms: string[] = []
     if (isGoogleConnected) platforms.push("google")
-    if (isMetaConnected) platforms.push("facebook")
+    // if (isMetaConnected) platforms.push("facebook")
     syncMutation.mutate(platforms.length > 0 ? platforms : undefined)
   }
 
@@ -429,7 +429,8 @@ function SettingsPageContent() {
                   </Badge>
                 </div>
                 <CardDescription className="text-xs mt-1">
-                  Add 3-5 keywords to find your restaurant mentions on Facebook and Instagram
+                  {/* Add 3-5 keywords to find your restaurant mentions on Facebook and Instagram */}
+                  Add 3-5 keywords to find your restaurant mentions on social media
                 </CardDescription>
               </div>
             </div>
@@ -443,7 +444,7 @@ function SettingsPageContent() {
             ) : (!hasPremium || premiumError?.section === "keywords") ? (
               <PremiumUpgrade 
                 feature="Social Media Keywords"
-                description="Track your restaurant mentions on Facebook and Instagram with custom keywords. This feature requires a premium subscription."
+                description="Track your restaurant mentions on social media with custom keywords. This feature requires a premium subscription."
               />
             ) : (
               <>
@@ -550,12 +551,12 @@ function SettingsPageContent() {
             {!hasPremium || premiumError?.section === "integrations" ? (
               <PremiumUpgrade 
                 feature="Platform Integrations"
-                description="Connect your Google Business Profile and Meta (Facebook & Instagram) accounts to sync reviews automatically. This feature requires a premium subscription."
+                description="Connect your Google Business Profile to sync reviews automatically. This feature requires a premium subscription."
               />
             ) : (
               <>
-                {/* Meta Integration */}
-            <div className="space-y-3">
+                {/* Meta Integration - Commented out for now */}
+            {/* <div className="space-y-3">
               <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-2 rounded-lg transition-all ${
                 isMetaConnected 
                   ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800" 
@@ -638,7 +639,7 @@ function SettingsPageContent() {
                   </p>
                 </div>
               )}
-            </div>
+            </div> */}
 
             {/* Google Integration */}
             <div className="space-y-3">
@@ -754,17 +755,17 @@ function SettingsPageContent() {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm mb-1">Last Sync</p>
                 <p className="text-xs text-muted-foreground">
-                  {isGoogleConnected || isMetaConnected
+                  {isGoogleConnected
                     ? (() => {
                         const googleSync = isGoogleConnected ? googleIntegration?.lastSyncedAt : null
-                        const metaSync = isMetaConnected ? metaIntegration?.lastSyncedAt : null
-                        if (googleSync && metaSync) {
-                          const googleDate = new Date(googleSync)
-                          const metaDate = new Date(metaSync)
-                          const latest = googleDate > metaDate ? googleDate : metaDate
-                          return formatLastSync(latest.toISOString())
-                        }
-                        return formatLastSync(googleSync || metaSync || null)
+                        // const metaSync = isMetaConnected ? metaIntegration?.lastSyncedAt : null
+                        // if (googleSync && metaSync) {
+                        //   const googleDate = new Date(googleSync)
+                        //   const metaDate = new Date(metaSync)
+                        //   const latest = googleDate > metaDate ? googleDate : metaDate
+                        //   return formatLastSync(latest.toISOString())
+                        // }
+                        return formatLastSync(googleSync || null)
                       })()
                     : "Not available - Connect an account first"
                   }
@@ -772,7 +773,7 @@ function SettingsPageContent() {
               </div>
               <Button 
                 onClick={handleSyncNow} 
-                disabled={syncMutation.isPending || (!isGoogleConnected && !isMetaConnected) || !restaurantId} 
+                disabled={syncMutation.isPending || !isGoogleConnected || !restaurantId} 
                 size="default"
                 variant="outline"
                 className="h-10 w-full sm:w-auto shrink-0"
