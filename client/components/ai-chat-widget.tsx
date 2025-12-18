@@ -298,7 +298,7 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
         {/* Floating Button */}
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+          className="fixed bottom-24 right-6 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
           aria-label="Open AI Chat"
         >
           {chatMessages.length > 0 && (
