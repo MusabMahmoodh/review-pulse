@@ -415,7 +415,7 @@ function SettingsPageContent() {
       {/* Main Content */}
       <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-24 md:pb-6">
         {/* Social Keywords Section */}
-        <Card className="overflow-hidden border-2">
+        {/* <Card className="overflow-hidden border-2">
           <CardHeader className="bg-muted/30 pb-4">
             <div className="flex items-center gap-2">
               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -430,7 +430,7 @@ function SettingsPageContent() {
                   </Badge>
                 </div>
                 <CardDescription className="text-xs mt-1">
-                  {/* Add 3-5 keywords to find your restaurant mentions on Facebook and Instagram */}
+                 
                   Add 3-5 keywords to find your restaurant mentions on social media
                 </CardDescription>
               </div>
@@ -525,7 +525,7 @@ function SettingsPageContent() {
               </>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Integration Status */}
         <Card className="overflow-hidden border-2">

@@ -101,28 +101,44 @@ export default function FeedbackPage({ params }: PageProps) {
           ...baseStyles,
           headerClass: 'bg-gradient-to-r from-[var(--primary-color)] to-[var(--secondary-color)] text-white',
           cardClass: 'shadow-2xl border-0',
-          buttonClass: 'bg-gradient-to-r from-[var(--primary-color)] to-[var(--secondary-color)] hover:opacity-90',
+          buttonClass: 'hover:opacity-90 text-white',
+          buttonStyle: {
+            background: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
+            color: 'white',
+          } as React.CSSProperties,
         }
       case 'minimal':
         return {
           ...baseStyles,
           headerClass: 'bg-transparent border-b-2 border-[var(--primary-color)]',
           cardClass: 'shadow-none border-2 border-[var(--primary-color)]/20',
-          buttonClass: 'bg-[var(--primary-color)] hover:bg-[var(--secondary-color)]',
+          buttonClass: 'text-white',
+          buttonStyle: {
+            backgroundColor: primaryColor,
+            color: 'white',
+          } as React.CSSProperties,
         }
       case 'elegant':
         return {
           ...baseStyles,
           headerClass: 'bg-[var(--background-color)] border-b border-[var(--primary-color)]/30',
           cardClass: 'shadow-lg border border-[var(--primary-color)]/10 bg-white/50 backdrop-blur-sm',
-          buttonClass: 'bg-[var(--secondary-color)] hover:bg-[var(--primary-color)]',
+          buttonClass: 'text-white',
+          buttonStyle: {
+            backgroundColor: secondaryColor,
+            color: 'white',
+          } as React.CSSProperties,
         }
       default: // default
         return {
           ...baseStyles,
           headerClass: 'border-b bg-card/50 backdrop-blur-sm',
           cardClass: '',
-          buttonClass: '',
+          buttonClass: 'text-white',
+          buttonStyle: {
+            backgroundColor: primaryColor,
+            color: 'white',
+          } as React.CSSProperties,
         }
     }
   }, [pageSettings])
@@ -154,7 +170,8 @@ export default function FeedbackPage({ params }: PageProps) {
         backgroundColor: pageSettings.backgroundColor,
         background: pageSettings.designVariation === 'modern' 
           ? `linear-gradient(to bottom, ${pageSettings.backgroundColor}, ${pageSettings.primaryColor}15)`
-          : `linear-gradient(to bottom, ${pageSettings.backgroundColor}, ${pageSettings.backgroundColor}dd)`
+          : `linear-gradient(to bottom, ${pageSettings.backgroundColor}, ${pageSettings.backgroundColor}dd)`,
+        ...designStyles as React.CSSProperties
       }}
     >
       <header className={designStyles.headerClass}>
@@ -252,10 +269,7 @@ export default function FeedbackPage({ params }: PageProps) {
                 className={`w-full ${designStyles.buttonClass}`}
                 size="lg" 
                 disabled={submitMutation.isPending}
-                style={designStyles.buttonClass ? {} : { 
-                  backgroundColor: pageSettings.primaryColor,
-                  color: 'white'
-                }}
+                style={designStyles.buttonStyle}
               >
                 <Send className="mr-2 h-4 w-4" />
                 {submitMutation.isPending ? "Submitting..." : "Submit Feedback"}
