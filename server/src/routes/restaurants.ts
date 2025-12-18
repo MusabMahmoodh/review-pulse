@@ -473,5 +473,121 @@ router.put("/review-page-settings", requireAuth, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/restaurants/google-place-id:
+ *   get:
+ *     summary: Get restaurant Google Place ID
+ *     tags: [Restaurants]
+ *     parameters:
+ *       - in: query
+ *         name: restaurantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Restaurant ID
+ *     responses:
+ *       200:
+ *         description: Place ID retrieved successfully
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Restaurant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/google-place-id", requireAuth, async (req, res) => {
+  try {
+    const restaurantId = req.restaurantId as string;
+
+    const restaurantRepo = AppDataSource.getRepository(Restaurant);
+    const restaurant = await restaurantRepo.findOne({ 
+      where: { id: restaurantId },
+      select: ["id", "googlePlaceId"]
+    });
+
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    return res.json({
+      success: true,
+      placeId: restaurant.googlePlaceId || null,
+    });
+  } catch (error) {
+    console.error("Error fetching Google Place ID:", error);
+    return res.status(500).json({ error: "Failed to fetch Google Place ID" });
+  }
+});
+
+/**
+ * @swagger
+ * /api/restaurants/google-place-id:
+ *   put:
+ *     summary: Update restaurant Google Place ID
+ *     tags: [Restaurants]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - restaurantId
+ *               - placeId
+ *             properties:
+ *               restaurantId:
+ *                 type: string
+ *               placeId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Place ID updated successfully
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Restaurant not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/google-place-id", requireAuth, async (req, res) => {
+  try {
+    const restaurantId = req.restaurantId as string;
+    const { placeId } = req.body;
+
+    // Check premium access
+    const hasPremium = await isPremium(restaurantId);
+    if (!hasPremium) {
+      return res.status(403).json({ 
+        error: "Premium subscription required",
+        requiresPremium: true,
+      });
+    }
+
+    if (!placeId || typeof placeId !== "string") {
+      return res.status(400).json({ error: "Place ID is required" });
+    }
+
+    const restaurantRepo = AppDataSource.getRepository(Restaurant);
+    const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
+
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    restaurant.googlePlaceId = placeId;
+    await restaurantRepo.save(restaurant);
+
+    return res.json({
+      success: true,
+      message: "Google Place ID saved successfully",
+      placeId: restaurant.googlePlaceId,
+    });
+  } catch (error) {
+    console.error("Error updating Google Place ID:", error);
+    return res.status(500).json({ error: "Failed to update Google Place ID" });
+  }
+});
+
 export default router;
 

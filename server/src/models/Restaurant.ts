@@ -30,6 +30,9 @@ export class Restaurant {
   @Column("simple-array", { default: "" })
   socialKeywords!: string[];
 
+  @Column({ nullable: true })
+  googlePlaceId?: string;
+
   @Column({ default: "active" })
   status!: "active" | "blocked";
 

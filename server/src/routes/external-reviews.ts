@@ -158,7 +158,13 @@ router.post("/sync", requireAuth, async (req, res) => {
     // Use "google-places" as platform name to use this method
     if (platformsToSync.includes("google-places")) {
       try {
-        const count = await fetchGoogleReviewsFromPlaces(restaurantId, placeId);
+        // Use provided placeId, or get from restaurant's saved placeId
+        let finalPlaceId = placeId;
+        if (!finalPlaceId && restaurant.googlePlaceId) {
+          finalPlaceId = restaurant.googlePlaceId;
+        }
+        
+        const count = await fetchGoogleReviewsFromPlaces(restaurantId, finalPlaceId);
 
         results["google-places"] = {
           success: true,

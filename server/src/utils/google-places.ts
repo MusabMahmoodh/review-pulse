@@ -33,14 +33,24 @@ export async function fetchGoogleReviewsFromPlaces(
     throw new Error("Restaurant not found");
   }
 
-  // If no placeId provided, try to find it using Text Search
-  let finalPlaceId: string | undefined = placeId;
+  // Priority: 1. Provided placeId, 2. Saved googlePlaceId, 3. Auto-detect from name/address
+  let finalPlaceId: string | undefined = placeId || restaurant.googlePlaceId;
+  
   if (!finalPlaceId) {
+    // Try to find it using Text Search
     const foundPlaceId: string | undefined = await findPlaceId(restaurant.name, restaurant.address, apiKey);
     if (!foundPlaceId) {
       throw new Error("Could not find Google Place ID. Please provide a Place ID or ensure restaurant name/address is accurate.");
     }
     finalPlaceId = foundPlaceId;
+    
+    // Save the auto-detected Place ID for future use
+    restaurant.googlePlaceId = foundPlaceId;
+    await restaurantRepo.save(restaurant);
+  } else if (placeId && placeId !== restaurant.googlePlaceId) {
+    // If a new placeId was provided, save it
+    restaurant.googlePlaceId = placeId;
+    await restaurantRepo.save(restaurant);
   }
   
   // At this point, finalPlaceId must be a string

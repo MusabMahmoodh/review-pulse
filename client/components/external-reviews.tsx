@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { RefreshCw, Star, Calendar, Loader2 } from "lucide-react"
+import { RefreshCw, Star, Calendar, Loader2, ChevronDown, ChevronUp } from "lucide-react"
 import type { ExternalReview } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useExternalReviews, useSyncExternalReviews } from "@/hooks"
@@ -18,11 +18,17 @@ interface ExternalReviewsProps {
 export function ExternalReviews({ restaurantId, compact = false }: ExternalReviewsProps) {
   const { toast } = useToast()
   const [selectedPlatform, setSelectedPlatform] = useState<string>("all")
+  const [showAllInCompact, setShowAllInCompact] = useState<boolean>(false)
 
   const { data, isLoading: loading } = useExternalReviews(restaurantId)
   const syncMutation = useSyncExternalReviews()
 
   const reviews = data?.reviews || []
+
+  // Reset showAllInCompact when platform filter changes
+  useEffect(() => {
+    setShowAllInCompact(false)
+  }, [selectedPlatform])
 
   const syncReviews = async () => {
     syncMutation.mutate(
@@ -65,7 +71,8 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
 
   const filteredReviews = selectedPlatform === "all" ? reviews : reviews.filter((r) => r.platform === selectedPlatform)
 
-  const displayReviews = compact ? filteredReviews.slice(0, 3) : filteredReviews
+  const displayReviews = compact && !showAllInCompact ? filteredReviews.slice(0, 3) : filteredReviews
+  const hasMoreReviews = compact && filteredReviews.length > 3
 
   const googleCount = reviews.filter((r) => r.platform === "google").length
   const facebookCount = reviews.filter((r) => r.platform === "facebook").length
@@ -159,6 +166,28 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
             ))
           )}
         </div>
+        {hasMoreReviews && (
+          <div className="px-6 pt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAllInCompact(!showAllInCompact)}
+              className="w-full text-muted-foreground hover:text-foreground"
+            >
+              {showAllInCompact ? (
+                <>
+                  <ChevronUp className="h-4 w-4 mr-2" />
+                  Show Less
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4 mr-2" />
+                  See All ({filteredReviews.length} reviews)
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     )
   }

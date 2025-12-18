@@ -35,6 +35,20 @@ function SettingsPageContent() {
   const restaurantId = user?.id || null
   const hasPremium = isPremiumFromAuth(user?.subscription)
 
+  // Fetch saved Place ID
+  const { data: placeIdData } = useQuery({
+    queryKey: ["restaurants", "google-place-id", restaurantId],
+    queryFn: () => restaurantsApi.getGooglePlaceId(restaurantId!),
+    enabled: !!restaurantId && isAuthenticated,
+  })
+
+  // Load saved placeId when data is available
+  useEffect(() => {
+    if (placeIdData?.placeId) {
+      setPlaceId(placeIdData.placeId)
+    }
+  }, [placeIdData?.placeId])
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -420,14 +434,25 @@ function SettingsPageContent() {
     }
   }
 
-  const handleSelectPlace = (selectedPlaceId: string) => {
+  const handleSelectPlace = async (selectedPlaceId: string) => {
     setPlaceId(selectedPlaceId)
     setPlaceSearchQuery("")
     setPlaceSearchResults([])
-    toast({
-      title: "Place Selected",
-      description: "Place ID saved. You can now sync reviews.",
-    })
+    
+    // Save to database
+    try {
+      await restaurantsApi.updateGooglePlaceId(restaurantId!, selectedPlaceId)
+      toast({
+        title: "Place ID Saved",
+        description: "Google Place ID has been saved. You can now sync reviews.",
+      })
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.data?.error || "Failed to save Place ID",
+        variant: "destructive",
+      })
+    }
   }
 
   const formatLastSync = (dateString: string | null) => {
@@ -898,15 +923,42 @@ function SettingsPageContent() {
                     </div>
                   )}
 
-                  {/* Manual Place ID Input */}
-                  <div className="space-y-2">
-                    <Label htmlFor="place-id">Or Enter Place ID Manually</Label>
-                    <Input
-                      id="place-id"
-                      placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4"
-                      value={placeId}
-                      onChange={(e) => setPlaceId(e.target.value)}
-                    />
+                    {/* Manual Place ID Input */}
+                    <div className="space-y-2">
+                      <Label htmlFor="place-id">Or Enter Place ID Manually</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="place-id"
+                          placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4"
+                          value={placeId}
+                          onChange={(e) => setPlaceId(e.target.value)}
+                          className="flex-1"
+                        />
+                        {placeId && placeId !== placeIdData?.placeId && (
+                          <Button
+                            onClick={async () => {
+                              try {
+                                await restaurantsApi.updateGooglePlaceId(restaurantId!, placeId)
+                                toast({
+                                  title: "Place ID Saved",
+                                  description: "Google Place ID has been saved successfully.",
+                                })
+                                queryClient.invalidateQueries({ queryKey: ["restaurants", restaurantId] })
+                              } catch (error: any) {
+                                toast({
+                                  title: "Error",
+                                  description: error?.data?.error || "Failed to save Place ID",
+                                  variant: "destructive",
+                                })
+                              }
+                            }}
+                            variant="outline"
+                            size="sm"
+                          >
+                            Save
+                          </Button>
+                        )}
+                      </div>
                     <p className="text-xs text-muted-foreground">
                       Find your Place ID using the search above or{" "}
                       <a

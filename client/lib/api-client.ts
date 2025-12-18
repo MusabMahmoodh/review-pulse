@@ -272,6 +272,24 @@ export const restaurantsApi = {
       body: JSON.stringify({ restaurantId, ...settings }),
     });
   },
+
+  getGooglePlaceId: async (restaurantId: string) => {
+    return fetchApi<{
+      success: boolean;
+      placeId: string | null;
+    }>(`/api/restaurants/google-place-id?restaurantId=${restaurantId}`);
+  },
+
+  updateGooglePlaceId: async (restaurantId: string, placeId: string) => {
+    return fetchApi<{
+      success: boolean;
+      message: string;
+      placeId: string;
+    }>("/api/restaurants/google-place-id", {
+      method: "PUT",
+      body: JSON.stringify({ restaurantId, placeId }),
+    });
+  },
 };
 
 // Admin API
