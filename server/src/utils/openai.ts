@@ -20,7 +20,8 @@ export interface InsightData {
 export async function generateInsights(
   feedback: CustomerFeedback[],
   reviews: ExternalReview[],
-  restaurantName?: string
+  restaurantName?: string,
+  filter: "external" | "internal" | "overall" = "overall"
 ): Promise<InsightData> {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is not configured");
@@ -66,8 +67,15 @@ export async function generateInsights(
       ? reviewData.reduce((sum, r) => sum + r.rating, 0) / reviewData.length
       : 0;
 
+  // Build prompt with filter context
+  const filterContext = filter === "internal" 
+    ? " (analyzing only internal feedback from your review system)"
+    : filter === "external"
+    ? " (analyzing only external reviews from Google, Facebook, etc.)"
+    : " (analyzing both internal feedback and external reviews)";
+
   // Build prompt
-  const prompt = `You are an AI assistant analyzing customer feedback and reviews for a restaurant${restaurantName ? ` named "${restaurantName}"` : ""}.
+  const prompt = `You are an AI assistant analyzing customer feedback and reviews for a restaurant${restaurantName ? ` named "${restaurantName}"` : ""}${filterContext}.
 
 Analyze the following data and provide insights:
 

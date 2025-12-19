@@ -15,8 +15,8 @@ export function useGenerateInsights() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ restaurantId, timePeriod = "month" }: { restaurantId: string; timePeriod?: TimePeriod }) =>
-      aiApi.generateInsights(restaurantId, timePeriod),
+    mutationFn: ({ restaurantId, timePeriod = "month", filter = "overall" }: { restaurantId: string; timePeriod?: TimePeriod; filter?: "external" | "internal" | "overall" }) =>
+      aiApi.generateInsights(restaurantId, timePeriod, filter),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["ai", "insights", variables.restaurantId] });
     },

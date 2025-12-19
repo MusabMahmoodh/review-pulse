@@ -209,8 +209,16 @@ router.get("/insights", requireAuth, async (req, res) => {
  */
 router.post("/generate-insights", requireAuth, async (req, res) => {
   try {
-    const { timePeriod = "month" } = req.body;
+    const { timePeriod = "month", filter = "overall" } = req.body;
     const restaurantId = req.restaurantId as string;
+    
+    // Validate filter type
+    const validFilters = ["external", "internal", "overall"];
+    if (!validFilters.includes(filter)) {
+      return res.status(400).json({
+        error: `Invalid filter. Must be one of: ${validFilters.join(", ")}`,
+      });
+    }
 
     if (!restaurantId) {
       return res.status(400).json({ error: "Restaurant ID required" });
@@ -256,7 +264,7 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
     const startDate = getStartDate(timePeriod);
 
     // Get feedback for analysis within the time period
-    const feedback = await feedbackRepo.find({
+    let feedback = await feedbackRepo.find({
       where: {
         restaurantId,
         createdAt: MoreThanOrEqual(startDate),
@@ -265,7 +273,7 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
     });
 
     // Get external reviews for analysis within the time period
-    const reviews = await reviewRepo.find({
+    let reviews = await reviewRepo.find({
       where: {
         restaurantId,
         reviewDate: MoreThanOrEqual(startDate),
@@ -273,21 +281,39 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
       order: { reviewDate: "DESC" },
     });
 
-    // Check if we have any data to analyze
-    if (feedback.length === 0 && reviews.length === 0) {
-      return res.status(400).json({
-        error: `No feedback or reviews found for the selected time period (${timePeriod})`,
-      });
+    // Filter data based on filter type
+    if (filter === "internal") {
+      reviews = []; // Only use internal feedback
+      if (feedback.length === 0) {
+        return res.status(400).json({
+          error: `No internal feedback found for the selected time period (${timePeriod})`,
+        });
+      }
+    } else if (filter === "external") {
+      feedback = []; // Only use external reviews
+      if (reviews.length === 0) {
+        return res.status(400).json({
+          error: `No external reviews found for the selected time period (${timePeriod})`,
+        });
+      }
+    } else {
+      // Overall - use both, but check if we have at least one
+      if (feedback.length === 0 && reviews.length === 0) {
+        return res.status(400).json({
+          error: `No feedback or reviews found for the selected time period (${timePeriod})`,
+        });
+      }
     }
 
     // Generate insights using OpenAI
     let insightData;
     console.log("Generating insights...");
-    console.log(feedback);
-    console.log(reviews);
+    console.log(`Filter: ${filter}`);
+    console.log(`Feedback count: ${feedback.length}`);
+    console.log(`Reviews count: ${reviews.length}`);
     console.log(restaurant.name);
     try {
-      insightData = await generateInsights(feedback, reviews, restaurant.name);
+      insightData = await generateInsights(feedback, reviews, restaurant.name, filter);
     } catch (error: any) {
       console.error("OpenAI error:", error);
       return res.status(500).json({

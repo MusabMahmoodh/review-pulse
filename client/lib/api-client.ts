@@ -442,14 +442,14 @@ export const aiApi = {
     }>(`/api/ai/insights?${params.toString()}`);
   },
 
-  generateInsights: async (restaurantId: string, timePeriod: TimePeriod = "month") => {
+  generateInsights: async (restaurantId: string, timePeriod: TimePeriod = "month", filter: "external" | "internal" | "overall" = "overall") => {
     return fetchApi<{
       success: boolean;
       insight: any;
       message: string;
     }>("/api/ai/generate-insights", {
       method: "POST",
-      body: JSON.stringify({ restaurantId, timePeriod }),
+      body: JSON.stringify({ restaurantId, timePeriod, filter }),
     });
   },
 

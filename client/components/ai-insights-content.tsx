@@ -58,6 +58,7 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
   const { toast } = useToast()
   const { user } = useAuth()
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("month")
+  const [filter, setFilter] = useState<"external" | "internal" | "overall">("overall")
   const [premiumError, setPremiumError] = useState(false)
   const generateInsightsMutation = useGenerateInsights()
   const { data: statsData } = useFeedbackStats(restaurantId)
@@ -67,7 +68,7 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
 
   const generateInsights = () => {
     generateInsightsMutation.mutate(
-      { restaurantId, timePeriod },
+      { restaurantId, timePeriod, filter },
       {
         onSuccess: (data) => {
           // Convert API response to AIInsight type (generatedAt is string from API, needs to be Date)
@@ -350,6 +351,20 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                   ))}
                 </SelectContent>
               </Select>
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">Source:</span>
+              </div>
+              <Select value={filter} onValueChange={(value) => setFilter(value as "external" | "internal" | "overall")}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="overall">Overall (Both)</SelectItem>
+                  <SelectItem value="internal">Internal Feedback</SelectItem>
+                  <SelectItem value="external">External Reviews</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <Button
               onClick={generateInsights}
@@ -377,11 +392,11 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
           <Card>
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm font-medium">Analysis Period:</span>
-                </div>
-                <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm font-medium">Analysis Period:</span>
+                  </div>
                   <Select value={timePeriod} onValueChange={(value) => setTimePeriod(value as TimePeriod)}>
                     <SelectTrigger className="w-full sm:w-[200px]">
                       <SelectValue />
@@ -394,19 +409,33 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button
-                    onClick={generateInsights}
-                    disabled={generateInsightsMutation.isPending}
-                    variant="outline"
-                    size="sm"
-                  >
-                    {generateInsightsMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <TrendingUp className="h-4 w-4" />
-                    )}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm font-medium">Source:</span>
+                  </div>
+                  <Select value={filter} onValueChange={(value) => setFilter(value as "external" | "internal" | "overall")}>
+                    <SelectTrigger className="w-full sm:w-[200px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="overall">Overall (Both)</SelectItem>
+                      <SelectItem value="internal">Internal Feedback</SelectItem>
+                      <SelectItem value="external">External Reviews</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+                <Button
+                  onClick={generateInsights}
+                  disabled={generateInsightsMutation.isPending}
+                  variant="outline"
+                  size="sm"
+                >
+                  {generateInsightsMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <TrendingUp className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>
