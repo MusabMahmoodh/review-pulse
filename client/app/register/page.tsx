@@ -10,10 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Loader2, Plus, X } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast-simple"
-import { Badge } from "@/components/ui/badge"
 import { useRegister } from "@/hooks/use-auth"
 
 export default function RegisterPage() {
@@ -28,8 +27,6 @@ export default function RegisterPage() {
     phone: "",
     address: "",
   })
-  const [keywords, setKeywords] = useState<string[]>([])
-  const [currentKeyword, setCurrentKeyword] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,15 +50,6 @@ export default function RegisterPage() {
       return
     }
 
-    if (keywords.length < 3) {
-      toast({
-        title: "Error",
-        description: "Please add at least 3 keywords for social media search",
-        variant: "destructive",
-      })
-      return
-    }
-
     registerMutation.mutate(
       {
         restaurantName: formData.restaurantName,
@@ -69,7 +57,6 @@ export default function RegisterPage() {
         password: formData.password,
         phone: formData.phone,
         address: formData.address,
-        socialKeywords: keywords,
       },
       {
         onSuccess: () => {
@@ -95,24 +82,6 @@ export default function RegisterPage() {
       ...prev,
       [e.target.name]: e.target.value,
     }))
-  }
-
-  const addKeyword = () => {
-    if (currentKeyword.trim() && keywords.length < 5 && !keywords.includes(currentKeyword.trim())) {
-      setKeywords([...keywords, currentKeyword.trim()])
-      setCurrentKeyword("")
-    }
-  }
-
-  const removeKeyword = (index: number) => {
-    setKeywords(keywords.filter((_, i) => i !== index))
-  }
-
-  const handleKeywordKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      addKeyword()
-    }
   }
 
   return (
@@ -181,47 +150,6 @@ export default function RegisterPage() {
                   rows={2}
                   required
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="keywords">Social Media Keywords (3-5 required)</Label>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Keywords to find your restaurant mentions on Facebook & Instagram
-                </p>
-                <div className="flex gap-2">
-                  <Input
-                    id="keywords"
-                    value={currentKeyword}
-                    onChange={(e) => setCurrentKeyword(e.target.value)}
-                    onKeyPress={handleKeywordKeyPress}
-                    placeholder="e.g., restaurant name, location"
-                    disabled={keywords.length >= 5}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={addKeyword}
-                    disabled={keywords.length >= 5 || !currentKeyword.trim()}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                {keywords.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {keywords.map((keyword, index) => (
-                      <Badge key={index} variant="secondary" className="gap-1">
-                        {keyword}
-                        <button type="button" onClick={() => removeKeyword(index)} className="ml-1">
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {keywords.length}/5 keywords • {keywords.length < 3 ? `Add ${3 - keywords.length} more` : "Ready"}
-                </p>
               </div>
 
               <div className="space-y-2">

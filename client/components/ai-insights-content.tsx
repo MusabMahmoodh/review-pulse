@@ -116,8 +116,12 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
 
     const ratings = stats.averageRatings
     
-    // Check for low ratings (below 3.5)
-    if (ratings.food < 3.5) {
+    // Skip rating-based warnings if there's no internal feedback (ratings are from external reviews only)
+    // Only show these warnings when we have actual internal feedback data
+    const hasInternalFeedback = stats.totalFeedback > 0
+    
+    // Check for low ratings (below 3.5) - only if we have internal feedback
+    if (hasInternalFeedback && ratings.food < 3.5) {
       issues.push({
         title: "Food Quality Concerns",
         description: `Food rating is ${ratings.food.toFixed(1)}/5.0 - significantly below acceptable standards. This is a critical operational issue that needs immediate attention.`,
@@ -126,7 +130,7 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
       })
     }
     
-    if (ratings.staff < 3.5) {
+    if (hasInternalFeedback && ratings.staff < 3.5) {
       issues.push({
         title: "Staff Service Issues",
         description: `Staff service rating is ${ratings.staff.toFixed(1)}/5.0 - customer service quality is below expectations.`,
@@ -135,7 +139,7 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
       })
     }
     
-    if (ratings.ambience < 3.5) {
+    if (hasInternalFeedback && ratings.ambience < 3.5) {
       issues.push({
         title: "Ambience Problems",
         description: `Ambience rating is ${ratings.ambience.toFixed(1)}/5.0 - dining environment needs improvement.`,
@@ -144,8 +148,8 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
       })
     }
     
-    // Check for declining trend
-    if (stats.recentTrend === "declining") {
+    // Check for declining trend - only if we have internal feedback
+    if (hasInternalFeedback && stats.recentTrend === "declining") {
       issues.push({
         title: "Declining Customer Satisfaction",
         description: "Recent feedback shows a declining trend in customer satisfaction. Immediate action required to reverse this trend.",
@@ -154,7 +158,7 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
       })
     }
     
-    // Check for negative sentiment
+    // Check for negative sentiment (this applies to both internal and external reviews)
     if (insight.sentiment === "negative") {
       issues.push({
         title: "Negative Customer Sentiment",
@@ -164,8 +168,8 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
       })
     }
     
-    // Check overall rating
-    if (ratings.overall < 3.5) {
+    // Check overall rating - only if we have internal feedback
+    if (hasInternalFeedback && ratings.overall < 3.5) {
       issues.push({
         title: "Low Overall Rating",
         description: `Overall rating is ${ratings.overall.toFixed(1)}/5.0 - this impacts your restaurant's reputation and customer retention.`,

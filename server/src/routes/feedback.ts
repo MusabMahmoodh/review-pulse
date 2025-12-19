@@ -237,20 +237,33 @@ router.get("/stats", requireAuth, async (req, res) => {
       where: { restaurantId },
     });
 
-    // Calculate averages
+    // Calculate averages from internal feedback
     const totalFeedback = feedback.length;
-    const avgFood =
+    let avgFood =
       totalFeedback > 0 ? feedback.reduce((sum, f) => sum + f.foodRating, 0) / totalFeedback : 0;
-    const avgStaff =
+    let avgStaff =
       totalFeedback > 0 ? feedback.reduce((sum, f) => sum + f.staffRating, 0) / totalFeedback : 0;
-    const avgAmbience =
+    let avgAmbience =
       totalFeedback > 0
         ? feedback.reduce((sum, f) => sum + f.ambienceRating, 0) / totalFeedback
         : 0;
-    const avgOverall =
+    let avgOverall =
       totalFeedback > 0
         ? feedback.reduce((sum, f) => sum + f.overallRating, 0) / totalFeedback
         : 0;
+
+    // If no internal feedback but we have external reviews, use external review average as fallback
+    if (totalFeedback === 0 && externalReviews.length > 0) {
+      const avgExternalRating =
+        externalReviews.reduce((sum, r) => sum + r.rating, 0) / externalReviews.length;
+      // Use external review average for overall rating
+      avgOverall = avgExternalRating;
+      // For food/staff/ambience, we can't map directly, but we can use overall as a proxy
+      // This prevents showing 0.0 which triggers false "concerning" warnings
+      avgFood = avgExternalRating;
+      avgStaff = avgExternalRating;
+      avgAmbience = avgExternalRating;
+    }
 
     // Calculate trend (simple logic - compare last 3 vs previous 3)
     let recentTrend: "improving" | "stable" | "declining" = "stable";

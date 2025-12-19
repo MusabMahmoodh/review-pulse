@@ -282,6 +282,10 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
 
     // Generate insights using OpenAI
     let insightData;
+    console.log("Generating insights...");
+    console.log(feedback);
+    console.log(reviews);
+    console.log(restaurant.name);
     try {
       insightData = await generateInsights(feedback, reviews, restaurant.name);
     } catch (error: any) {
