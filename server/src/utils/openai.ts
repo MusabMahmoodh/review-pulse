@@ -109,7 +109,7 @@ Requirements:
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -347,7 +347,7 @@ export async function* chatAboutFeedbackStream(
 
   try {
     const stream = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
