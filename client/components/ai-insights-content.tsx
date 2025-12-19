@@ -519,21 +519,62 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                   disabled={generateInsightsMutation.isPending}
                   variant="outline"
                   size="sm"
-                  className="relative overflow-hidden border-purple-300 dark:border-purple-700 hover:border-purple-500 dark:hover:border-purple-500 hover:bg-gradient-to-r hover:from-purple-50 hover:via-pink-50 hover:to-blue-50 dark:hover:from-purple-950 dark:hover:via-pink-950 dark:hover:to-blue-950 hover:bg-[length:200%_100%] transition-all group"
+                  className="relative overflow-visible border-purple-300 dark:border-purple-700 hover:border-purple-500 dark:hover:border-purple-500 hover:bg-gradient-to-r hover:from-purple-50 hover:via-pink-50 hover:to-blue-50 dark:hover:from-purple-950 dark:hover:via-pink-950 dark:hover:to-blue-950 hover:bg-[length:200%_100%] transition-all group cursor-pointer active:scale-95 px-3"
                   style={{
                     transition: 'all 0.3s ease',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.animation = 'gradient 3s ease infinite';
+                    e.currentTarget.style.animation = 'gradient 3s ease infinite, pulse-glow 2s ease-in-out infinite';
+                    e.currentTarget.style.transform = 'scale(1.05)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.animation = 'none';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'scale(0.95)';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.05)';
                   }}
                 >
+                  {/* Shimmer effect */}
+                  <div 
+                    className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-purple-200/30 to-transparent dark:via-purple-400/20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{
+                      animation: 'shimmer 2s infinite',
+                    }}
+                  />
+                  
+                  {/* Sparkle effects */}
+                  <div 
+                    className="absolute top-1 left-2 w-1 h-1 bg-purple-500 dark:bg-purple-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                    style={{
+                      animation: 'sparkle 2s infinite',
+                      animationDelay: '0s',
+                    }}
+                  />
+                  <div 
+                    className="absolute bottom-1 right-2 w-1 h-1 bg-pink-500 dark:bg-pink-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                    style={{
+                      animation: 'sparkle 2s infinite',
+                      animationDelay: '0.5s',
+                    }}
+                  />
+                  
                   {generateInsightsMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin relative z-10" />
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin relative z-20 mr-2" />
+                      <span className="relative z-20 text-xs font-medium">Analyzing...</span>
+                    </>
                   ) : (
-                    <Wand2 className="h-4 w-4 relative z-10 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors" />
+                    <>
+                      <Wand2 className="h-4 w-4 relative z-20 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 group-hover:rotate-12 group-active:rotate-24 transition-all duration-300 mr-2" />
+                      <div className="relative z-20 flex flex-col items-start">
+                        <span className="text-xs font-semibold text-purple-700 dark:text-purple-300 leading-tight">Generate</span>
+                        <span className="text-[10px] font-medium text-purple-600/80 dark:text-purple-400/80 leading-tight">Click to generate</span>
+                      </div>
+                    </>
                   )}
                 </Button>
               </div>
