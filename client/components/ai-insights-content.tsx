@@ -362,7 +362,7 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="overall">Overall (Both)</SelectItem>
-                  <SelectItem value="internal">Internal Feedback</SelectItem>
+                  <SelectItem value="internal">Guestra</SelectItem>
                   <SelectItem value="external">External Reviews</SelectItem>
                 </SelectContent>
               </Select>
@@ -509,7 +509,7 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="overall">Overall (Both)</SelectItem>
-                      <SelectItem value="internal">Internal Feedback</SelectItem>
+                      <SelectItem value="internal">Guestra</SelectItem>
                       <SelectItem value="external">External Reviews</SelectItem>
                     </SelectContent>
                   </Select>
