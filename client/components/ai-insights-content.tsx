@@ -30,6 +30,7 @@ import {
   BarChart3,
   Clock,
   AlertCircle,
+  Wand2,
 } from "lucide-react"
 import type { AIInsight } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast-simple"
@@ -370,17 +371,106 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
               onClick={generateInsights}
               disabled={generateInsightsMutation.isPending}
               size="lg"
-              className="w-full sm:w-auto mx-auto block"
+              className="w-full sm:w-auto mx-auto block relative overflow-visible bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-[length:200%_100%] hover:from-purple-500 hover:via-pink-500 hover:to-blue-500 text-white shadow-lg hover:shadow-2xl group cursor-pointer active:scale-95 transition-all duration-200"
+              style={{
+                animation: 'gradient 3s ease infinite, pulse-glow 2s ease-in-out infinite, float 3s ease-in-out infinite, magic-pulse 2s ease-in-out infinite',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.transition = 'transform 0.2s ease';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'scale(0.98)';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'scale(1.05)';
+              }}
             >
+              {/* Ripple effect on click */}
+              <div className="absolute inset-0 rounded-md overflow-hidden pointer-events-none">
+                <div className="absolute inset-0 bg-white/20 rounded-full opacity-0 group-active:opacity-100 group-active:animate-ripple" />
+              </div>
+              
+              {/* Shimmer effect */}
+              <div 
+                className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none"
+                style={{
+                  animation: 'shimmer 3s infinite',
+                }}
+              />
+              
+              {/* Enhanced sparkle effects */}
+              <div 
+                className="absolute top-2 left-4 w-1.5 h-1.5 bg-white rounded-full shadow-lg shadow-white/50 pointer-events-none"
+                style={{
+                  animation: 'sparkle 2s infinite',
+                  animationDelay: '0s',
+                }}
+              />
+              <div 
+                className="absolute top-3 right-6 w-1.5 h-1.5 bg-white rounded-full shadow-lg shadow-white/50 pointer-events-none"
+                style={{
+                  animation: 'sparkle 2s infinite',
+                  animationDelay: '0.5s',
+                }}
+              />
+              <div 
+                className="absolute bottom-2 left-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-lg shadow-white/50 pointer-events-none"
+                style={{
+                  animation: 'sparkle 2s infinite',
+                  animationDelay: '1s',
+                }}
+              />
+              <div 
+                className="absolute top-1/2 right-4 w-1 h-1 bg-white rounded-full shadow-lg shadow-white/50 pointer-events-none"
+                style={{
+                  animation: 'sparkle 2.5s infinite',
+                  animationDelay: '1.5s',
+                }}
+              />
+              
+              {/* Magic particles on hover */}
+              <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div 
+                  className="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full"
+                  style={{
+                    animation: 'particles 1s ease-out infinite',
+                    '--tx': '20px',
+                  } as React.CSSProperties}
+                />
+                <div 
+                  className="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full"
+                  style={{
+                    animation: 'particles 1s ease-out infinite',
+                    animationDelay: '0.2s',
+                    '--tx': '-20px',
+                  } as React.CSSProperties}
+                />
+                <div 
+                  className="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full"
+                  style={{
+                    animation: 'particles 1s ease-out infinite',
+                    animationDelay: '0.4s',
+                    '--tx': '0px',
+                  } as React.CSSProperties}
+                />
+              </div>
+              
               {generateInsightsMutation.isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Analyzing Feedback...
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin relative z-20 text-white" />
+                  <span className="relative z-20 text-white font-semibold">Analyzing Feedback...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Generate Insights
+                  <Wand2 className="mr-2 h-5 w-5 relative z-20 text-white group-hover:rotate-12 group-active:rotate-24 transition-transform duration-300 group-hover:scale-110" />
+                  <div className="relative z-20 flex flex-col items-start">
+                    <span className="text-white font-semibold group-hover:tracking-wide transition-all duration-300 leading-tight">Generate Insights</span>
+                    <span className="text-white/90 text-xs font-medium mt-1 leading-tight drop-shadow-sm">Click to generate</span>
+                  </div>
                 </>
               )}
             </Button>
@@ -429,11 +519,21 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                   disabled={generateInsightsMutation.isPending}
                   variant="outline"
                   size="sm"
+                  className="relative overflow-hidden border-purple-300 dark:border-purple-700 hover:border-purple-500 dark:hover:border-purple-500 hover:bg-gradient-to-r hover:from-purple-50 hover:via-pink-50 hover:to-blue-50 dark:hover:from-purple-950 dark:hover:via-pink-950 dark:hover:to-blue-950 hover:bg-[length:200%_100%] transition-all group"
+                  style={{
+                    transition: 'all 0.3s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.animation = 'gradient 3s ease infinite';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.animation = 'none';
+                  }}
                 >
                   {generateInsightsMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin relative z-10" />
                   ) : (
-                    <TrendingUp className="h-4 w-4" />
+                    <Wand2 className="h-4 w-4 relative z-10 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors" />
                   )}
                 </Button>
               </div>
