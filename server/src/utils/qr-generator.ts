@@ -17,3 +17,4 @@ export function generateQRCodeUrl(restaurantId: string): string {
 
 
 
+
