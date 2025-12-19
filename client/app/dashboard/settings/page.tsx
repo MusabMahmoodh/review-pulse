@@ -8,12 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ArrowLeft, Facebook, Instagram, Chrome, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle, Loader2, Hash, Crown, Lock, Palette, MessageSquare, Star, Search, MapPin } from "lucide-react"
+import { ArrowLeft, Facebook, Instagram, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle, Loader2, Hash, Crown, Lock, Palette, MessageSquare, Star, MapPin } from "lucide-react"
 import { Logo } from "@/components/logo"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useAuth } from "@/hooks/use-auth"
-import { restaurantsApi, externalReviewsApi, googleAuthApi, metaAuthApi } from "@/lib/api-client"
+import { restaurantsApi, externalReviewsApi, metaAuthApi } from "@/lib/api-client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { isPremiumRequiredError, isPremiumFromAuth } from "@/lib/premium"
 import { PremiumUpgrade } from "@/components/premium-upgrade"
@@ -28,9 +28,6 @@ function SettingsPageContent() {
   const [newKeyword, setNewKeyword] = useState("")
   const [premiumError, setPremiumError] = useState<{ section?: string } | null>(null)
   const [placeId, setPlaceId] = useState("")
-  const [placeSearchQuery, setPlaceSearchQuery] = useState("")
-  const [isSearchingPlaces, setIsSearchingPlaces] = useState(false)
-  const [placeSearchResults, setPlaceSearchResults] = useState<Array<{ place_id: string; name: string; formatted_address: string }>>([])
 
   const restaurantId = user?.id || null
   const hasPremium = isPremiumFromAuth(user?.subscription)
@@ -64,14 +61,6 @@ function SettingsPageContent() {
   })
 
   const keywords = keywordsData?.keywords || []
-
-  // Fetch Google integration status
-  const { data: googleIntegration, isLoading: googleLoading } = useQuery({
-    queryKey: ["restaurants", "google-integration", restaurantId],
-    queryFn: () => restaurantsApi.getGoogleIntegration(restaurantId!),
-    enabled: !!restaurantId && isAuthenticated,
-    refetchInterval: 30000, // Refetch every 30 seconds to check status
-  })
 
   // Fetch Meta integration status
   const { data: metaIntegration, isLoading: metaLoading } = useQuery({
@@ -172,12 +161,10 @@ function SettingsPageContent() {
       externalReviewsApi.sync(restaurantId!, platforms, placeId),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["external-reviews", restaurantId] })
-      queryClient.invalidateQueries({ queryKey: ["restaurants", "google-integration", restaurantId] })
       queryClient.invalidateQueries({ queryKey: ["restaurants", "meta-integration", restaurantId] })
       
       const totalSynced = data.totalSynced || 0
       const googleResult = data.results?.google
-      const googlePlacesResult = data.results?.["google-places"]
       // const facebookResult = data.results?.facebook
       
       const successMessages: string[] = []
@@ -187,12 +174,6 @@ function SettingsPageContent() {
         successMessages.push(`Google: ${googleResult.count} review${googleResult.count !== 1 ? "s" : ""}`)
       } else if (googleResult?.error) {
         errorMessages.push(`Google: ${googleResult.error}`)
-      }
-      
-      if (googlePlacesResult?.success) {
-        successMessages.push(`Google Places: ${googlePlacesResult.count} review${googlePlacesResult.count !== 1 ? "s" : ""}`)
-      } else if (googlePlacesResult?.error) {
-        errorMessages.push(`Google Places: ${googlePlacesResult.error}`)
       }
       
       // if (facebookResult?.success) {
@@ -243,42 +224,8 @@ function SettingsPageContent() {
 
   // Handle OAuth callback messages from URL params
   useEffect(() => {
-    const googleConnected = searchParams.get("google_connected")
-    const googleError = searchParams.get("google_error")
     const metaConnected = searchParams.get("meta_connected")
     const metaError = searchParams.get("meta_error")
-
-    if (googleConnected === "true") {
-      queryClient.invalidateQueries({ queryKey: ["restaurants", "google-integration", restaurantId] })
-      toast({
-        title: "Success",
-        description: "Google account connected successfully!",
-      })
-      // Clean up URL
-      window.history.replaceState({}, "", "/dashboard/settings")
-    }
-
-    if (googleError) {
-    const errorMessages: Record<string, string> = {
-      missing_params: "Missing authorization parameters",
-      token_failed: "Failed to obtain access token from Google",
-      account_failed: "Failed to fetch your Google Business Profile account",
-      no_account: "No Google Business Profile account found. Please set up Google Business Profile first.",
-      location_failed: "Failed to fetch business locations",
-      no_location: "No business location found. Please ensure your Google Business Profile has at least one location.",
-      quota_exceeded: "API quota exceeded. Your Google Business Profile API access may still be pending approval, or quota hasn't been allocated. Please request quota increase in Google Cloud Console.",
-      premium_required: "Premium subscription required. Please contact admin to upgrade.",
-      unknown: "An unknown error occurred during Google authorization",
-    }
-
-      toast({
-        title: "Connection Failed",
-        description: errorMessages[googleError] || "Failed to connect Google account",
-        variant: "destructive",
-      })
-      // Clean up URL
-      window.history.replaceState({}, "", "/dashboard/settings")
-    }
 
     // if (metaConnected === "true") {
     //   queryClient.invalidateQueries({ queryKey: ["restaurants", "meta-integration", restaurantId] })
@@ -360,12 +307,6 @@ function SettingsPageContent() {
     updateKeywordsMutation.mutate(keywords)
   }
 
-  const handleConnectGoogle = () => {
-    if (!restaurantId) return
-    const authUrl = googleAuthApi.authorize(restaurantId)
-    window.location.href = authUrl
-  }
-
   const handleConnectMeta = () => {
     if (!restaurantId) return
     const authUrl = metaAuthApi.authorize(restaurantId)
@@ -373,86 +314,19 @@ function SettingsPageContent() {
   }
 
   const handleSyncNow = async () => {
-    const platforms: string[] = []
-    let syncPlaceId: string | undefined = undefined
-    
-    // Use OAuth if connected
-    if (isGoogleConnected) {
-      platforms.push("google")
-    }
-    // Use Places API if Place ID is provided
-    else if (placeId) {
-      platforms.push("google-places")
-      syncPlaceId = placeId
-    }
-    
-    // if (isMetaConnected) platforms.push("facebook")
-    
-    if (platforms.length === 0) {
+    if (!placeId) {
       toast({
-        title: "No Connection",
-        description: "Please connect your Google account or enter a Place ID to sync reviews.",
+        title: "Place ID Required",
+        description: "Please enter a Google Place ID to sync reviews.",
         variant: "destructive",
       })
       return
     }
     
     syncMutation.mutate({ 
-      platforms,
-      placeId: syncPlaceId
+      platforms: ["google"],
+      placeId: placeId
     })
-  }
-
-  const handleSearchPlace = async () => {
-    if (!placeSearchQuery.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a search query",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsSearchingPlaces(true)
-    try {
-      const result = await externalReviewsApi.searchPlace(placeSearchQuery)
-      setPlaceSearchResults(result.places || [])
-      if (result.places && result.places.length === 0) {
-        toast({
-          title: "No Results",
-          description: "No places found. Try a more specific search.",
-        })
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.data?.error || "Failed to search places",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSearchingPlaces(false)
-    }
-  }
-
-  const handleSelectPlace = async (selectedPlaceId: string) => {
-    setPlaceId(selectedPlaceId)
-    setPlaceSearchQuery("")
-    setPlaceSearchResults([])
-    
-    // Save to database
-    try {
-      await restaurantsApi.updateGooglePlaceId(restaurantId!, selectedPlaceId)
-      toast({
-        title: "Place ID Saved",
-        description: "Google Place ID has been saved. You can now sync reviews.",
-      })
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.data?.error || "Failed to save Place ID",
-        variant: "destructive",
-      })
-    }
   }
 
   const formatLastSync = (dateString: string | null) => {
@@ -471,7 +345,6 @@ function SettingsPageContent() {
     return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`
   }
 
-  const isGoogleConnected = googleIntegration?.connected && googleIntegration?.status === "active"
   const isMetaConnected = metaIntegration?.connected && metaIntegration?.status === "active"
 
   // Loading state
@@ -744,101 +617,7 @@ function SettingsPageContent() {
               )}
             </div> */}
 
-            {/* Google Integration - Option 1: OAuth Connection */}
-            <div className="space-y-3">
-              <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-2 rounded-lg transition-all ${
-                isGoogleConnected 
-                  ? "bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-800" 
-                  : "bg-muted/30 border-border"
-              }`}>
-                <div className="flex items-center gap-3 flex-1">
-                  <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                    isGoogleConnected 
-                      ? "bg-green-100 dark:bg-green-900" 
-                      : "bg-muted"
-                  }`}>
-                    <Chrome className={`h-6 w-6 ${
-                      isGoogleConnected 
-                        ? "text-green-600 dark:text-green-400" 
-                        : "text-muted-foreground"
-                    }`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold text-sm">Option 1: Connect Google Account</p>
-                      {isGoogleConnected && (
-                        <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 shrink-0" />
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {googleLoading ? (
-                        <span className="flex items-center gap-1">
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          Loading...
-                        </span>
-                      ) : isGoogleConnected ? (
-                        `Last synced: ${formatLastSync(googleIntegration?.lastSyncedAt || null)}`
-                      ) : (
-                        "Connect your Google Business Profile account (requires OAuth)"
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {isGoogleConnected ? (
-                    <Badge variant="default" className="bg-green-600 hover:bg-green-700">
-                      Connected
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="border-muted-foreground/30">
-                      Not Connected
-                    </Badge>
-                  )}
-                </div>
-              </div>
-
-              {!isGoogleConnected && (
-                <Button 
-                  onClick={handleConnectGoogle} 
-                  className="w-full h-10" 
-                  variant="outline"
-                  disabled={googleLoading || !restaurantId}
-                >
-                  {googleLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Connecting...
-                    </>
-                  ) : (
-                    <>
-                      <Chrome className="h-4 w-4 mr-2" />
-                      Connect Google Account
-                    </>
-                  )}
-                </Button>
-              )}
-
-              {isGoogleConnected && (
-                <div className="p-3 bg-green-50/50 dark:bg-green-950/10 rounded-lg border border-green-200/50 dark:border-green-800/50">
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    <span className="font-medium text-foreground">Connected:</span> Your Google Business Profile is connected. 
-                    Reviews will sync automatically every 24 hours.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">OR</span>
-              </div>
-            </div>
-
-            {/* Google Integration - Option 2: Place ID */}
+            {/* Google Integration - Place ID */}
             <div className="space-y-3">
               <div className={`p-4 border-2 rounded-lg transition-all ${
                 placeId 
@@ -858,9 +637,9 @@ function SettingsPageContent() {
                     }`} />
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-sm">Option 2: Enter Place ID</p>
+                    <p className="font-semibold text-sm">Google Place ID</p>
                     <p className="text-xs text-muted-foreground">
-                      Easy setup - no OAuth required! Just need your Google Place ID.
+                      Enter your Google Place ID to sync reviews from Google.
                     </p>
                   </div>
                   {placeId && (
@@ -870,119 +649,65 @@ function SettingsPageContent() {
                   )}
                 </div>
 
-                {/* Place Search */}
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="place-search">Search for Your Restaurant</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="place-search"
-                        placeholder="e.g., McDonald's Times Square, New York"
-                        value={placeSearchQuery}
-                        onChange={(e) => setPlaceSearchQuery(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            handleSearchPlace()
+                {/* Manual Place ID Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="place-id">Google Place ID</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="place-id"
+                      placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4"
+                      value={placeId}
+                      onChange={(e) => setPlaceId(e.target.value)}
+                      className="flex-1"
+                    />
+                    {placeId && placeId !== placeIdData?.placeId && (
+                      <Button
+                        onClick={async () => {
+                          try {
+                            await restaurantsApi.updateGooglePlaceId(restaurantId!, placeId)
+                            toast({
+                              title: "Place ID Saved",
+                              description: "Google Place ID has been saved successfully.",
+                            })
+                            queryClient.invalidateQueries({ queryKey: ["restaurants", restaurantId] })
+                          } catch (error: any) {
+                            toast({
+                              title: "Error",
+                              description: error?.data?.error || "Failed to save Place ID",
+                              variant: "destructive",
+                            })
                           }
                         }}
-                        className="flex-1"
-                      />
-                      <Button
-                        onClick={handleSearchPlace}
-                        disabled={isSearchingPlaces || !placeSearchQuery.trim()}
                         variant="outline"
+                        size="sm"
                       >
-                        {isSearchingPlaces ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Search className="h-4 w-4" />
-                        )}
+                        Save
                       </Button>
-                    </div>
+                    )}
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Find your Place ID using{" "}
+                    <a
+                      href="https://developers.google.com/maps/documentation/places/web-service/place-id"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline hover:no-underline"
+                    >
+                      Google's Place ID Finder
+                    </a>
+                  </p>
+                </div>
 
-                  {/* Place Search Results */}
-                  {placeSearchResults.length > 0 && (
-                    <div className="space-y-2 max-h-48 overflow-y-auto border rounded-lg p-2 bg-background">
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Select your restaurant:</p>
-                      {placeSearchResults.map((place) => (
-                        <button
-                          key={place.place_id}
-                          onClick={() => handleSelectPlace(place.place_id)}
-                          className="w-full text-left p-2 rounded hover:bg-muted transition-colors border border-transparent hover:border-border"
-                        >
-                          <p className="text-sm font-medium">{place.name}</p>
-                          <p className="text-xs text-muted-foreground">{place.formatted_address}</p>
-                          {place.rating && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              ⭐ {place.rating} ({place.user_ratings_total} reviews)
-                            </p>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                    {/* Manual Place ID Input */}
-                    <div className="space-y-2">
-                      <Label htmlFor="place-id">Or Enter Place ID Manually</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="place-id"
-                          placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4"
-                          value={placeId}
-                          onChange={(e) => setPlaceId(e.target.value)}
-                          className="flex-1"
-                        />
-                        {placeId && placeId !== placeIdData?.placeId && (
-                          <Button
-                            onClick={async () => {
-                              try {
-                                await restaurantsApi.updateGooglePlaceId(restaurantId!, placeId)
-                                toast({
-                                  title: "Place ID Saved",
-                                  description: "Google Place ID has been saved successfully.",
-                                })
-                                queryClient.invalidateQueries({ queryKey: ["restaurants", restaurantId] })
-                              } catch (error: any) {
-                                toast({
-                                  title: "Error",
-                                  description: error?.data?.error || "Failed to save Place ID",
-                                  variant: "destructive",
-                                })
-                              }
-                            }}
-                            variant="outline"
-                            size="sm"
-                          >
-                            Save
-                          </Button>
-                        )}
-                      </div>
+                {placeId && (
+                  <div className="p-3 bg-green-50/50 dark:bg-green-950/10 rounded-lg border border-green-200/50 dark:border-green-800/50 mt-3">
                     <p className="text-xs text-muted-foreground">
-                      Find your Place ID using the search above or{" "}
-                      <a
-                        href="https://developers.google.com/maps/documentation/places/web-service/place-id"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary underline hover:no-underline"
-                      >
-                        Google's Place ID Finder
-                      </a>
+                      <span className="font-medium text-foreground">✓ Place ID saved:</span> {placeId}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      You can now sync reviews using this Place ID.
                     </p>
                   </div>
-
-                  {placeId && (
-                    <div className="p-3 bg-green-50/50 dark:bg-green-950/10 rounded-lg border border-green-200/50 dark:border-green-800/50">
-                      <p className="text-xs text-muted-foreground">
-                        <span className="font-medium text-foreground">✓ Place ID saved:</span> {placeId}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        You can now sync reviews using this Place ID.
-                      </p>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
               </>
@@ -1016,14 +741,9 @@ function SettingsPageContent() {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm mb-1">Last Sync</p>
                 <p className="text-xs text-muted-foreground">
-                  {isGoogleConnected
-                    ? (() => {
-                        const googleSync = isGoogleConnected ? googleIntegration?.lastSyncedAt : null
-                        return formatLastSync(googleSync || null)
-                      })()
-                    : placeId
+                  {placeId
                     ? "Ready to sync with Place ID"
-                    : "Connect an account or enter Place ID to sync"
+                    : "Enter Place ID to sync reviews"
                   }
                 </p>
               </div>
@@ -1032,7 +752,7 @@ function SettingsPageContent() {
                 disabled={
                   syncMutation.isPending || 
                   !restaurantId || 
-                  (!isGoogleConnected && !placeId)
+                  !placeId
                 } 
                 size="default"
                 variant="outline"

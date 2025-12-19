@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { Restaurant, GoogleIntegration, MetaIntegration, ReviewPageSettings } from "../models";
+import { Restaurant, MetaIntegration, ReviewPageSettings } from "../models";
 import { requireAuth } from "../middleware/auth";
 import { isPremium } from "../utils/subscription";
 
@@ -137,74 +137,6 @@ router.put("/keywords", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Error updating keywords:", error);
     return res.status(500).json({ error: "Failed to update keywords" });
-  }
-});
-
-/**
- * @swagger
- * /api/restaurants/google-integration:
- *   get:
- *     summary: Get Google integration status for a restaurant
- *     tags: [Restaurants]
- *     parameters:
- *       - in: query
- *         name: restaurantId
- *         required: true
- *         schema:
- *           type: string
- *         description: Restaurant ID
- *     responses:
- *       200:
- *         description: Google integration status
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 connected:
- *                   type: boolean
- *                 status:
- *                   type: string
- *                 lastSyncedAt:
- *                   type: string
- *                   format: date-time
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-router.get("/google-integration", requireAuth, async (req, res) => {
-  try {
-    const restaurantId = req.restaurantId as string;
-
-    // Check premium access
-    const hasPremium = await isPremium(restaurantId);
-    if (!hasPremium) {
-      return res.status(403).json({ 
-        error: "Premium subscription required",
-        requiresPremium: true,
-      });
-    }
-
-    const integrationRepo = AppDataSource.getRepository(GoogleIntegration);
-    const integration = await integrationRepo.findOne({ where: { restaurantId } });
-
-    if (!integration) {
-      return res.json({
-        connected: false,
-        status: null,
-        lastSyncedAt: null,
-      });
-    }
-
-    return res.json({
-      connected: true,
-      status: integration.status,
-      lastSyncedAt: integration.lastSyncedAt || null,
-    });
-  } catch (error) {
-    console.error("Error fetching Google integration:", error);
-    return res.status(500).json({ error: "Failed to fetch integration status" });
   }
 });
 

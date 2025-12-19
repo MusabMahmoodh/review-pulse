@@ -219,14 +219,6 @@ export const restaurantsApi = {
     });
   },
 
-  getGoogleIntegration: async (restaurantId: string) => {
-    return fetchApi<{
-      connected: boolean;
-      status: "active" | "expired" | "revoked" | null;
-      lastSyncedAt: string | null;
-    }>(`/api/restaurants/google-integration?restaurantId=${restaurantId}`);
-  },
-
   getMetaIntegration: async (restaurantId: string) => {
     return fetchApi<{
       connected: boolean;
@@ -417,26 +409,6 @@ export const externalReviewsApi = {
       method: "POST",
       body: JSON.stringify({ restaurantId, platforms, placeId }),
     });
-  },
-
-  searchPlace: async (query: string) => {
-    return fetchApi<{
-      places: Array<{
-        place_id: string;
-        name: string;
-        formatted_address: string;
-        rating?: number;
-        user_ratings_total?: number;
-      }>;
-    }>(`/api/external-reviews/search-place?query=${encodeURIComponent(query)}`);
-  },
-};
-
-// Google OAuth API
-export const googleAuthApi = {
-  authorize: (restaurantId: string) => {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-    return `${backendUrl}/api/auth/google/authorize?restaurantId=${restaurantId}`;
   },
 };
 

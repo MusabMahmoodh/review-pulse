@@ -21,14 +21,9 @@ PORT=3001
 NODE_ENV=development
 CLIENT_URL=http://localhost:3000
 
-# Google OAuth (for Google Reviews integration - Business Profile API)
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
-
-# Google Places API (easier alternative for testing - just needs API key, no OAuth!)
-# Get from: https://console.cloud.google.com/apis/credentials
-GOOGLE_PLACES_API_KEY=your_google_places_api_key
+# Serper API (for Google Reviews integration)
+# Get your API key from: https://serper.dev
+SERPER_API_KEY=your_serper_api_key
 
 # Encryption key for OAuth tokens (generate with: openssl rand -hex 32)
 ENCRYPTION_KEY=your_32_byte_hex_encryption_key
@@ -51,8 +46,6 @@ The server will run on `http://localhost:3001` by default.
 ### Authentication
 - `POST /api/auth/register` - Register a new restaurant
 - `POST /api/auth/login` - Login restaurant
-- `GET /api/auth/google/authorize?restaurantId=xxx` - Initiate Google OAuth authorization
-- `GET /api/auth/google/callback` - Handle Google OAuth callback
 
 ### Feedback
 - `POST /api/feedback/submit` - Submit customer feedback
@@ -69,11 +62,9 @@ The server will run on `http://localhost:3001` by default.
 
 ### External Reviews
 - `GET /api/external-reviews/list?restaurantId=xxx` - List external reviews
-- `POST /api/external-reviews/sync` - Sync external reviews from Google (and other platforms)
-  - Use `platforms: ["google"]` for Business Profile API (requires OAuth)
-  - Use `platforms: ["google-places"]` for Places API (easier, just needs API key)
-  - Optional: `placeId` parameter for Places API
-- `GET /api/external-reviews/search-place?query=xxx` - Search for Google Place IDs
+- `POST /api/external-reviews/sync` - Sync external reviews from Google via Serper API
+  - Use `platforms: ["google"]` for Google reviews via Serper API
+  - Required: `placeId` parameter (Google Place ID)
 
 ### AI
 - `GET /api/ai/insights?restaurantId=xxx&timePeriod=xxx` - Get AI insights (optional timePeriod: 2days, week, month, 2months, 3months, 4months, 5months, 6months)

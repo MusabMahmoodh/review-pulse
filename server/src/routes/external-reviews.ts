@@ -1,8 +1,7 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { ExternalReview, Restaurant, GoogleIntegration, MetaIntegration } from "../models";
-import { fetchGoogleReviews } from "../utils/google-reviews";
-import { fetchGoogleReviewsFromPlaces, searchPlace } from "../utils/google-places";
+import { ExternalReview, Restaurant, MetaIntegration } from "../models";
+import { fetchGoogleReviewsFromSerper } from "../utils/serper-reviews";
 import { fetchMetaReviews } from "../utils/meta-posts";
 import { requireAuth } from "../middleware/auth";
 import { isPremium } from "../utils/subscription";
@@ -111,7 +110,6 @@ router.post("/sync", requireAuth, async (req, res) => {
     }
 
     const restaurantRepo = AppDataSource.getRepository(Restaurant);
-    const googleIntegrationRepo = AppDataSource.getRepository(GoogleIntegration);
     const metaIntegrationRepo = AppDataSource.getRepository(MetaIntegration);
 
     const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
@@ -119,44 +117,12 @@ router.post("/sync", requireAuth, async (req, res) => {
       return res.status(404).json({ error: "Restaurant not found" });
     }
 
-    const platformsToSync = platforms || ["google", "facebook"];
+    const platformsToSync = platforms || ["google"];
     const results: Record<string, { success: boolean; count: number; error?: string }> = {};
-    const { placeId } = req.body; // Optional Place ID for Places API
+    const { placeId } = req.body; // Optional Place ID for Serper API
 
-    // Sync Google Reviews (Business Profile API - requires OAuth)
+    // Sync Google Reviews via Serper API
     if (platformsToSync.includes("google")) {
-      try {
-        const integration = await googleIntegrationRepo.findOne({ where: { restaurantId } });
-
-        if (!integration || integration.status !== "active") {
-          results.google = {
-            success: false,
-            count: 0,
-            error: "Google integration not connected or inactive. Please connect your Google account first.",
-          };
-        } else {
-          // Get last sync time for incremental sync
-          const sinceDate = integration.lastSyncedAt || undefined;
-          const count = await fetchGoogleReviews(restaurantId, sinceDate);
-
-          results.google = {
-            success: true,
-            count,
-          };
-        }
-      } catch (error: any) {
-        console.error("Google sync error:", error);
-        results.google = {
-          success: false,
-          count: 0,
-          error: error.message || "Failed to sync Google reviews",
-        };
-      }
-    }
-
-    // Sync Google Reviews via Places API (easier - just needs API key, no OAuth!)
-    // Use "google-places" as platform name to use this method
-    if (platformsToSync.includes("google-places")) {
       try {
         // Use provided placeId, or get from restaurant's saved placeId
         let finalPlaceId = placeId;
@@ -164,18 +130,35 @@ router.post("/sync", requireAuth, async (req, res) => {
           finalPlaceId = restaurant.googlePlaceId;
         }
         
-        const count = await fetchGoogleReviewsFromPlaces(restaurantId, finalPlaceId);
+        if (!finalPlaceId) {
+          results.google = {
+            success: false,
+            count: 0,
+            error: "Place ID is required. Please provide a Google Place ID.",
+          };
+        } else {
+          // Get last sync time for incremental sync
+          // Find the most recent synced review to determine sinceDate
+          const reviewRepo = AppDataSource.getRepository(ExternalReview);
+          const lastReview = await reviewRepo.findOne({
+            where: { restaurantId, platform: "google" },
+            order: { syncedAt: "DESC" },
+          });
+          
+          const sinceDate = lastReview?.syncedAt || undefined;
+          const count = await fetchGoogleReviewsFromSerper(restaurantId, finalPlaceId, sinceDate);
 
-        results["google-places"] = {
-          success: true,
-          count,
-        };
+          results.google = {
+            success: true,
+            count,
+          };
+        }
       } catch (error: any) {
-        console.error("Google Places sync error:", error);
-        results["google-places"] = {
+        console.error("Serper sync error:", error);
+        results.google = {
           success: false,
           count: 0,
-          error: error.message || "Failed to sync Google reviews via Places API",
+          error: error.message || "Failed to sync Google reviews via Serper API",
         };
       }
     }
@@ -227,43 +210,6 @@ router.post("/sync", requireAuth, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /api/external-reviews/search-place:
- *   get:
- *     summary: Search for a Google Place (useful for finding Place IDs)
- *     tags: [External Reviews]
- *     parameters:
- *       - in: query
- *         name: query
- *         required: true
- *         schema:
- *           type: string
- *         description: Search query (e.g., "Pizza Hut New York")
- *     responses:
- *       200:
- *         description: List of matching places
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-router.get("/search-place", requireAuth, async (req, res) => {
-  try {
-    const { query } = req.query;
-
-    if (!query || typeof query !== "string") {
-      return res.status(400).json({ error: "Query parameter is required" });
-    }
-
-    const places = await searchPlace(query);
-
-    return res.json({ places });
-  } catch (error: any) {
-    console.error("Error searching places:", error);
-    return res.status(500).json({ error: error.message || "Failed to search places" });
-  }
-});
 
 export default router;
 
