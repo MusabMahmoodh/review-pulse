@@ -631,13 +631,6 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                       <p className="text-lg font-semibold capitalize">{stats.recentTrend}</p>
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">External Reviews</p>
-                    <p className="text-2xl font-bold">
-                      {stats.externalReviewsCount.google + stats.externalReviewsCount.facebook + stats.externalReviewsCount.instagram}
-                    </p>
-                    <p className="text-xs text-muted-foreground">across platforms</p>
-                  </div>
                 </div>
               )}
             </CardContent>

@@ -6,9 +6,15 @@ import { authApi } from "@/lib/api-client";
 
 const TOKEN_KEY = "rp_auth_token";
 
-export function useRegister() {
+export function useRegisterTeacher() {
   return useMutation({
-    mutationFn: authApi.register,
+    mutationFn: authApi.registerTeacher,
+  });
+}
+
+export function useRegisterOrganization() {
+  return useMutation({
+    mutationFn: authApi.registerOrganization,
   });
 }
 

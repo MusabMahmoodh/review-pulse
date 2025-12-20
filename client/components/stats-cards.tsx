@@ -34,21 +34,10 @@ export function StatsCards({ stats }: StatsCardsProps) {
             ? "text-red-500"
             : "text-yellow-500",
     },
-    {
-      icon: Users,
-      label: "External Reviews",
-      value: (
-        stats.externalReviewsCount.google +
-        stats.externalReviewsCount.facebook +
-        stats.externalReviewsCount.instagram
-      ).toString(),
-      suffix: "",
-      color: "text-chart-4",
-    },
   ]
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
       {cards.map((card) => (
         <Card key={card.label}>
           <CardContent className="p-4">

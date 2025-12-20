@@ -2,13 +2,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { QrCode, LogOut, ChevronRight, Settings, Sparkles, BarChart3, MessageSquare, Star, CheckSquare, Users, BookOpen } from "lucide-react"
+import { QrCode, LogOut, ChevronRight, Settings, Sparkles, BarChart3, MessageSquare, CheckSquare, Users, BookOpen } from "lucide-react"
 import { Logo } from "@/components/logo"
 import Link from "next/link"
 import { FeedbackList } from "@/components/feedback-list"
 import { StatsCards } from "@/components/stats-cards"
 import { RatingsChart } from "@/components/ratings-chart"
-import { ExternalReviews } from "@/components/external-reviews"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 import { useFeedbackList, useFeedbackStats, useAIInsights, useAuth } from "@/hooks"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -250,18 +249,6 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* External Reviews */}
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">External Reviews</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="px-0 pb-0">
-            <ExternalReviews teacherId={teacherId} compact />
-          </CardContent>
-        </Card>
       </main>
       
       {/* Mobile Bottom Navigation */}

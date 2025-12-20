@@ -85,24 +85,68 @@ async function fetchApi<T>(
 
 // Auth API
 export const authApi = {
-  register: async (data: {
+  registerTeacher: async (data: {
     teacherName: string;
     email: string;
     password: string;
     phone: string;
-    address: string;
+    address?: string;
     subject?: string;
     department?: string;
     organizationId?: string;
   }) => {
-    return fetchApi<{
+    const result = await fetchApi<{
       success: boolean;
       teacherId: string;
+      token: string;
       qrCodeUrl: string;
-    }>("/api/auth/register", {
+      teacher: {
+        id: string;
+        name: string;
+        email: string;
+        organizationId?: string;
+      };
+    }>("/api/auth/register/teacher", {
       method: "POST",
       body: JSON.stringify(data),
     });
+    
+    // Store token in localStorage if present
+    if (result.token && typeof window !== "undefined") {
+      window.localStorage.setItem(TOKEN_KEY, result.token);
+    }
+    
+    return result;
+  },
+
+  registerOrganization: async (data: {
+    organizationName: string;
+    email: string;
+    password: string;
+    phone: string;
+    address: string;
+    website?: string;
+  }) => {
+    const result = await fetchApi<{
+      success: boolean;
+      organizationId: string;
+      token: string;
+      organization: {
+        id: string;
+        name: string;
+        email: string;
+      };
+    }>("/api/auth/register/organization", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    
+    // Store token in localStorage if present
+    if (result.token && typeof window !== "undefined") {
+      window.localStorage.setItem(TOKEN_KEY, result.token);
+    }
+    
+    return result;
   },
 
   login: async (email: string, password: string) => {

@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Loader2, Building2, User } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast-simple"
-import { apiClient } from "@/lib/api-client"
+import { authApi } from "@/lib/api-client"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -68,7 +68,7 @@ export default function RegisterPage() {
 
     setIsLoading(true)
     try {
-      const response = await apiClient.post("/auth/register/organization", {
+      const result = await authApi.registerOrganization({
         organizationName: orgFormData.organizationName,
         email: orgFormData.email,
         password: orgFormData.password,
@@ -77,9 +77,7 @@ export default function RegisterPage() {
         website: orgFormData.website || undefined,
       })
 
-      if (response.data.success) {
-        // Store token
-        localStorage.setItem("token", response.data.token)
+      if (result.success) {
         toast({
           title: "Success!",
           description: "Your organization account has been created",
@@ -89,7 +87,7 @@ export default function RegisterPage() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error?.response?.data?.error || error?.message || "Registration failed",
+        description: error?.data?.error || error?.message || "Registration failed",
         variant: "destructive",
       })
     } finally {
@@ -120,7 +118,7 @@ export default function RegisterPage() {
 
     setIsLoading(true)
     try {
-      const response = await apiClient.post("/auth/register/teacher", {
+      const result = await authApi.registerTeacher({
         teacherName: teacherFormData.teacherName,
         email: teacherFormData.email,
         password: teacherFormData.password,
@@ -131,9 +129,7 @@ export default function RegisterPage() {
         organizationId: teacherFormData.organizationId || undefined,
       })
 
-      if (response.data.success) {
-        // Store token
-        localStorage.setItem("token", response.data.token)
+      if (result.success) {
         toast({
           title: "Success!",
           description: "Your teacher account has been created",
@@ -143,7 +139,7 @@ export default function RegisterPage() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error?.response?.data?.error || error?.message || "Registration failed",
+        description: error?.data?.error || error?.message || "Registration failed",
         variant: "destructive",
       })
     } finally {
