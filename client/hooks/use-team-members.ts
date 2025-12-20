@@ -4,11 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { teamMembersApi } from "@/lib/api-client";
 import type { TeamMember } from "@/lib/types";
 
-export function useTeamMembers(restaurantId: string | null) {
+export function useTeamMembers(teacherId: string | null) {
   return useQuery<{ members: TeamMember[] }>({
-    queryKey: ["team-members", restaurantId],
+    queryKey: ["team-members", teacherId],
     queryFn: async () => {
-      const response = await teamMembersApi.list(restaurantId!);
+      const response = await teamMembersApi.list(teacherId!);
       return {
         members: response.members.map((member) => ({
           ...member,
@@ -17,7 +17,7 @@ export function useTeamMembers(restaurantId: string | null) {
         })) as TeamMember[],
       };
     },
-    enabled: !!restaurantId,
+    enabled: !!teacherId,
   });
 }
 
@@ -27,7 +27,7 @@ export function useCreateTeamMember() {
   return useMutation({
     mutationFn: teamMembersApi.create,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["team-members", variables.restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ["team-members", variables.teacherId] });
     },
   });
 }

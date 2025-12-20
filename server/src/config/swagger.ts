@@ -6,7 +6,7 @@ const swaggerDefinition: SwaggerDefinition = {
   info: {
     title: "Review Pulse API",
     version: "1.0.0",
-    description: "API documentation for Review Pulse - Restaurant feedback management platform",
+    description: "API documentation for Review Pulse - Teacher and Organization student feedback management platform",
     contact: {
       name: "Review Pulse Support",
     },
@@ -26,7 +26,7 @@ const swaggerDefinition: SwaggerDefinition = {
       },
     },
     schemas: {
-      Restaurant: {
+      Teacher: {
         type: "object",
         properties: {
           id: { type: "string" },
@@ -34,25 +34,43 @@ const swaggerDefinition: SwaggerDefinition = {
           email: { type: "string" },
           phone: { type: "string" },
           address: { type: "string" },
+          subject: { type: "string" },
+          department: { type: "string" },
           qrCode: { type: "string" },
-          socialKeywords: { type: "array", items: { type: "string" } },
+          organizationId: { type: "string" },
           status: { type: "string", enum: ["active", "blocked"] },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
         },
       },
-      CustomerFeedback: {
+      Organization: {
         type: "object",
         properties: {
           id: { type: "string" },
-          restaurantId: { type: "string" },
-          customerName: { type: "string" },
-          customerContact: { type: "string" },
-          foodRating: { type: "number", minimum: 1, maximum: 5 },
-          staffRating: { type: "number", minimum: 1, maximum: 5 },
-          ambienceRating: { type: "number", minimum: 1, maximum: 5 },
+          name: { type: "string" },
+          email: { type: "string" },
+          phone: { type: "string" },
+          address: { type: "string" },
+          website: { type: "string" },
+          status: { type: "string", enum: ["active", "blocked"] },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+        },
+      },
+      StudentFeedback: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          teacherId: { type: "string" },
+          studentName: { type: "string" },
+          studentContact: { type: "string" },
+          studentId: { type: "string" },
+          teachingRating: { type: "number", minimum: 1, maximum: 5 },
+          communicationRating: { type: "number", minimum: 1, maximum: 5 },
+          materialRating: { type: "number", minimum: 1, maximum: 5 },
           overallRating: { type: "number", minimum: 1, maximum: 5 },
           suggestions: { type: "string" },
+          courseName: { type: "string" },
           createdAt: { type: "string", format: "date-time" },
         },
       },
@@ -60,7 +78,7 @@ const swaggerDefinition: SwaggerDefinition = {
         type: "object",
         properties: {
           id: { type: "string" },
-          restaurantId: { type: "string" },
+          teacherId: { type: "string" },
           platform: { type: "string", enum: ["google", "facebook", "instagram"] },
           author: { type: "string" },
           rating: { type: "number" },
@@ -92,6 +110,8 @@ const options = {
 };
 
 export const swaggerSpec = swaggerJsdoc(options);
+
+
 
 
 

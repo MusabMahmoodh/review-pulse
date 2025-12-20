@@ -26,11 +26,11 @@ export default function FeedbackPage({ params }: PageProps) {
   const { data: settings } = useReviewPageSettings(restaurantId)
   
   const [formData, setFormData] = useState({
-    customerName: "",
-    customerContact: "",
-    foodRating: 5,
-    staffRating: 5,
-    ambienceRating: 5,
+    studentName: "",
+    studentContact: "",
+    teachingRating: 5,
+    communicationRating: 5,
+    materialRating: 5,
     overallRating: 5,
     suggestions: "",
   })
@@ -56,8 +56,14 @@ export default function FeedbackPage({ params }: PageProps) {
 
     submitMutation.mutate(
       {
-        restaurantId,
-        ...formData,
+        teacherId: restaurantId,
+        teachingRating: formData.teachingRating,
+        communicationRating: formData.communicationRating,
+        materialRating: formData.materialRating,
+        overallRating: formData.overallRating,
+        studentName: formData.studentName || undefined,
+        studentContact: formData.studentContact || undefined,
+        suggestions: formData.suggestions || undefined,
       },
       {
         onSuccess: () => {
@@ -156,7 +162,7 @@ export default function FeedbackPage({ params }: PageProps) {
               style={{ color: pageSettings.primaryColor }}
             />
             <h2 className="text-2xl font-bold mb-2">Thank You!</h2>
-            <p className="text-muted-foreground">Your feedback helps us serve you better</p>
+            <p className="text-muted-foreground">Your feedback helps improve the learning experience</p>
           </CardContent>
         </Card>
       </div>
@@ -177,7 +183,7 @@ export default function FeedbackPage({ params }: PageProps) {
       <header className={designStyles.headerClass}>
         <div className="container mx-auto px-4 py-4 flex items-center justify-center gap-2">
           <Logo width={32} height={32} />
-          <span className="text-xl font-bold">Share Your Experience</span>
+          <span className="text-xl font-bold">Share Your Feedback</span>
         </div>
       </header>
 
@@ -185,41 +191,41 @@ export default function FeedbackPage({ params }: PageProps) {
         <Card className={designStyles.cardClass}>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{pageSettings.welcomeMessage}</CardTitle>
-            <CardDescription>Help us improve by rating your experience</CardDescription>
+            <CardDescription>Help us improve by sharing your learning experience</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Rating Sections */}
               <RatingSection
-                title="Food Quality"
-                description="How was the taste, presentation, and quality?"
-                value={formData.foodRating}
-                onChange={(value) => handleRatingChange("foodRating", value)}
+                title="Teaching Quality"
+                description="How effective was the teaching and explanation?"
+                value={formData.teachingRating}
+                onChange={(value) => handleRatingChange("teachingRating", value)}
                 primaryColor={pageSettings.primaryColor}
                 designVariation={pageSettings.designVariation}
               />
 
               <RatingSection
-                title="Staff Service"
-                description="How friendly and helpful was our team?"
-                value={formData.staffRating}
-                onChange={(value) => handleRatingChange("staffRating", value)}
+                title="Communication"
+                description="How clear and responsive was the communication?"
+                value={formData.communicationRating}
+                onChange={(value) => handleRatingChange("communicationRating", value)}
                 primaryColor={pageSettings.primaryColor}
                 designVariation={pageSettings.designVariation}
               />
 
               <RatingSection
-                title="Ambience"
-                description="How was the atmosphere and cleanliness?"
-                value={formData.ambienceRating}
-                onChange={(value) => handleRatingChange("ambienceRating", value)}
+                title="Course Materials"
+                description="How useful and well-organized were the materials?"
+                value={formData.materialRating}
+                onChange={(value) => handleRatingChange("materialRating", value)}
                 primaryColor={pageSettings.primaryColor}
                 designVariation={pageSettings.designVariation}
               />
 
               <RatingSection
                 title="Overall Experience"
-                description="How likely are you to recommend us?"
+                description="How likely are you to recommend this teacher?"
                 value={formData.overallRating}
                 onChange={(value) => handleRatingChange("overallRating", value)}
                 primaryColor={pageSettings.primaryColor}
@@ -232,7 +238,7 @@ export default function FeedbackPage({ params }: PageProps) {
                   <Textarea
                     id="suggestions"
                     name="suggestions"
-                    placeholder="Any suggestions or special mentions?"
+                    placeholder="Any suggestions or feedback you'd like to share?"
                     value={formData.suggestions}
                     onChange={handleChange}
                     rows={4}
@@ -240,24 +246,24 @@ export default function FeedbackPage({ params }: PageProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="customerName">Your Name (Optional)</Label>
+                  <Label htmlFor="studentName">Your Name (Optional)</Label>
                   <Input
-                    id="customerName"
-                    name="customerName"
+                    id="studentName"
+                    name="studentName"
                     placeholder="John Doe"
-                    value={formData.customerName}
+                    value={formData.studentName}
                     onChange={handleChange}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="customerContact">Contact Number (Optional)</Label>
+                  <Label htmlFor="studentContact">Contact Number (Optional)</Label>
                   <Input
-                    id="customerContact"
-                    name="customerContact"
+                    id="studentContact"
+                    name="studentContact"
                     type="tel"
                     placeholder="+1 (555) 123-4567"
-                    value={formData.customerContact}
+                    value={formData.studentContact}
                     onChange={handleChange}
                   />
                   <p className="text-xs text-muted-foreground">We'll only use this to stay connected with you</p>

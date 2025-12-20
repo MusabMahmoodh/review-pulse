@@ -2,6 +2,8 @@
 
 This guide covers setting up Review Pulse for development using **free cloud services** for easy access and collaboration.
 
+Review Pulse helps teachers and educational institutes collect student feedback and turn it into AI-powered actionable insights.
+
 ## Architecture Overview
 
 ```
@@ -56,9 +58,9 @@ This guide covers setting up Review Pulse for development using **free cloud ser
 
 **Option A: Using Supabase SQL Editor**
 1. Go to **SQL Editor** in Supabase dashboard
-2. Copy content from `server/src/migrations/InitialMigration1765721925211.ts`
+2. Copy content from migration files in `server/src/migrations/`
 3. Extract SQL and run in SQL Editor
-4. Repeat for other migration files
+4. Run migrations in order
 
 **Option B: Using Local Setup**
 ```bash
@@ -106,16 +108,9 @@ PORT=3001
 NODE_ENV=development
 CLIENT_URL=https://your-vercel-app.vercel.app
 
-# Google OAuth (use test credentials)
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_REDIRECT_URI=https://your-vercel-app.vercel.app/api/auth/google/callback
-
-# Generate: openssl rand -hex 32
-ENCRYPTION_KEY=your_32_byte_hex_encryption_key
-
-# OpenAI API Key (get from OpenAI)
-OPENAI_API_KEY=your_openai_api_key
+# JWT Secret (generate: openssl rand -hex 32)
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRES_IN=7d
 
 API_URL=https://your-railway-app.up.railway.app
 ```
@@ -204,141 +199,22 @@ NEXT_PUBLIC_API_URL=https://your-railway-app.up.railway.app
 
 ---
 
-## Alternative: Render Setup (Free Tier)
+## Part 4: Local Development Setup
 
-If Railway doesn't work, use Render:
-
-### Render Backend Setup
-
-1. Go to [Render](https://render.com) and sign up
-2. Click **"New"** → **"Web Service"**
-3. Connect GitHub repository
-4. Configure:
-   - **Name**: `review-pulse-api`
-   - **Environment**: Node
-   - **Build Command**: `cd server && npm install`
-   - **Start Command**: `cd server && npm start`
-   - **Root Directory**: `server`
-5. Add environment variables (same as Railway)
-6. Deploy
-
-**Note**: Render free tier spins down after 15 minutes of inactivity. First request may be slow.
-
----
-
-## Alternative: Fly.io Setup (Free Tier)
-
-### Fly.io Backend Setup
-
-1. Install Fly CLI:
-   ```bash
-   curl -L https://fly.io/install.sh | sh
-   ```
-
-2. Sign up:
-   ```bash
-   fly auth signup
-   ```
-
-3. Create app:
-   ```bash
-   cd server
-   fly launch
-   ```
-
-4. Configure `fly.toml`:
-   ```toml
-   app = "review-pulse-api"
-   primary_region = "iad"
-
-   [build]
-
-   [env]
-     PORT = "3001"
-     NODE_ENV = "production"
-
-   [[services]]
-     internal_port = 3001
-     protocol = "tcp"
-   ```
-
-5. Set secrets:
-   ```bash
-   fly secrets set DB_HOST=db.xxxxx.supabase.co
-   fly secrets set DB_PASSWORD=your_password
-   # ... add all other env vars
-   ```
-
-6. Deploy:
-   ```bash
-   fly deploy
-   ```
-
----
-
-## Part 4: Google OAuth Setup (Development)
-
-### 4.1 Create Google Cloud Project
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create new project: `review-pulse-dev`
-3. Enable **Google Business Profile API** (if needed)
-
-### 4.2 Configure OAuth Consent Screen
-
-1. Go to **APIs & Services** → **OAuth consent screen**
-2. Choose **External**
-3. Fill in:
-   - App name: `Review Pulse Dev`
-   - User support email: Your email
-   - Developer contact: Your email
-4. Add scopes: `https://www.googleapis.com/auth/business.manage`
-5. Add test users (your email)
-
-### 4.3 Create OAuth Credentials
-
-1. Go to **APIs & Services** → **Credentials**
-2. Click **Create Credentials** → **OAuth 2.0 Client ID**
-3. Application type: **Web application**
-4. Name: `Review Pulse Dev Client`
-5. Authorized redirect URIs:
-   - `http://localhost:3000/api/auth/google/callback` (local)
-   - `https://your-vercel-app.vercel.app/api/auth/google/callback` (Vercel)
-6. Save **Client ID** and **Client Secret**
-
----
-
-## Part 5: OpenAI API Key (Free Trial)
-
-### 5.1 Get OpenAI API Key
-
-1. Go to [OpenAI Platform](https://platform.openai.com)
-2. Sign up/login
-3. Go to **API Keys**
-4. Click **"Create new secret key"**
-5. Copy and save the key (starts with `sk-`)
-
-**Note**: Free tier includes $5 credit. GPT-4o-mini is very affordable (~$0.15 per 1M tokens).
-
----
-
-## Part 6: Local Development Setup
-
-### 6.1 Clone Repository
+### 4.1 Clone Repository
 
 ```bash
 git clone https://github.com/yourusername/review-pulse.git
 cd review-pulse
 ```
 
-### 6.2 Backend Setup
+### 4.2 Backend Setup
 
 ```bash
 cd server
 npm install
 
 # Create .env file
-cp .env.example .env  # Or create manually
 ```
 
 Edit `server/.env`:
@@ -352,12 +228,8 @@ PORT=3001
 NODE_ENV=development
 CLIENT_URL=http://localhost:3000
 
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
-
-ENCRYPTION_KEY=your_32_byte_hex_encryption_key
-OPENAI_API_KEY=your_openai_api_key
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRES_IN=7d
 
 API_URL=http://localhost:3001
 ```
@@ -370,7 +242,7 @@ npm run migration:run
 npm run dev
 ```
 
-### 6.3 Frontend Setup
+### 4.3 Frontend Setup
 
 ```bash
 cd client
@@ -385,9 +257,9 @@ npm run dev
 
 ---
 
-## Part 7: Development Workflow
+## Part 5: Development Workflow
 
-### 7.1 Making Changes
+### 5.1 Making Changes
 
 1. **Local Development:**
    - Make changes locally
@@ -399,7 +271,7 @@ npm run dev
    - **Railway**: Auto-deploys on push to main branch
    - Both provide preview deployments for PRs
 
-### 7.2 Database Migrations
+### 5.2 Database Migrations
 
 ```bash
 # Create new migration
@@ -413,7 +285,7 @@ npm run migration:run
 railway run npm run migration:run
 ```
 
-### 7.3 Viewing Logs
+### 5.3 Viewing Logs
 
 **Railway:**
 - Go to Railway dashboard → Your service → **Logs**
@@ -434,7 +306,7 @@ npm run dev
 
 ---
 
-## Part 8: Free Tier Limits & Considerations
+## Part 6: Free Tier Limits & Considerations
 
 ### Supabase Free Tier
 - ✅ 500MB database storage
@@ -508,8 +380,6 @@ psql "postgresql://postgres:password@db.xxxxx.supabase.co:5432/postgres"
 - [ ] Backend environment variables configured
 - [ ] Vercel frontend deployed
 - [ ] Frontend environment variables configured
-- [ ] Google OAuth configured
-- [ ] OpenAI API key added
 - [ ] Local development environment working
 - [ ] All services accessible and communicating
 
@@ -534,4 +404,3 @@ psql "postgresql://postgres:password@db.xxxxx.supabase.co:5432/postgres"
 - [Vercel Docs](https://vercel.com/docs)
 - [Render Docs](https://render.com/docs)
 - [Fly.io Docs](https://fly.io/docs)
-

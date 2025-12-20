@@ -1,39 +1,48 @@
-// Database Types for Restaurant Feedback Platform
+// Database Types for Teacher/Institute Feedback Platform
 
-export interface Restaurant {
+export interface Organization {
   id: string
   name: string
   email: string
   phone: string
   address: string
-  qrCode: string
-  socialKeywords: string[] // 5 keywords to search on Facebook/Instagram
+  website?: string
   createdAt: Date
   updatedAt: Date
 }
 
-export interface RestaurantAuth {
-  restaurantId: string
-  passwordHash: string
+export interface Teacher {
+  id: string
+  name: string
   email: string
+  phone: string
+  address?: string
+  subject?: string
+  department?: string
+  qrCode: string
+  organizationId?: string
+  createdAt: Date
+  updatedAt: Date
 }
 
-export interface CustomerFeedback {
+export interface StudentFeedback {
   id: string
-  restaurantId: string
-  customerName?: string
-  customerContact?: string
-  foodRating: number // 1-5
-  staffRating: number // 1-5
-  ambienceRating: number // 1-5
+  teacherId: string
+  studentName?: string
+  studentContact?: string
+  studentId?: string
+  teachingRating: number // 1-5
+  communicationRating: number // 1-5
+  materialRating: number // 1-5
   overallRating: number // 1-5
   suggestions?: string
+  courseName?: string
   createdAt: Date
 }
 
 export interface ExternalReview {
   id: string
-  restaurantId: string
+  teacherId: string
   platform: "google" | "facebook" | "instagram"
   author: string
   rating: number
@@ -44,7 +53,7 @@ export interface ExternalReview {
 
 export interface AIInsight {
   id: string
-  restaurantId: string
+  teacherId: string
   summary: string
   recommendations: string[]
   sentiment: "positive" | "neutral" | "negative"
@@ -55,9 +64,9 @@ export interface AIInsight {
 export interface FeedbackStats {
   totalFeedback: number
   averageRatings: {
-    food: number
-    staff: number
-    ambience: number
+    teaching: number
+    communication: number
+    material: number
     overall: number
   }
   recentTrend: "improving" | "stable" | "declining"
@@ -78,11 +87,12 @@ export interface Admin {
 
 export interface Subscription {
   id: string
-  restaurantId: string
+  organizationId?: string
+  teacherId?: string
   plan: "free" | "basic" | "premium" | "enterprise"
   status: "active" | "cancelled" | "expired" | "trial"
   startDate: Date
-  endDate: Date | null // null means forever
+  endDate: Date | null
   monthlyPrice: number
   defaultPrice?: number
   discount?: number
@@ -90,7 +100,7 @@ export interface Subscription {
   amountPaid?: number
 }
 
-export interface RestaurantWithDetails extends Restaurant {
+export interface TeacherWithDetails extends Teacher {
   subscription?: Subscription
   feedbackCount: number
   averageRating: number
@@ -98,9 +108,12 @@ export interface RestaurantWithDetails extends Restaurant {
   lastActivity?: Date
 }
 
+// Legacy alias for backward compatibility (can be removed later)
+export type RestaurantWithDetails = TeacherWithDetails
+
 export interface ActionableItem {
   id: string
-  restaurantId: string
+  teacherId: string
   title: string
   description?: string
   completed: boolean
@@ -115,7 +128,8 @@ export interface ActionableItem {
 
 export interface TeamMember {
   id: string
-  restaurantId: string
+  organizationId?: string
+  teacherId: string
   name: string
   email?: string
   phone?: string

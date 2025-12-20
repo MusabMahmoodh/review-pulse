@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Users,
+  User,
   Clock,
   Target,
   Star,
@@ -69,7 +70,7 @@ export default function HomePage() {
             }`}
           >
             <span className="bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
-              Stop collecting reviews.
+              Collect student feedback.
             </span>
             <br />
             <span
@@ -79,7 +80,7 @@ export default function HomePage() {
                   : "opacity-0 translate-y-4"
               }`}
             >
-              Start fixing what matters.
+              Improve teaching with AI insights.
             </span>
           </h1>
 
@@ -91,8 +92,8 @@ export default function HomePage() {
                 : "opacity-0 translate-y-4"
             }`}
           >
-            Guestra helps restaurants turn customer feedback into AI-powered, actionable insights — so you know exactly
-            what to improve.
+            Review Pulse helps teachers and institutes turn student feedback into AI-powered, actionable insights — so you know exactly
+            what to improve in your teaching.
           </p>
 
           {/* CTA Buttons with animation */}
@@ -136,7 +137,7 @@ export default function HomePage() {
           >
             <div className="flex items-center gap-2 group">
               <CheckCircle2 className="h-4 w-4 text-primary transition-transform group-hover:scale-110" />
-              <span className="transition-colors group-hover:text-foreground">QR-based customer reviews</span>
+              <span className="transition-colors group-hover:text-foreground">QR-based student feedback</span>
             </div>
             <div className="flex items-center gap-2 group">
               <CheckCircle2 className="h-4 w-4 text-primary transition-transform group-hover:scale-110" />
@@ -162,7 +163,7 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-16 md:py-24 bg-muted/30 relative">
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Reviews are everywhere. Clarity is nowhere.</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-balance">Student feedback is everywhere. Clarity is nowhere.</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-6 mt-12">
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-left duration-700 delay-100">
@@ -170,7 +171,7 @@ export default function HomePage() {
                 <div className="flex items-start gap-3">
                   <AlertCircle className="h-5 w-5 text-destructive mt-0.5 transition-transform group-hover:scale-110" />
                   <div>
-                    <h3 className="font-semibold mb-2">Customers leave reviews on multiple platforms</h3>
+                    <h3 className="font-semibold mb-2">Students leave feedback on multiple platforms</h3>
                     <p className="text-sm text-muted-foreground">
                       Feedback scattered across Google{/*, Facebook, Instagram*/}, and more. Impossible to track.
                     </p>
@@ -183,9 +184,9 @@ export default function HomePage() {
                 <div className="flex items-start gap-3">
                   <AlertCircle className="h-5 w-5 text-destructive mt-0.5 transition-transform group-hover:scale-110" />
                   <div>
-                    <h3 className="font-semibold mb-2">Managers don't have time to read everything</h3>
+                    <h3 className="font-semibold mb-2">Teachers don't have time to read everything</h3>
                     <p className="text-sm text-muted-foreground">
-                      Hundreds of reviews pile up. No time to analyze, prioritize, or act on them.
+                      Hundreds of feedback entries pile up. No time to analyze, prioritize, or act on them.
                     </p>
                   </div>
                 </div>
@@ -211,7 +212,7 @@ export default function HomePage() {
                   <div>
                     <h3 className="font-semibold mb-2">Important issues get buried</h3>
                     <p className="text-sm text-muted-foreground">
-                      Critical problems hidden among noise. Urgent fixes missed until it's too late.
+                      Critical problems hidden among noise. Urgent improvements missed until it's too late.
                     </p>
                   </div>
                 </div>
@@ -220,7 +221,7 @@ export default function HomePage() {
           </div>
           <div className="text-center pt-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
             <p className="text-lg font-semibold text-muted-foreground">
-              Reading reviews doesn't improve your business. Acting on them does.
+              Reading feedback doesn't improve your teaching. Acting on it does.
             </p>
           </div>
         </div>
@@ -230,7 +231,7 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-5xl mx-auto space-y-12">
           <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Guestra turns feedback into decisions.</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-balance">Review Pulse turns feedback into decisions.</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="text-center group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
@@ -241,7 +242,7 @@ export default function HomePage() {
                 <CardTitle className="text-2xl">Collect</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Customers leave feedback instantly via QR</p>
+                <p className="text-muted-foreground">Students leave feedback instantly via QR</p>
               </CardContent>
             </Card>
             <Card className="text-center group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
@@ -252,7 +253,7 @@ export default function HomePage() {
                 <CardTitle className="text-2xl">Analyze</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">AI clusters reviews, detects patterns, and finds real issues</p>
+                <p className="text-muted-foreground">AI clusters feedback, detects patterns, and finds real issues</p>
               </CardContent>
             </Card>
             <Card className="text-center group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
@@ -283,7 +284,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto space-y-12">
           <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <h2 className="text-3xl md:text-4xl font-bold text-balance">
-              From customer voice to team action — in minutes
+              From student voice to teaching action — in minutes
             </h2>
           </div>
           <div className="space-y-8">
@@ -300,11 +301,11 @@ export default function HomePage() {
                 <ul className="space-y-2 text-muted-foreground">
                   <li className="flex items-center gap-2 group/item">
                     <CheckCircle2 className="h-4 w-4 text-primary transition-transform group-hover/item:scale-110" />
-                    <span>QR on tables, bills, or counters</span>
+                    <span>QR codes in classrooms, handouts, or presentations</span>
                   </li>
                   <li className="flex items-center gap-2 group/item">
                     <CheckCircle2 className="h-4 w-4 text-primary transition-transform group-hover/item:scale-110" />
-                    <span>No app needed for customers</span>
+                    <span>No app needed for students</span>
                   </li>
                 </ul>
               </CardContent>
@@ -322,7 +323,7 @@ export default function HomePage() {
                 <ul className="space-y-2 text-muted-foreground">
                   <li className="flex items-center gap-2 group/item">
                     <CheckCircle2 className="h-4 w-4 text-primary transition-transform group-hover/item:scale-110" />
-                    <span>AI identifies common complaints & praise</span>
+                    <span>AI identifies common concerns & praise</span>
                   </li>
                   <li className="flex items-center gap-2 group/item">
                     <CheckCircle2 className="h-4 w-4 text-primary transition-transform group-hover/item:scale-110" />
@@ -361,7 +362,7 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-5xl mx-auto space-y-12">
           <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Why restaurants choose Guestra</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-balance">Why teachers and institutes choose Review Pulse</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
@@ -372,7 +373,7 @@ export default function HomePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">No more reading hundreds of reviews</p>
+                <p className="text-muted-foreground">No more reading hundreds of feedback entries</p>
               </CardContent>
             </Card>
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
@@ -383,7 +384,7 @@ export default function HomePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">AI highlights what impacts customers most</p>
+                <p className="text-muted-foreground">AI highlights what impacts students most</p>
               </CardContent>
             </Card>
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
@@ -394,7 +395,7 @@ export default function HomePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Fix issues before they hit public platforms</p>
+                <p className="text-muted-foreground">Address concerns before they escalate</p>
               </CardContent>
             </Card>
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400">
@@ -416,36 +417,36 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-16 md:py-24 bg-muted/30">
         <div className="max-w-5xl mx-auto space-y-12">
           <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Built for real restaurant teams</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-balance">Built for teachers and institutes</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card className="text-center group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
               <CardHeader>
-                <Building2 className="h-8 w-8 text-primary mx-auto mb-2 transition-transform group-hover:scale-110 group-hover:rotate-6" />
-                <CardTitle>Single-location owners</CardTitle>
+                <User className="h-8 w-8 text-primary mx-auto mb-2 transition-transform group-hover:scale-110 group-hover:rotate-6" />
+                <CardTitle>Individual Teachers</CardTitle>
               </CardHeader>
             </Card>
             <Card className="text-center group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
               <CardHeader>
-                <Briefcase className="h-8 w-8 text-primary mx-auto mb-2 transition-transform group-hover:scale-110 group-hover:rotate-6" />
-                <CardTitle>Multi-outlet chains</CardTitle>
+                <Building2 className="h-8 w-8 text-primary mx-auto mb-2 transition-transform group-hover:scale-110 group-hover:rotate-6" />
+                <CardTitle>Educational Institutes</CardTitle>
               </CardHeader>
             </Card>
             <Card className="text-center group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
               <CardHeader>
                 <BarChart3 className="h-8 w-8 text-primary mx-auto mb-2 transition-transform group-hover:scale-110 group-hover:rotate-6" />
-                <CardTitle>Operations managers</CardTitle>
+                <CardTitle>Department Heads</CardTitle>
               </CardHeader>
             </Card>
             <Card className="text-center group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-400">
               <CardHeader>
                 <Users className="h-8 w-8 text-primary mx-auto mb-2 transition-transform group-hover:scale-110 group-hover:rotate-6" />
-                <CardTitle>Customer experience teams</CardTitle>
+                <CardTitle>Teaching Teams</CardTitle>
               </CardHeader>
             </Card>
           </div>
           <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
-            <p className="text-lg text-muted-foreground">If customer experience matters, Guestra fits.</p>
+            <p className="text-lg text-muted-foreground">If student feedback matters, Review Pulse fits.</p>
           </div>
         </div>
       </section>
@@ -512,19 +513,19 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-16 md:py-24 bg-muted/30">
         <div className="max-w-4xl mx-auto space-y-12">
           <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Trusted by restaurant teams</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-balance">Trusted by teachers and institutes</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 hover:scale-105 animate-in fade-in slide-in-from-left duration-700 delay-100">
               <CardContent className="p-6 text-center space-y-4">
                 <div className="text-3xl font-bold text-primary transition-transform group-hover:scale-110">32%</div>
-                <p className="text-muted-foreground">Reduced negative reviews</p>
+                <p className="text-muted-foreground">Reduced negative feedback</p>
               </CardContent>
             </Card>
             <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 hover:scale-105 animate-in fade-in slide-in-from-right duration-700 delay-200">
               <CardContent className="p-6 text-center space-y-4">
                 <div className="text-3xl font-bold text-primary transition-transform group-hover:scale-110">5+ hours</div>
-                <p className="text-muted-foreground">Saved per week on review analysis</p>
+                <p className="text-muted-foreground">Saved per week on feedback analysis</p>
               </CardContent>
             </Card>
           </div>
@@ -578,9 +579,9 @@ export default function HomePage() {
         <Card className="bg-primary text-primary-foreground group hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4 duration-700">
           <CardContent className="p-8 md:p-12 text-center space-y-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/5 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            <h2 className="text-3xl md:text-4xl font-bold text-balance relative z-10">Your customers are already talking.</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-balance relative z-10">Your students are already talking.</h2>
             <p className="text-lg opacity-90 text-pretty max-w-2xl mx-auto relative z-10">
-              Guestra tells you what to do next.
+              Review Pulse tells you what to do next.
             </p>
             <div className="pt-2 relative z-10">
               <Link href="/register">
@@ -599,8 +600,8 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t mt-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="container mx-auto px-4 py-8 text-center text-sm text-muted-foreground">
-          <p>© 2025 Guestra. All rights reserved.</p>
-          <p className="mt-2 text-xs">every review is a growth opportunity</p>
+          <p>© 2025 Review Pulse. All rights reserved.</p>
+          <p className="mt-2 text-xs">every feedback is a teaching opportunity</p>
         </div>
       </footer>
     </div>

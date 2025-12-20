@@ -123,30 +123,30 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
     const hasInternalFeedback = stats.totalFeedback > 0
     
     // Check for low ratings (below 3.5) - only if we have internal feedback
-    if (hasInternalFeedback && ratings.food < 3.5) {
+    if (hasInternalFeedback && ratings.teaching !== undefined && ratings.teaching < 3.5) {
       issues.push({
-        title: "Food Quality Concerns",
-        description: `Food rating is ${ratings.food.toFixed(1)}/5.0 - significantly below acceptable standards. This is a critical operational issue that needs immediate attention.`,
+        title: "Teaching Quality Concerns",
+        description: `Teaching rating is ${ratings.teaching.toFixed(1)}/5.0 - significantly below acceptable standards. This is a critical operational issue that needs immediate attention.`,
         priority: "critical",
-        category: "Food Quality"
+        category: "Teaching Quality"
       })
     }
     
-    if (hasInternalFeedback && ratings.staff < 3.5) {
+    if (hasInternalFeedback && ratings.communication !== undefined && ratings.communication < 3.5) {
       issues.push({
-        title: "Staff Service Issues",
-        description: `Staff service rating is ${ratings.staff.toFixed(1)}/5.0 - customer service quality is below expectations.`,
+        title: "Communication Issues",
+        description: `Communication rating is ${ratings.communication.toFixed(1)}/5.0 - communication quality is below expectations.`,
         priority: "critical",
-        category: "Service"
+        category: "Communication"
       })
     }
     
-    if (hasInternalFeedback && ratings.ambience < 3.5) {
+    if (hasInternalFeedback && ratings.material !== undefined && ratings.material < 3.5) {
       issues.push({
-        title: "Ambience Problems",
-        description: `Ambience rating is ${ratings.ambience.toFixed(1)}/5.0 - dining environment needs improvement.`,
+        title: "Material Quality Problems",
+        description: `Material rating is ${ratings.material.toFixed(1)}/5.0 - teaching materials need improvement.`,
         priority: "high",
-        category: "Ambience"
+        category: "Material Quality"
       })
     }
     
@@ -196,27 +196,27 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
     const ratings = stats.averageRatings
     
     // Find strengths (ratings above 4.0)
-    if (ratings.food >= 4.0) {
+    if (ratings.teaching !== undefined && ratings.teaching >= 4.0) {
       strengths.push({
-        title: "Excellent Food Quality",
-        description: `Food quality is highly rated at ${ratings.food.toFixed(1)}/5.0. This is a key strength to maintain and leverage.`,
-        rating: ratings.food
+        title: "Excellent Teaching Quality",
+        description: `Teaching quality is highly rated at ${ratings.teaching.toFixed(1)}/5.0. This is a key strength to maintain and leverage.`,
+        rating: ratings.teaching
       })
     }
     
-    if (ratings.staff >= 4.0) {
+    if (ratings.communication !== undefined && ratings.communication >= 4.0) {
       strengths.push({
-        title: "Outstanding Service",
-        description: `Staff service is excellent at ${ratings.staff.toFixed(1)}/5.0. Your team is delivering great customer experiences.`,
-        rating: ratings.staff
+        title: "Outstanding Communication",
+        description: `Communication is excellent at ${ratings.communication.toFixed(1)}/5.0. Your communication skills are delivering great student experiences.`,
+        rating: ratings.communication
       })
     }
     
-    if (ratings.ambience >= 4.0) {
+    if (ratings.material !== undefined && ratings.material >= 4.0) {
       strengths.push({
-        title: "Great Ambience",
-        description: `Ambience is well-received at ${ratings.ambience.toFixed(1)}/5.0. The dining environment is appreciated by customers.`,
-        rating: ratings.ambience
+        title: "Great Material Quality",
+        description: `Material quality is well-received at ${ratings.material.toFixed(1)}/5.0. The teaching materials are appreciated by students.`,
+        rating: ratings.material
       })
     }
     
@@ -255,13 +255,13 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
       // Check if key topics relate to low-rated areas
       insight.keyTopics.forEach(topic => {
         const lowerTopic = topic.toLowerCase()
-        if ((lowerTopic.includes("food") || lowerTopic.includes("menu") || lowerTopic.includes("taste")) && ratings.food < 3.5) {
+        if ((lowerTopic.includes("teaching") || lowerTopic.includes("instruction") || lowerTopic.includes("lesson")) && ratings.teaching !== undefined && ratings.teaching < 3.5) {
           lowRatedTopics.push(topic)
         }
-        if ((lowerTopic.includes("service") || lowerTopic.includes("staff") || lowerTopic.includes("wait")) && ratings.staff < 3.5) {
+        if ((lowerTopic.includes("communication") || lowerTopic.includes("explanation") || lowerTopic.includes("clarity")) && ratings.communication !== undefined && ratings.communication < 3.5) {
           lowRatedTopics.push(topic)
         }
-        if ((lowerTopic.includes("ambience") || lowerTopic.includes("atmosphere") || lowerTopic.includes("environment")) && ratings.ambience < 3.5) {
+        if ((lowerTopic.includes("material") || lowerTopic.includes("content") || lowerTopic.includes("resources")) && ratings.material !== undefined && ratings.material < 3.5) {
           lowRatedTopics.push(topic)
         }
       })
@@ -289,26 +289,26 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
   const worstAspect = stats ? (() => {
     const ratings = stats.averageRatings
     const aspects = [
-      { name: "Food Quality", rating: ratings.food, icon: "🍽️" },
-      { name: "Staff Service", rating: ratings.staff, icon: "👥" },
-      { name: "Ambience", rating: ratings.ambience, icon: "🏛️" }
-    ]
-    return aspects.reduce((worst, current) => 
+      { name: "Teaching", rating: ratings.teaching ?? 0, icon: "📚" },
+      { name: "Communication", rating: ratings.communication ?? 0, icon: "💬" },
+      { name: "Material", rating: ratings.material ?? 0, icon: "📖" }
+    ].filter(a => a.rating > 0) // Only include aspects with ratings
+    return aspects.length > 0 ? aspects.reduce((worst, current) => 
       current.rating < worst.rating ? current : worst
-    )
+    ) : null
   })() : null
 
   // Get best performing aspect
   const bestAspect = stats ? (() => {
     const ratings = stats.averageRatings
     const aspects = [
-      { name: "Food Quality", rating: ratings.food, icon: "🍽️" },
-      { name: "Staff Service", rating: ratings.staff, icon: "👥" },
-      { name: "Ambience", rating: ratings.ambience, icon: "🏛️" }
-    ]
-    return aspects.reduce((best, current) => 
+      { name: "Teaching", rating: ratings.teaching ?? 0, icon: "📚" },
+      { name: "Communication", rating: ratings.communication ?? 0, icon: "💬" },
+      { name: "Material", rating: ratings.material ?? 0, icon: "📖" }
+    ].filter(a => a.rating > 0) // Only include aspects with ratings
+    return aspects.length > 0 ? aspects.reduce((best, current) => 
       current.rating > best.rating ? current : best
-    )
+    ) : null
   })() : null
 
   // Show premium upgrade if premium error occurred or user doesn't have premium
@@ -610,7 +610,7 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">Overall Rating</p>
-                    <p className="text-2xl font-bold">{stats.averageRatings.overall.toFixed(1)}</p>
+                    <p className="text-2xl font-bold">{(stats.averageRatings.overall ?? 0).toFixed(1)}</p>
                     <p className="text-xs text-muted-foreground">/ 5.0</p>
                   </div>
                   <div className="space-y-1">
@@ -704,62 +704,62 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                   <CardTitle className="text-lg">Performance Metrics</CardTitle>
                 </div>
                 <CardDescription>
-                  Detailed breakdown of customer ratings across key areas
+                  Detailed breakdown of student ratings across key areas
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 rounded-lg border bg-muted/30">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Food Quality</span>
-                      <span className="text-2xl font-bold">{stats.averageRatings.food.toFixed(1)}</span>
+                      <span className="text-sm font-medium">Teaching</span>
+                      <span className="text-2xl font-bold">{(stats.averageRatings.teaching ?? 0).toFixed(1)}</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
                       <div
                         className={`h-2 rounded-full ${
-                          stats.averageRatings.food >= 4.0
+                          (stats.averageRatings.teaching ?? 0) >= 4.0
                             ? "bg-green-500"
-                            : stats.averageRatings.food >= 3.0
+                            : (stats.averageRatings.teaching ?? 0) >= 3.0
                             ? "bg-yellow-500"
                             : "bg-red-500"
                         }`}
-                        style={{ width: `${(stats.averageRatings.food / 5) * 100}%` }}
+                        style={{ width: `${((stats.averageRatings.teaching ?? 0) / 5) * 100}%` }}
                       />
                     </div>
                   </div>
                   <div className="p-4 rounded-lg border bg-muted/30">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Staff Service</span>
-                      <span className="text-2xl font-bold">{stats.averageRatings.staff.toFixed(1)}</span>
+                      <span className="text-sm font-medium">Communication</span>
+                      <span className="text-2xl font-bold">{(stats.averageRatings.communication ?? 0).toFixed(1)}</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
                       <div
                         className={`h-2 rounded-full ${
-                          stats.averageRatings.staff >= 4.0
+                          (stats.averageRatings.communication ?? 0) >= 4.0
                             ? "bg-green-500"
-                            : stats.averageRatings.staff >= 3.0
+                            : (stats.averageRatings.communication ?? 0) >= 3.0
                             ? "bg-yellow-500"
                             : "bg-red-500"
                         }`}
-                        style={{ width: `${(stats.averageRatings.staff / 5) * 100}%` }}
+                        style={{ width: `${((stats.averageRatings.communication ?? 0) / 5) * 100}%` }}
                       />
                     </div>
                   </div>
                   <div className="p-4 rounded-lg border bg-muted/30">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Ambience</span>
-                      <span className="text-2xl font-bold">{stats.averageRatings.ambience.toFixed(1)}</span>
+                      <span className="text-sm font-medium">Material</span>
+                      <span className="text-2xl font-bold">{(stats.averageRatings.material ?? 0).toFixed(1)}</span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
                       <div
                         className={`h-2 rounded-full ${
-                          stats.averageRatings.ambience >= 4.0
+                          (stats.averageRatings.material ?? 0) >= 4.0
                             ? "bg-green-500"
-                            : stats.averageRatings.ambience >= 3.0
+                            : (stats.averageRatings.material ?? 0) >= 3.0
                             ? "bg-yellow-500"
                             : "bg-red-500"
                         }`}
-                        style={{ width: `${(stats.averageRatings.ambience / 5) * 100}%` }}
+                        style={{ width: `${((stats.averageRatings.material ?? 0) / 5) * 100}%` }}
                       />
                     </div>
                   </div>

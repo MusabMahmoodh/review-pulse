@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { ActionableItem, Restaurant, CustomerFeedback, ExternalReview, AIInsight, TeamMember } from "../models";
+import { ActionableItem, Teacher, StudentFeedback, ExternalReview, AIInsight, TeamMember } from "../models";
 import { requireAuth } from "../middleware/auth";
 import { isPremium } from "../utils/subscription";
 
@@ -10,15 +10,15 @@ const router = Router();
  * @swagger
  * /api/actionable-items:
  *   get:
- *     summary: Get all actionable items for a restaurant
+ *     summary: Get all actionable items for a teacher
  *     tags: [ActionableItems]
  *     parameters:
  *       - in: query
- *         name: restaurantId
+ *         name: teacherId
  *         required: true
  *         schema:
  *           type: string
- *         description: Restaurant ID
+ *         description: Teacher ID
  *       - in: query
  *         name: completed
  *         required: false
@@ -35,15 +35,15 @@ const router = Router();
  */
 router.get("/", requireAuth, async (req, res) => {
   try {
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
     const completed = req.query.completed as string | undefined;
 
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
+    if (!teacherId) {
+      return res.status(400).json({ error: "Teacher ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -55,7 +55,7 @@ router.get("/", requireAuth, async (req, res) => {
 
     const query = actionableItemRepo
       .createQueryBuilder("item")
-      .where("item.restaurantId = :restaurantId", { restaurantId });
+      .where("item.teacherId = :teacherId", { teacherId });
 
     if (completed !== undefined) {
       query.andWhere("item.completed = :completed", { completed: completed === "true" });
@@ -78,11 +78,11 @@ router.get("/", requireAuth, async (req, res) => {
  *     tags: [ActionableItems]
  *     parameters:
  *       - in: query
- *         name: restaurantId
+ *         name: teacherId
  *         required: true
  *         schema:
  *           type: string
- *         description: Restaurant ID
+ *         description: Teacher ID
  *       - in: query
  *         name: sourceType
  *         required: true
@@ -106,12 +106,12 @@ router.get("/", requireAuth, async (req, res) => {
  */
 router.get("/by-source", requireAuth, async (req, res) => {
   try {
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
     const sourceType = req.query.sourceType as string;
     const sourceId = req.query.sourceId as string;
 
-    if (!restaurantId || !sourceType || !sourceId) {
-      return res.status(400).json({ error: "Restaurant ID, sourceType, and sourceId are required" });
+    if (!teacherId || !sourceType || !sourceId) {
+      return res.status(400).json({ error: "Teacher ID, sourceType, and sourceId are required" });
     }
 
     if (sourceType !== "comment" && sourceType !== "ai_suggestion") {
@@ -119,7 +119,7 @@ router.get("/by-source", requireAuth, async (req, res) => {
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -131,7 +131,7 @@ router.get("/by-source", requireAuth, async (req, res) => {
 
     const item = await actionableItemRepo.findOne({
       where: {
-        restaurantId,
+        teacherId,
         sourceType: sourceType as "comment" | "ai_suggestion",
         sourceId,
       },
@@ -161,12 +161,12 @@ router.get("/by-source", requireAuth, async (req, res) => {
  *           schema:
  *             type: object
  *             required:
- *               - restaurantId
+ *               - teacherId
  *               - title
  *               - sourceType
  *               - sourceId
  *             properties:
- *               restaurantId:
+ *               teacherId:
  *                 type: string
  *               title:
  *                 type: string
@@ -190,9 +190,9 @@ router.get("/by-source", requireAuth, async (req, res) => {
 router.post("/", requireAuth, async (req, res) => {
   try {
     const { title, description, sourceType, sourceId, sourceText, assignedTo, deadline } = req.body;
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
 
-    if (!restaurantId || !title || !sourceType || !sourceId) {
+    if (!teacherId || !title || !sourceType || !sourceId) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -201,7 +201,7 @@ router.post("/", requireAuth, async (req, res) => {
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -211,18 +211,18 @@ router.post("/", requireAuth, async (req, res) => {
 
     // Verify source exists
     if (sourceType === "comment") {
-      const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
+      const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
       const reviewRepo = AppDataSource.getRepository(ExternalReview);
       
-      const feedback = await feedbackRepo.findOne({ where: { id: sourceId, restaurantId } });
-      const review = await reviewRepo.findOne({ where: { id: sourceId, restaurantId } });
+      const feedback = await feedbackRepo.findOne({ where: { id: sourceId, teacherId } });
+      const review = await reviewRepo.findOne({ where: { id: sourceId, teacherId } });
       
       if (!feedback && !review) {
         return res.status(404).json({ error: "Source comment not found" });
       }
     } else if (sourceType === "ai_suggestion") {
       const insightRepo = AppDataSource.getRepository(AIInsight);
-      const insight = await insightRepo.findOne({ where: { id: sourceId, restaurantId } });
+      const insight = await insightRepo.findOne({ where: { id: sourceId, teacherId } });
       
       if (!insight) {
         return res.status(404).json({ error: "Source AI insight not found" });
@@ -235,7 +235,7 @@ router.post("/", requireAuth, async (req, res) => {
     if (assignedTo) {
       const teamMemberRepo = AppDataSource.getRepository(TeamMember);
       const teamMember = await teamMemberRepo.findOne({
-        where: { id: assignedTo, restaurantId },
+        where: { id: assignedTo, teacherId },
       });
       if (!teamMember) {
         return res.status(404).json({ error: "Team member not found" });
@@ -244,7 +244,7 @@ router.post("/", requireAuth, async (req, res) => {
 
     const item = actionableItemRepo.create({
       id: `actionable_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      restaurantId,
+      teacherId,
       title,
       description: description || undefined,
       sourceType,
@@ -307,14 +307,14 @@ router.patch("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, completed, assignedTo, deadline } = req.body;
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
 
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
+    if (!teacherId) {
+      return res.status(400).json({ error: "Teacher ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -325,7 +325,7 @@ router.patch("/:id", requireAuth, async (req, res) => {
     const actionableItemRepo = AppDataSource.getRepository(ActionableItem);
 
     const item = await actionableItemRepo.findOne({
-      where: { id, restaurantId },
+      where: { id, teacherId },
     });
 
     if (!item) {
@@ -337,7 +337,7 @@ router.patch("/:id", requireAuth, async (req, res) => {
       if (assignedTo) {
         const teamMemberRepo = AppDataSource.getRepository(TeamMember);
         const teamMember = await teamMemberRepo.findOne({
-          where: { id: assignedTo, restaurantId },
+          where: { id: assignedTo, teacherId },
         });
         if (!teamMember) {
           return res.status(404).json({ error: "Team member not found" });
@@ -387,14 +387,14 @@ router.patch("/:id", requireAuth, async (req, res) => {
 router.delete("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
 
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
+    if (!teacherId) {
+      return res.status(400).json({ error: "Teacher ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -405,7 +405,7 @@ router.delete("/:id", requireAuth, async (req, res) => {
     const actionableItemRepo = AppDataSource.getRepository(ActionableItem);
 
     const item = await actionableItemRepo.findOne({
-      where: { id, restaurantId },
+      where: { id, teacherId },
     });
 
     if (!item) {

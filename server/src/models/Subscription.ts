@@ -1,13 +1,17 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from "typeorm";
-import { Restaurant } from "./Restaurant";
+import { Organization } from "./Organization";
+import { Teacher } from "./Teacher";
 
 @Entity("subscriptions")
 export class Subscription {
   @PrimaryColumn()
   id!: string;
 
-  @Column()
-  restaurantId!: string;
+  @Column({ nullable: true })
+  organizationId?: string; // For organization subscriptions
+
+  @Column({ nullable: true })
+  teacherId?: string; // For individual teacher subscriptions
 
   @Column()
   plan!: "free" | "basic" | "premium" | "enterprise";
@@ -37,9 +41,13 @@ export class Subscription {
   amountPaid?: number; // Amount actually paid
 
   // Relations
-  @ManyToOne(() => Restaurant, (restaurant) => restaurant.subscriptions)
-  @JoinColumn({ name: "restaurantId" })
-  restaurant!: Restaurant;
+  @ManyToOne(() => Organization, (org) => org.subscriptions, { nullable: true })
+  @JoinColumn({ name: "organizationId" })
+  organization?: Organization;
+
+  @ManyToOne(() => Teacher, (teacher) => teacher.subscriptions, { nullable: true })
+  @JoinColumn({ name: "teacherId" })
+  teacher?: Teacher;
 }
 
 

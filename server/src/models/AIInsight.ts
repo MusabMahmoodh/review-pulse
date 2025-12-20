@@ -1,5 +1,5 @@
 import { Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
-import { Restaurant } from "./Restaurant";
+import { Teacher } from "./Teacher";
 
 @Entity("ai_insights")
 export class AIInsight {
@@ -7,7 +7,7 @@ export class AIInsight {
   id!: string;
 
   @Column()
-  restaurantId!: string;
+  teacherId!: string;
 
   @Column({ type: "text" })
   summary!: string;
@@ -25,9 +25,9 @@ export class AIInsight {
   generatedAt!: Date;
 
   // Relations
-  @ManyToOne(() => Restaurant)
-  @JoinColumn({ name: "restaurantId" })
-  restaurant!: Restaurant;
+  @ManyToOne(() => Teacher)
+  @JoinColumn({ name: "teacherId" })
+  teacher!: Teacher;
 }
 
 

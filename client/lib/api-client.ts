@@ -86,16 +86,18 @@ async function fetchApi<T>(
 // Auth API
 export const authApi = {
   register: async (data: {
-    restaurantName: string;
+    teacherName: string;
     email: string;
     password: string;
     phone: string;
     address: string;
-    socialKeywords?: string[];
+    subject?: string;
+    department?: string;
+    organizationId?: string;
   }) => {
     return fetchApi<{
       success: boolean;
-      restaurantId: string;
+      teacherId: string;
       qrCodeUrl: string;
     }>("/api/auth/register", {
       method: "POST",
@@ -107,12 +109,19 @@ export const authApi = {
     return fetchApi<{
       success: boolean;
       token: string;
-      restaurantId: string;
-      restaurant: {
+      teacherId?: string;
+      organizationId?: string;
+      teacher?: {
         id: string;
         name: string;
         email: string;
       };
+      organization?: {
+        id: string;
+        name: string;
+        email: string;
+      };
+      userType: "teacher" | "organization";
     }>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
@@ -122,7 +131,22 @@ export const authApi = {
   me: async (token: string) => {
     return fetchApi<{
       success: boolean;
-      restaurant: {
+      userType: "teacher" | "organization";
+      teacher?: {
+        id: string;
+        name: string;
+        email: string;
+        organizationId?: string;
+        subscription?: {
+          id: string;
+          plan: "free" | "basic" | "premium" | "enterprise";
+          status: "active" | "cancelled" | "expired" | "trial";
+          startDate: string;
+          endDate: string | null;
+          monthlyPrice: number;
+        } | null;
+      };
+      organization?: {
         id: string;
         name: string;
         email: string;
@@ -144,14 +168,16 @@ export const authApi = {
 // Feedback API
 export const feedbackApi = {
   submit: async (data: {
-    restaurantId: string;
-    customerName?: string;
-    customerContact?: string;
-    foodRating: number;
-    staffRating: number;
-    ambienceRating: number;
+    teacherId: string;
+    studentName?: string;
+    studentContact?: string;
+    studentId?: string;
+    teachingRating: number;
+    communicationRating: number;
+    materialRating: number;
     overallRating: number;
     suggestions?: string;
+    courseName?: string;
   }) => {
     return fetchApi<{
       success: boolean;
@@ -162,31 +188,33 @@ export const feedbackApi = {
     });
   },
 
-  list: async (restaurantId: string) => {
+  list: async (teacherId: string) => {
     return fetchApi<{
       feedback: Array<{
         id: string;
-        restaurantId: string;
-        customerName?: string;
-        customerContact?: string;
-        foodRating: number;
-        staffRating: number;
-        ambienceRating: number;
+        teacherId: string;
+        studentName?: string;
+        studentContact?: string;
+        studentId?: string;
+        teachingRating: number;
+        communicationRating: number;
+        materialRating: number;
         overallRating: number;
         suggestions?: string;
+        courseName?: string;
         createdAt: string;
       }>;
-    }>(`/api/feedback/list?restaurantId=${restaurantId}`);
+    }>(`/api/feedback/list?teacherId=${teacherId}`);
   },
 
-  stats: async (restaurantId: string) => {
+  stats: async (teacherId: string) => {
     return fetchApi<{
       stats: {
         totalFeedback: number;
         averageRatings: {
-          food: number;
-          staff: number;
-          ambience: number;
+          teaching: number;
+          communication: number;
+          material: number;
           overall: number;
         };
         recentTrend: "improving" | "stable" | "declining";
@@ -196,51 +224,24 @@ export const feedbackApi = {
           instagram: number;
         };
       };
-    }>(`/api/feedback/stats?restaurantId=${restaurantId}`);
+    }>(`/api/feedback/stats?teacherId=${teacherId}`);
   },
 };
 
-// Restaurants API
-export const restaurantsApi = {
-  getKeywords: async (restaurantId: string) => {
-    return fetchApi<{
-      keywords: string[];
-    }>(`/api/restaurants/keywords?restaurantId=${restaurantId}`);
-  },
-
-  updateKeywords: async (restaurantId: string, keywords: string[]) => {
-    return fetchApi<{
-      success: boolean;
-      message: string;
-      keywords: string[];
-    }>("/api/restaurants/keywords", {
-      method: "PUT",
-      body: JSON.stringify({ restaurantId, keywords }),
-    });
-  },
-
-  getMetaIntegration: async (restaurantId: string) => {
-    return fetchApi<{
-      connected: boolean;
-      status: "active" | "expired" | "revoked" | null;
-      lastSyncedAt: string | null;
-      pageId: string | null;
-      instagramBusinessAccountId: string | null;
-    }>(`/api/restaurants/meta-integration?restaurantId=${restaurantId}`);
-  },
-
-  getReviewPageSettings: async (restaurantId: string) => {
+// Teachers API (formerly Restaurants API)
+export const teachersApi = {
+  getReviewPageSettings: async (teacherId: string) => {
     return fetchApi<{
       welcomeMessage: string;
       primaryColor: string;
       secondaryColor: string;
       backgroundColor: string;
       designVariation: string;
-    }>(`/api/restaurants/review-page-settings?restaurantId=${restaurantId}`);
+    }>(`/api/teachers/review-page-settings?teacherId=${teacherId}`);
   },
 
   updateReviewPageSettings: async (
-    restaurantId: string,
+    teacherId: string,
     settings: {
       welcomeMessage?: string;
       primaryColor?: string;
@@ -259,36 +260,23 @@ export const restaurantsApi = {
         backgroundColor: string;
         designVariation: string;
       };
-    }>("/api/restaurants/review-page-settings", {
+    }>("/api/teachers/review-page-settings", {
       method: "PUT",
-      body: JSON.stringify({ restaurantId, ...settings }),
-    });
-  },
-
-  getGooglePlaceId: async (restaurantId: string) => {
-    return fetchApi<{
-      success: boolean;
-      placeId: string | null;
-    }>(`/api/restaurants/google-place-id?restaurantId=${restaurantId}`);
-  },
-
-  updateGooglePlaceId: async (restaurantId: string, placeId: string) => {
-    return fetchApi<{
-      success: boolean;
-      message: string;
-      placeId: string;
-    }>("/api/restaurants/google-place-id", {
-      method: "PUT",
-      body: JSON.stringify({ restaurantId, placeId }),
+      body: JSON.stringify({ teacherId, ...settings }),
     });
   },
 };
 
+// Legacy alias for backward compatibility (can be removed later)
+export const restaurantsApi = teachersApi;
+
 // Admin API
 export const adminApi = {
   login: async (email: string, password: string) => {
-    return fetchApi<{
+    const result = await fetchApi<{
       success: boolean;
+      token?: string;
+      userType?: "admin";
       admin: {
         id: string;
         email: string;
@@ -298,47 +286,56 @@ export const adminApi = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
+    
+    // Store token in localStorage if present
+    if (result.token && typeof window !== "undefined") {
+      window.localStorage.setItem(TOKEN_KEY, result.token);
+    }
+    
+    return result;
   },
 
-  getRestaurants: async () => {
+  getTeachers: async () => {
     const data = await fetchApi<{
-      restaurants: Array<{
+      teachers: Array<{
         id: string;
         name: string;
         email: string;
         phone: string;
-        address: string;
+        address?: string;
+        subject?: string;
+        department?: string;
+        organizationId?: string;
         status: "active" | "blocked";
         feedbackCount: number;
         averageRating: number;
         createdAt: string;
         updatedAt: string;
       }>;
-    }>("/api/admin/restaurants");
+    }>("/api/admin/teachers");
     
     // Map backend response to include optional fields that might be missing
     return {
-      restaurants: (data.restaurants || []).map((r: any) => ({
-        ...r,
-        socialKeywords: r.socialKeywords || [],
-        subscription: r.subscription || undefined,
-        lastActivity: r.lastActivity || undefined,
+      teachers: (data.teachers || []).map((t: any) => ({
+        ...t,
+        subscription: t.subscription || undefined,
+        lastActivity: t.lastActivity || undefined,
       })),
     };
   },
 
-  updateRestaurantStatus: async (restaurantId: string, status: "active" | "blocked") => {
+  updateTeacherStatus: async (teacherId: string, status: "active" | "blocked") => {
     return fetchApi<{
       success: boolean;
-      restaurant: any;
-    }>("/api/admin/restaurants/status", {
+      teacher: any;
+    }>("/api/admin/teachers/status", {
       method: "PATCH",
-      body: JSON.stringify({ restaurantId, status }),
+      body: JSON.stringify({ teacherId, status }),
     });
   },
 
   promoteToPremium: async (
-    restaurantId: string,
+    teacherId: string,
     months?: number | null,
     discount?: number,
     amountPaid?: number
@@ -347,7 +344,8 @@ export const adminApi = {
       success: boolean;
       subscription: {
         id: string;
-        restaurantId: string;
+        teacherId?: string;
+        organizationId?: string;
         plan: "premium" | "enterprise";
         status: "active";
         startDate: string;
@@ -359,9 +357,9 @@ export const adminApi = {
         amountPaid?: number;
       };
       message: string;
-    }>("/api/admin/restaurants/promote-premium", {
+    }>("/api/admin/teachers/promote-premium", {
       method: "POST",
-      body: JSON.stringify({ restaurantId, months, discount, amountPaid }),
+      body: JSON.stringify({ teacherId, months, discount, amountPaid }),
     });
   },
 
@@ -370,12 +368,104 @@ export const adminApi = {
       success: boolean;
       subscription: {
         id: string;
-        restaurantId: string;
+        teacherId?: string;
+        organizationId?: string;
         plan: string;
         status: "cancelled";
       };
       message: string;
-    }>("/api/admin/restaurants/cancel-subscription", {
+    }>("/api/admin/teachers/cancel-subscription", {
+      method: "POST",
+      body: JSON.stringify({ subscriptionId }),
+    });
+  },
+
+  getOrganizations: async () => {
+    const data = await fetchApi<{
+      organizations: Array<{
+        id: string;
+        name: string;
+        email: string;
+        phone: string;
+        address?: string;
+        website?: string;
+        status: "active" | "blocked";
+        teacherCount: number;
+        createdAt: string;
+        updatedAt: string;
+        subscription?: {
+          id: string;
+          plan: string;
+          status: string;
+          startDate: string;
+          endDate: string | null;
+          monthlyPrice: number;
+          defaultPrice: number;
+          discount?: number;
+          finalPrice: number;
+          amountPaid?: number;
+        };
+      }>;
+    }>("/api/admin/organizations");
+    
+    return {
+      organizations: (data.organizations || []).map((org: any) => ({
+        ...org,
+        subscription: org.subscription || undefined,
+      })),
+    };
+  },
+
+  updateOrganizationStatus: async (organizationId: string, status: "active" | "blocked") => {
+    return fetchApi<{
+      success: boolean;
+      organization: any;
+    }>("/api/admin/organizations/status", {
+      method: "PATCH",
+      body: JSON.stringify({ organizationId, status }),
+    });
+  },
+
+  promoteOrganizationToPremium: async (
+    organizationId: string,
+    months?: number | null,
+    discount?: number,
+    amountPaid?: number
+  ) => {
+    return fetchApi<{
+      success: boolean;
+      subscription: {
+        id: string;
+        organizationId?: string;
+        plan: "premium" | "enterprise";
+        status: "active";
+        startDate: string;
+        endDate: string | null;
+        monthlyPrice: number;
+        defaultPrice: number;
+        discount?: number;
+        finalPrice: number;
+        amountPaid?: number;
+      };
+      message: string;
+    }>("/api/admin/organizations/promote-premium", {
+      method: "POST",
+      body: JSON.stringify({ organizationId, months, discount, amountPaid }),
+    });
+  },
+
+  cancelOrganizationSubscription: async (subscriptionId: string) => {
+    return fetchApi<{
+      success: boolean;
+      subscription: {
+        id: string;
+        teacherId?: string;
+        organizationId?: string;
+        plan: string;
+        status: "cancelled";
+      };
+      message: string;
+    }>("/api/admin/organizations/cancel-subscription", {
       method: "POST",
       body: JSON.stringify({ subscriptionId }),
     });
@@ -384,11 +474,11 @@ export const adminApi = {
 
 // External Reviews API
 export const externalReviewsApi = {
-  list: async (restaurantId: string) => {
+  list: async (teacherId: string) => {
     return fetchApi<{
       reviews: Array<{
         id: string;
-        restaurantId: string;
+        teacherId: string;
         platform: "google" | "facebook" | "instagram";
         author: string;
         rating: number;
@@ -396,10 +486,10 @@ export const externalReviewsApi = {
         reviewDate: string;
         syncedAt: string;
       }>;
-    }>(`/api/external-reviews/list?restaurantId=${restaurantId}`);
+    }>(`/api/external-reviews/list?teacherId=${teacherId}`);
   },
 
-  sync: async (restaurantId: string, platforms?: string[], placeId?: string) => {
+  sync: async (teacherId: string, platforms?: string[], placeId?: string) => {
     return fetchApi<{
       success: boolean;
       results: Record<string, { success: boolean; count: number; error?: string }>;
@@ -407,16 +497,16 @@ export const externalReviewsApi = {
       syncedAt: string;
     }>("/api/external-reviews/sync", {
       method: "POST",
-      body: JSON.stringify({ restaurantId, platforms, placeId }),
+      body: JSON.stringify({ teacherId, platforms, placeId }),
     });
   },
 };
 
 // Meta OAuth API
 export const metaAuthApi = {
-  authorize: (restaurantId: string) => {
+  authorize: (teacherId: string) => {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-    return `${backendUrl}/api/auth/meta/authorize?restaurantId=${restaurantId}`;
+    return `${backendUrl}/api/auth/meta/authorize?teacherId=${teacherId}`;
   },
 };
 
@@ -424,15 +514,15 @@ export const metaAuthApi = {
 export type TimePeriod = "2days" | "week" | "month" | "2months" | "3months" | "4months" | "5months" | "6months";
 
 export const aiApi = {
-  getInsights: async (restaurantId: string, timePeriod?: TimePeriod) => {
-    const params = new URLSearchParams({ restaurantId });
+  getInsights: async (teacherId: string, timePeriod?: TimePeriod) => {
+    const params = new URLSearchParams({ teacherId });
     if (timePeriod) {
       params.append("timePeriod", timePeriod);
     }
     return fetchApi<{
       insight: {
         id: string;
-        restaurantId: string;
+        teacherId: string;
         summary: string;
         recommendations: string[];
         sentiment: "positive" | "neutral" | "negative";
@@ -442,37 +532,37 @@ export const aiApi = {
     }>(`/api/ai/insights?${params.toString()}`);
   },
 
-  generateInsights: async (restaurantId: string, timePeriod: TimePeriod = "month", filter: "external" | "internal" | "overall" = "overall") => {
+  generateInsights: async (teacherId: string, timePeriod: TimePeriod = "month", filter: "external" | "internal" | "overall" = "overall") => {
     return fetchApi<{
       success: boolean;
       insight: any;
       message: string;
     }>("/api/ai/generate-insights", {
       method: "POST",
-      body: JSON.stringify({ restaurantId, timePeriod, filter }),
+      body: JSON.stringify({ teacherId, timePeriod, filter }),
     });
   },
 
-  chat: async (restaurantId: string, message: string) => {
+  chat: async (teacherId: string, message: string) => {
     return fetchApi<{
       success: boolean;
       response: string;
     }>("/api/ai/chat", {
       method: "POST",
-      body: JSON.stringify({ restaurantId, message }),
+      body: JSON.stringify({ teacherId, message }),
       timeout: 120000, // 2 minutes timeout for AI chat
     });
   },
 
   /**
    * Stream chat response from AI
-   * @param restaurantId - Restaurant ID
+   * @param teacherId - Teacher ID
    * @param message - User message
    * @param onChunk - Callback for each chunk of the stream
    * @returns Promise that resolves when stream completes
    */
   chatStream: async (
-    restaurantId: string,
+    teacherId: string,
     message: string,
     onChunk: (chunk: string) => void
   ): Promise<void> => {
@@ -485,7 +575,7 @@ export const aiApi = {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ restaurantId, message }),
+      body: JSON.stringify({ teacherId, message }),
     });
 
     if (!response.ok) {
@@ -551,15 +641,15 @@ export const aiApi = {
 
 // Actionable Items API
 export const actionableItemsApi = {
-  list: async (restaurantId: string, completed?: boolean) => {
-    const params = new URLSearchParams({ restaurantId });
+  list: async (teacherId: string, completed?: boolean) => {
+    const params = new URLSearchParams({ teacherId });
     if (completed !== undefined) {
       params.append("completed", String(completed));
     }
     return fetchApi<{
       items: Array<{
         id: string;
-        restaurantId: string;
+        teacherId: string;
         title: string;
         description?: string;
         completed: boolean;
@@ -575,7 +665,7 @@ export const actionableItemsApi = {
   },
 
   create: async (data: {
-    restaurantId: string;
+    teacherId: string;
     title: string;
     description?: string;
     sourceType: "comment" | "ai_suggestion";
@@ -588,7 +678,7 @@ export const actionableItemsApi = {
       success: boolean;
       item: {
         id: string;
-        restaurantId: string;
+        teacherId: string;
         title: string;
         description?: string;
         completed: boolean;
@@ -617,7 +707,7 @@ export const actionableItemsApi = {
       success: boolean;
       item: {
         id: string;
-        restaurantId: string;
+        teacherId: string;
         title: string;
         description?: string;
         completed: boolean;
@@ -644,16 +734,16 @@ export const actionableItemsApi = {
     });
   },
 
-  getBySource: async (restaurantId: string, sourceType: "comment" | "ai_suggestion", sourceId: string) => {
+  getBySource: async (teacherId: string, sourceType: "comment" | "ai_suggestion", sourceId: string) => {
     const params = new URLSearchParams({
-      restaurantId,
+      teacherId,
       sourceType,
       sourceId,
     });
     return fetchApi<{
       item: {
         id: string;
-        restaurantId: string;
+        teacherId: string;
         title: string;
         description?: string;
         completed: boolean;
@@ -671,12 +761,13 @@ export const actionableItemsApi = {
 
 // Team Members API
 export const teamMembersApi = {
-  list: async (restaurantId: string) => {
-    const params = new URLSearchParams({ restaurantId });
+  list: async (teacherId: string) => {
+    const params = new URLSearchParams({ teacherId });
     return fetchApi<{
       members: Array<{
         id: string;
-        restaurantId: string;
+        teacherId: string;
+        organizationId?: string;
         name: string;
         email?: string;
         phone?: string;
@@ -688,7 +779,7 @@ export const teamMembersApi = {
   },
 
   create: async (data: {
-    restaurantId: string;
+    teacherId: string;
     name: string;
     email?: string;
     phone?: string;
@@ -698,7 +789,8 @@ export const teamMembersApi = {
       success: boolean;
       member: {
         id: string;
-        restaurantId: string;
+        teacherId: string;
+        organizationId?: string;
         name: string;
         email?: string;
         phone?: string;
@@ -722,7 +814,8 @@ export const teamMembersApi = {
       success: boolean;
       member: {
         id: string;
-        restaurantId: string;
+        teacherId: string;
+        organizationId?: string;
         name: string;
         email?: string;
         phone?: string;

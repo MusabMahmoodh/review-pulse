@@ -4,11 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { actionableItemsApi } from "@/lib/api-client";
 import type { ActionableItem } from "@/lib/types";
 
-export function useActionableItems(restaurantId: string | null, completed?: boolean) {
+export function useActionableItems(teacherId: string | null, completed?: boolean) {
   return useQuery<{ items: ActionableItem[] }>({
-    queryKey: ["actionable-items", restaurantId, completed],
+    queryKey: ["actionable-items", teacherId, completed],
     queryFn: async () => {
-      const response = await actionableItemsApi.list(restaurantId!, completed);
+      const response = await actionableItemsApi.list(teacherId!, completed);
       return {
       items: response.items.map((item) => ({
         ...item,
@@ -18,7 +18,7 @@ export function useActionableItems(restaurantId: string | null, completed?: bool
       })) as ActionableItem[],
       };
     },
-    enabled: !!restaurantId,
+    enabled: !!teacherId,
   });
 }
 
@@ -28,10 +28,10 @@ export function useCreateActionableItem() {
   return useMutation({
     mutationFn: actionableItemsApi.create,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["actionable-items", variables.restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ["actionable-items", variables.teacherId] });
       // Also invalidate the by-source query so it shows "Linked" instead of "Convert"
       queryClient.invalidateQueries({ 
-        queryKey: ["actionable-item", "by-source", variables.restaurantId, variables.sourceType, variables.sourceId] 
+        queryKey: ["actionable-item", "by-source", variables.teacherId, variables.sourceType, variables.sourceId] 
       });
     },
   });
@@ -65,15 +65,15 @@ export function useDeleteActionableItem() {
 }
 
 export function useActionableItemBySource(
-  restaurantId: string | null,
+  teacherId: string | null,
   sourceType: "comment" | "ai_suggestion",
   sourceId: string | null
 ) {
   return useQuery<{ item: ActionableItem } | null>({
-    queryKey: ["actionable-item", "by-source", restaurantId, sourceType, sourceId],
+    queryKey: ["actionable-item", "by-source", teacherId, sourceType, sourceId],
     queryFn: async () => {
       try {
-        const response = await actionableItemsApi.getBySource(restaurantId!, sourceType, sourceId!);
+        const response = await actionableItemsApi.getBySource(teacherId!, sourceType, sourceId!);
         return {
         item: {
           ...response.item,
@@ -91,7 +91,7 @@ export function useActionableItemBySource(
         throw error;
       }
     },
-    enabled: !!restaurantId && !!sourceId,
+    enabled: !!teacherId && !!sourceId,
     retry: false, // Don't retry on 404
   });
 }

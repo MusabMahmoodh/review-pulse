@@ -1,5 +1,5 @@
 import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from "typeorm";
-import { Restaurant } from "./Restaurant";
+import { Teacher } from "./Teacher";
 
 @Entity("actionable_items")
 export class ActionableItem {
@@ -7,7 +7,7 @@ export class ActionableItem {
   id!: string;
 
   @Column()
-  restaurantId!: string;
+  teacherId!: string;
 
   @Column({ type: "text" })
   title!: string;
@@ -22,7 +22,7 @@ export class ActionableItem {
   sourceType!: "comment" | "ai_suggestion";
 
   @Column()
-  sourceId!: string; // ID of CustomerFeedback, ExternalReview, or AIInsight
+  sourceId!: string; // ID of StudentFeedback, ExternalReview, or AIInsight
 
   @Column({ nullable: true })
   sourceText?: string; // Store the original text for reference
@@ -40,8 +40,8 @@ export class ActionableItem {
   updatedAt!: Date;
 
   // Relations
-  @ManyToOne(() => Restaurant)
-  @JoinColumn({ name: "restaurantId" })
-  restaurant!: Restaurant;
+  @ManyToOne(() => Teacher)
+  @JoinColumn({ name: "teacherId" })
+  teacher!: Teacher;
 }
 

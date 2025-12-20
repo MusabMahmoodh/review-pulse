@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { CustomerFeedback, Restaurant, ExternalReview } from "../models";
+import { StudentFeedback, Teacher, ExternalReview } from "../models";
 import { requireAuth } from "../middleware/auth";
 
 const router = Router();
@@ -9,7 +9,7 @@ const router = Router();
  * @swagger
  * /api/feedback/submit:
  *   post:
- *     summary: Submit customer feedback
+ *     summary: Submit student feedback
  *     tags: [Feedback]
  *     requestBody:
  *       required: true
@@ -18,27 +18,29 @@ const router = Router();
  *           schema:
  *             type: object
  *             required:
- *               - restaurantId
- *               - foodRating
- *               - staffRating
- *               - ambienceRating
+ *               - teacherId
+ *               - teachingRating
+ *               - communicationRating
+ *               - materialRating
  *               - overallRating
  *             properties:
- *               restaurantId:
+ *               teacherId:
  *                 type: string
- *               customerName:
+ *               studentName:
  *                 type: string
- *               customerContact:
+ *               studentContact:
  *                 type: string
- *               foodRating:
+ *               studentId:
+ *                 type: string
+ *               teachingRating:
  *                 type: number
  *                 minimum: 1
  *                 maximum: 5
- *               staffRating:
+ *               communicationRating:
  *                 type: number
  *                 minimum: 1
  *                 maximum: 5
- *               ambienceRating:
+ *               materialRating:
  *                 type: number
  *                 minimum: 1
  *                 maximum: 5
@@ -47,6 +49,8 @@ const router = Router();
  *                 minimum: 1
  *                 maximum: 5
  *               suggestions:
+ *                 type: string
+ *               courseName:
  *                 type: string
  *     responses:
  *       201:
@@ -58,53 +62,57 @@ const router = Router();
  *       400:
  *         description: Bad request
  *       404:
- *         description: Restaurant not found
+ *         description: Teacher not found
  *       500:
  *         description: Internal server error
  */
 router.post("/submit", async (req, res) => {
   try {
     const {
-      restaurantId,
-      customerName,
-      customerContact,
-      foodRating,
-      staffRating,
-      ambienceRating,
+      teacherId,
+      studentName,
+      studentContact,
+      studentId,
+      teachingRating,
+      communicationRating,
+      materialRating,
       overallRating,
       suggestions,
+      courseName,
     } = req.body;
 
-    if (!restaurantId || !foodRating || !staffRating || !ambienceRating || !overallRating) {
+    if (!teacherId || !teachingRating || !communicationRating || !materialRating || !overallRating) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
     // Validate ratings
-    const ratings = [foodRating, staffRating, ambienceRating, overallRating];
+    const ratings = [teachingRating, communicationRating, materialRating, overallRating];
     if (ratings.some((r) => r < 1 || r > 5)) {
       return res.status(400).json({ error: "Invalid ratings (must be 1-5)" });
     }
 
-    const restaurantRepo = AppDataSource.getRepository(Restaurant);
-    const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
+    const teacherRepo = AppDataSource.getRepository(Teacher);
+    const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
 
-    // Validate restaurant exists
-    const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
-    if (!restaurant) {
-      return res.status(404).json({ error: "Restaurant not found" });
+    // Validate teacher exists
+    const teacher = await teacherRepo.findOne({ where: { id: teacherId } });
+    if (!teacher) {
+      return res.status(404).json({ error: "Teacher not found" });
     }
 
     // Create feedback entry
     const feedback = feedbackRepo.create({
       id: `feedback_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      restaurantId,
-      customerName: customerName || undefined,
-      customerContact: customerContact || undefined,
-      foodRating,
-      staffRating,
-      ambienceRating,
+      teacherId,
+      studentName: studentName || undefined,
+      studentContact: studentContact || undefined,
+      studentId: studentId || undefined,
+      teachingRating,
+      communicationRating,
+      materialRating,
       overallRating,
       suggestions: suggestions || undefined,
+      courseName: courseName || undefined,
     });
 
     await feedbackRepo.save(feedback);
@@ -123,15 +131,15 @@ router.post("/submit", async (req, res) => {
  * @swagger
  * /api/feedback/list:
  *   get:
- *     summary: List feedback for a restaurant
+ *     summary: List feedback for a teacher
  *     tags: [Feedback]
  *     parameters:
  *       - in: query
- *         name: restaurantId
+ *         name: teacherId
  *         required: true
  *         schema:
  *           type: string
- *         description: Restaurant ID
+ *         description: Teacher ID
  *     responses:
  *       200:
  *         description: List of feedback
@@ -143,7 +151,7 @@ router.post("/submit", async (req, res) => {
  *                 feedback:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/CustomerFeedback'
+ *                     $ref: '#/components/schemas/StudentFeedback'
  *       400:
  *         description: Bad request
  *       500:
@@ -151,12 +159,12 @@ router.post("/submit", async (req, res) => {
  */
 router.get("/list", requireAuth, async (req, res) => {
   try {
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
 
-    const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
+    const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
 
     const feedback = await feedbackRepo.find({
-      where: { restaurantId },
+      where: { teacherId },
       order: { createdAt: "DESC" },
     });
 
@@ -171,15 +179,15 @@ router.get("/list", requireAuth, async (req, res) => {
  * @swagger
  * /api/feedback/stats:
  *   get:
- *     summary: Get feedback statistics for a restaurant
+ *     summary: Get feedback statistics for a teacher
  *     tags: [Feedback]
  *     parameters:
  *       - in: query
- *         name: restaurantId
+ *         name: teacherId
  *         required: true
  *         schema:
  *           type: string
- *         description: Restaurant ID
+ *         description: Teacher ID
  *     responses:
  *       200:
  *         description: Feedback statistics
@@ -196,11 +204,11 @@ router.get("/list", requireAuth, async (req, res) => {
  *                     averageRatings:
  *                       type: object
  *                       properties:
- *                         food:
+ *                         teaching:
  *                           type: number
- *                         staff:
+ *                         communication:
  *                           type: number
- *                         ambience:
+ *                         material:
  *                           type: number
  *                         overall:
  *                           type: number
@@ -223,29 +231,29 @@ router.get("/list", requireAuth, async (req, res) => {
  */
 router.get("/stats", requireAuth, async (req, res) => {
   try {
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
 
-    const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
+    const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const externalReviewRepo = AppDataSource.getRepository(ExternalReview);
 
     const feedback = await feedbackRepo.find({
-      where: { restaurantId },
+      where: { teacherId },
       order: { createdAt: "DESC" },
     });
 
     const externalReviews = await externalReviewRepo.find({
-      where: { restaurantId },
+      where: { teacherId },
     });
 
     // Calculate averages from internal feedback
     const totalFeedback = feedback.length;
-    let avgFood =
-      totalFeedback > 0 ? feedback.reduce((sum, f) => sum + f.foodRating, 0) / totalFeedback : 0;
-    let avgStaff =
-      totalFeedback > 0 ? feedback.reduce((sum, f) => sum + f.staffRating, 0) / totalFeedback : 0;
-    let avgAmbience =
+    let avgTeaching =
+      totalFeedback > 0 ? feedback.reduce((sum, f) => sum + f.teachingRating, 0) / totalFeedback : 0;
+    let avgCommunication =
+      totalFeedback > 0 ? feedback.reduce((sum, f) => sum + f.communicationRating, 0) / totalFeedback : 0;
+    let avgMaterial =
       totalFeedback > 0
-        ? feedback.reduce((sum, f) => sum + f.ambienceRating, 0) / totalFeedback
+        ? feedback.reduce((sum, f) => sum + f.materialRating, 0) / totalFeedback
         : 0;
     let avgOverall =
       totalFeedback > 0
@@ -258,11 +266,11 @@ router.get("/stats", requireAuth, async (req, res) => {
         externalReviews.reduce((sum, r) => sum + r.rating, 0) / externalReviews.length;
       // Use external review average for overall rating
       avgOverall = avgExternalRating;
-      // For food/staff/ambience, we can't map directly, but we can use overall as a proxy
+      // For teaching/communication/material, we can't map directly, but we can use overall as a proxy
       // This prevents showing 0.0 which triggers false "concerning" warnings
-      avgFood = avgExternalRating;
-      avgStaff = avgExternalRating;
-      avgAmbience = avgExternalRating;
+      avgTeaching = avgExternalRating;
+      avgCommunication = avgExternalRating;
+      avgMaterial = avgExternalRating;
     }
 
     // Calculate trend (simple logic - compare last 3 vs previous 3)
@@ -279,9 +287,9 @@ router.get("/stats", requireAuth, async (req, res) => {
     const stats = {
       totalFeedback,
       averageRatings: {
-        food: Math.round(avgFood * 100) / 100,
-        staff: Math.round(avgStaff * 100) / 100,
-        ambience: Math.round(avgAmbience * 100) / 100,
+        teaching: Math.round(avgTeaching * 100) / 100,
+        communication: Math.round(avgCommunication * 100) / 100,
+        material: Math.round(avgMaterial * 100) / 100,
         overall: Math.round(avgOverall * 100) / 100,
       },
       recentTrend,

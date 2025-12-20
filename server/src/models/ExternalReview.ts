@@ -1,5 +1,5 @@
 import { Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
-import { Restaurant } from "./Restaurant";
+import { Teacher } from "./Teacher";
 
 @Entity("external_reviews")
 export class ExternalReview {
@@ -7,7 +7,7 @@ export class ExternalReview {
   id!: string;
 
   @Column()
-  restaurantId!: string;
+  teacherId!: string;
 
   @Column()
   platform!: "google" | "facebook" | "instagram";
@@ -28,21 +28,7 @@ export class ExternalReview {
   syncedAt!: Date;
 
   // Relations
-  @ManyToOne(() => Restaurant, (restaurant) => restaurant.externalReviews)
-  @JoinColumn({ name: "restaurantId" })
-  restaurant!: Restaurant;
+  @ManyToOne(() => Teacher, (teacher) => teacher.externalReviews)
+  @JoinColumn({ name: "teacherId" })
+  teacher!: Teacher;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

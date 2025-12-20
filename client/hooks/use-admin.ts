@@ -10,43 +10,49 @@ export function useAdminLogin() {
   });
 }
 
-export function useAdminRestaurants() {
+export function useAdminTeachers() {
   return useQuery({
-    queryKey: ["admin", "restaurants"],
-    queryFn: adminApi.getRestaurants,
+    queryKey: ["admin", "teachers"],
+    queryFn: adminApi.getTeachers,
   });
 }
 
-export function useUpdateRestaurantStatus() {
+// Legacy alias for backward compatibility
+export const useAdminRestaurants = useAdminTeachers;
+
+export function useUpdateTeacherStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ restaurantId, status }: { restaurantId: string; status: "active" | "blocked" }) =>
-      adminApi.updateRestaurantStatus(restaurantId, status),
+    mutationFn: ({ teacherId, status }: { teacherId: string; status: "active" | "blocked" }) =>
+      adminApi.updateTeacherStatus(teacherId, status),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "restaurants"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "teachers"] });
     },
   });
 }
+
+// Legacy alias for backward compatibility
+export const useUpdateRestaurantStatus = useUpdateTeacherStatus;
 
 export function usePromoteToPremium() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ 
-      restaurantId, 
+      teacherId, 
       months, 
       discount, 
       amountPaid 
     }: { 
-      restaurantId: string; 
+      teacherId: string; 
       months?: number | null;
       discount?: number;
       amountPaid?: number;
     }) =>
-      adminApi.promoteToPremium(restaurantId, months, discount, amountPaid),
+      adminApi.promoteToPremium(teacherId, months, discount, amountPaid),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "restaurants"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "teachers"] });
     },
   });
 }
@@ -58,7 +64,60 @@ export function useCancelSubscription() {
     mutationFn: (subscriptionId: string) =>
       adminApi.cancelSubscription(subscriptionId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "restaurants"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "teachers"] });
+    },
+  });
+}
+
+export function useAdminOrganizations() {
+  return useQuery({
+    queryKey: ["admin", "organizations"],
+    queryFn: adminApi.getOrganizations,
+  });
+}
+
+export function useUpdateOrganizationStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ organizationId, status }: { organizationId: string; status: "active" | "blocked" }) =>
+      adminApi.updateOrganizationStatus(organizationId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "organizations"] });
+    },
+  });
+}
+
+export function usePromoteOrganizationToPremium() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ 
+      organizationId, 
+      months, 
+      discount, 
+      amountPaid 
+    }: { 
+      organizationId: string; 
+      months?: number | null;
+      discount?: number;
+      amountPaid?: number;
+    }) =>
+      adminApi.promoteOrganizationToPremium(organizationId, months, discount, amountPaid),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "organizations"] });
+    },
+  });
+}
+
+export function useCancelOrganizationSubscription() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (subscriptionId: string) =>
+      adminApi.cancelOrganizationSubscription(subscriptionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "organizations"] });
     },
   });
 }

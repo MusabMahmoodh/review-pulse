@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { AIInsight, Restaurant, CustomerFeedback, ExternalReview } from "../models";
+import { AIInsight, Teacher, StudentFeedback, ExternalReview } from "../models";
 import { generateInsights, chatAboutFeedback, chatAboutFeedbackStream } from "../utils/openai";
 import { MoreThanOrEqual } from "typeorm";
 import { requireAuth } from "../middleware/auth";
@@ -53,15 +53,15 @@ function getStartDate(period: TimePeriod): Date {
  * @swagger
  * /api/ai/insights:
  *   get:
- *     summary: Get AI insights for a restaurant
+ *     summary: Get AI insights for a teacher
  *     tags: [AI]
  *     parameters:
  *       - in: query
- *         name: restaurantId
+ *         name: teacherId
  *         required: true
  *         schema:
  *           type: string
- *         description: Restaurant ID
+ *         description: Teacher ID
  *       - in: query
  *         name: timePeriod
  *         required: false
@@ -83,7 +83,7 @@ function getStartDate(period: TimePeriod): Date {
  *                   properties:
  *                     id:
  *                       type: string
- *                     restaurantId:
+ *                     teacherId:
  *                       type: string
  *                     summary:
  *                       type: string
@@ -108,15 +108,15 @@ function getStartDate(period: TimePeriod): Date {
  */
 router.get("/insights", requireAuth, async (req, res) => {
   try {
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
     const timePeriod = req.query.timePeriod as TimePeriod | undefined;
 
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
+    if (!teacherId) {
+      return res.status(400).json({ error: "Teacher ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -128,7 +128,7 @@ router.get("/insights", requireAuth, async (req, res) => {
 
     let query = insightRepo
       .createQueryBuilder("insight")
-      .where("insight.restaurantId = :restaurantId", { restaurantId });
+      .where("insight.teacherId = :teacherId", { teacherId });
 
     // If time period is specified, filter insights generated within that period
     if (timePeriod) {
@@ -169,7 +169,7 @@ router.get("/insights", requireAuth, async (req, res) => {
  * @swagger
  * /api/ai/generate-insights:
  *   post:
- *     summary: Generate AI insights for a restaurant
+ *     summary: Generate AI insights for a teacher
  *     tags: [AI]
  *     requestBody:
  *       required: true
@@ -178,9 +178,9 @@ router.get("/insights", requireAuth, async (req, res) => {
  *           schema:
  *             type: object
  *             required:
- *               - restaurantId
+ *               - teacherId
  *             properties:
- *               restaurantId:
+ *               teacherId:
  *                 type: string
  *               timePeriod:
  *                 type: string
@@ -203,14 +203,14 @@ router.get("/insights", requireAuth, async (req, res) => {
  *       400:
  *         description: Bad request
  *       404:
- *         description: Restaurant not found
+ *         description: Teacher not found
  *       500:
  *         description: Internal server error
  */
 router.post("/generate-insights", requireAuth, async (req, res) => {
   try {
     const { timePeriod = "month", filter = "overall" } = req.body;
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
     
     // Validate filter type
     const validFilters = ["external", "internal", "overall"];
@@ -220,12 +220,12 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
       });
     }
 
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
+    if (!teacherId) {
+      return res.status(400).json({ error: "Teacher ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -250,14 +250,14 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
       });
     }
 
-    const restaurantRepo = AppDataSource.getRepository(Restaurant);
-    const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
+    const teacherRepo = AppDataSource.getRepository(Teacher);
+    const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const reviewRepo = AppDataSource.getRepository(ExternalReview);
     const insightRepo = AppDataSource.getRepository(AIInsight);
 
-    const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
-    if (!restaurant) {
-      return res.status(404).json({ error: "Restaurant not found" });
+    const teacher = await teacherRepo.findOne({ where: { id: teacherId } });
+    if (!teacher) {
+      return res.status(404).json({ error: "Teacher not found" });
     }
 
     // Calculate start date based on time period
@@ -266,7 +266,7 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
     // Get feedback for analysis within the time period
     let feedback = await feedbackRepo.find({
       where: {
-        restaurantId,
+        teacherId,
         createdAt: MoreThanOrEqual(startDate),
       },
       order: { createdAt: "DESC" },
@@ -275,7 +275,7 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
     // Get external reviews for analysis within the time period
     let reviews = await reviewRepo.find({
       where: {
-        restaurantId,
+        teacherId,
         reviewDate: MoreThanOrEqual(startDate),
       },
       order: { reviewDate: "DESC" },
@@ -311,9 +311,9 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
     console.log(`Filter: ${filter}`);
     console.log(`Feedback count: ${feedback.length}`);
     console.log(`Reviews count: ${reviews.length}`);
-    console.log(restaurant.name);
+    console.log(teacher.name);
     try {
-      insightData = await generateInsights(feedback, reviews, restaurant.name, filter);
+      insightData = await generateInsights(feedback, reviews, teacher.name);
     } catch (error: any) {
       console.error("OpenAI error:", error);
       return res.status(500).json({
@@ -324,7 +324,7 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
     // Save insight to database
     const insight = insightRepo.create({
       id: `insight_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      restaurantId,
+      teacherId,
       summary: insightData.summary,
       recommendations: insightData.recommendations,
       sentiment: insightData.sentiment,
@@ -348,7 +348,7 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
  * @swagger
  * /api/ai/chat:
  *   post:
- *     summary: AI chat - Ask questions about restaurant feedback
+ *     summary: AI chat - Ask questions about teacher feedback
  *     tags: [AI]
  *     requestBody:
  *       required: true
@@ -357,10 +357,10 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
  *           schema:
  *             type: object
  *             required:
- *               - restaurantId
+ *               - teacherId
  *               - message
  *             properties:
- *               restaurantId:
+ *               teacherId:
  *                 type: string
  *               message:
  *                 type: string
@@ -385,14 +385,14 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
 router.post("/chat", requireAuth, async (req, res) => {
   try {
     const { message } = req.body;
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
 
-    if (!restaurantId || !message) {
+    if (!teacherId || !message) {
       return res.status(400).json({ error: "Message required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -400,13 +400,13 @@ router.post("/chat", requireAuth, async (req, res) => {
       });
     }
 
-    const restaurantRepo = AppDataSource.getRepository(Restaurant);
-    const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
+    const teacherRepo = AppDataSource.getRepository(Teacher);
+    const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const reviewRepo = AppDataSource.getRepository(ExternalReview);
 
-    const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
-    if (!restaurant) {
-      return res.status(404).json({ error: "Restaurant not found" });
+    const teacher = await teacherRepo.findOne({ where: { id: teacherId } });
+    if (!teacher) {
+      return res.status(404).json({ error: "Teacher not found" });
     }
 
     // Get recent feedback and reviews for context (last 30 days)
@@ -415,7 +415,7 @@ router.post("/chat", requireAuth, async (req, res) => {
 
     const feedback = await feedbackRepo.find({
       where: {
-        restaurantId,
+        teacherId,
         createdAt: MoreThanOrEqual(thirtyDaysAgo),
       },
       order: { createdAt: "DESC" },
@@ -423,7 +423,7 @@ router.post("/chat", requireAuth, async (req, res) => {
 
     const reviews = await reviewRepo.find({
       where: {
-        restaurantId,
+        teacherId,
         reviewDate: MoreThanOrEqual(thirtyDaysAgo),
       },
       order: { reviewDate: "DESC" },
@@ -432,7 +432,7 @@ router.post("/chat", requireAuth, async (req, res) => {
     // Generate AI response using OpenAI
     let aiResponse;
     try {
-      aiResponse = await chatAboutFeedback(message, feedback, reviews, restaurant.name);
+      aiResponse = await chatAboutFeedback(message, feedback, reviews, teacher.name);
     } catch (error: any) {
       console.error("OpenAI chat error:", error);
       return res.status(500).json({
@@ -454,7 +454,7 @@ router.post("/chat", requireAuth, async (req, res) => {
  * @swagger
  * /api/ai/chat/stream:
  *   post:
- *     summary: AI chat with streaming response - Ask questions about restaurant feedback
+ *     summary: AI chat with streaming response - Ask questions about teacher feedback
  *     tags: [AI]
  *     requestBody:
  *       required: true
@@ -463,10 +463,10 @@ router.post("/chat", requireAuth, async (req, res) => {
  *           schema:
  *             type: object
  *             required:
- *               - restaurantId
+ *               - teacherId
  *               - message
  *             properties:
- *               restaurantId:
+ *               teacherId:
  *                 type: string
  *               message:
  *                 type: string
@@ -486,14 +486,14 @@ router.post("/chat", requireAuth, async (req, res) => {
 router.post("/chat/stream", requireAuth, async (req, res) => {
   try {
     const { message } = req.body;
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
 
-    if (!restaurantId || !message) {
+    if (!teacherId || !message) {
       return res.status(400).json({ error: "Message required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -501,13 +501,13 @@ router.post("/chat/stream", requireAuth, async (req, res) => {
       });
     }
 
-    const restaurantRepo = AppDataSource.getRepository(Restaurant);
-    const feedbackRepo = AppDataSource.getRepository(CustomerFeedback);
+    const teacherRepo = AppDataSource.getRepository(Teacher);
+    const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const reviewRepo = AppDataSource.getRepository(ExternalReview);
 
-    const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
-    if (!restaurant) {
-      return res.status(404).json({ error: "Restaurant not found" });
+    const teacher = await teacherRepo.findOne({ where: { id: teacherId } });
+    if (!teacher) {
+      return res.status(404).json({ error: "Teacher not found" });
     }
 
     // Get recent feedback and reviews for context (last 30 days)
@@ -516,7 +516,7 @@ router.post("/chat/stream", requireAuth, async (req, res) => {
 
     const feedback = await feedbackRepo.find({
       where: {
-        restaurantId,
+        teacherId,
         createdAt: MoreThanOrEqual(thirtyDaysAgo),
       },
       order: { createdAt: "DESC" },
@@ -524,7 +524,7 @@ router.post("/chat/stream", requireAuth, async (req, res) => {
 
     const reviews = await reviewRepo.find({
       where: {
-        restaurantId,
+        teacherId,
         reviewDate: MoreThanOrEqual(thirtyDaysAgo),
       },
       order: { reviewDate: "DESC" },
@@ -538,7 +538,7 @@ router.post("/chat/stream", requireAuth, async (req, res) => {
 
     // Generate streaming AI response
     try {
-      const stream = chatAboutFeedbackStream(message, feedback, reviews, restaurant.name);
+      const stream = chatAboutFeedbackStream(message, feedback, reviews, teacher.name);
       
       for await (const chunk of stream) {
         // Send chunk as SSE data

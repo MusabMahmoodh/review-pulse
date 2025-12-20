@@ -31,6 +31,8 @@ export function useAuth() {
     id: string;
     name: string;
     email: string;
+    userType: "teacher" | "organization";
+    organizationId?: string;
     subscription?: {
       id: string;
       plan: "free" | "basic" | "premium" | "enterprise";
@@ -54,7 +56,24 @@ export function useAuth() {
     authApi
       .me(existingToken)
       .then((res) => {
-        setUser(res.restaurant);
+        if (res.teacher) {
+          setUser({
+            id: res.teacher.id,
+            name: res.teacher.name,
+            email: res.teacher.email,
+            userType: "teacher",
+            organizationId: res.teacher.organizationId,
+            subscription: res.teacher.subscription || null,
+          });
+        } else if (res.organization) {
+          setUser({
+            id: res.organization.id,
+            name: res.organization.name,
+            email: res.organization.email,
+            userType: "organization",
+            subscription: res.organization.subscription || null,
+          });
+        }
       })
       .catch((err: any) => {
         console.error("Auth me error", err);

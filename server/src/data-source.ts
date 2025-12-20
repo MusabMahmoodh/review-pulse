@@ -1,15 +1,15 @@
 import "reflect-metadata";
 import dotenv from "dotenv";
 import { DataSource } from "typeorm";
-import { Restaurant } from "./models/Restaurant";
-import { RestaurantAuth } from "./models/RestaurantAuth";
-import { CustomerFeedback } from "./models/CustomerFeedback";
+import { Organization } from "./models/Organization";
+import { OrganizationAuth } from "./models/OrganizationAuth";
+import { Teacher } from "./models/Teacher";
+import { TeacherAuth } from "./models/TeacherAuth";
+import { StudentFeedback } from "./models/StudentFeedback";
 import { ExternalReview } from "./models/ExternalReview";
 import { AIInsight } from "./models/AIInsight";
 import { Admin } from "./models/Admin";
 import { Subscription } from "./models/Subscription";
-import { GoogleIntegration } from "./models/GoogleIntegration";
-import { MetaIntegration } from "./models/MetaIntegration";
 import { ReviewPageSettings } from "./models/ReviewPageSettings";
 import { ActionableItem } from "./models/ActionableItem";
 import { TeamMember } from "./models/TeamMember";
@@ -32,15 +32,15 @@ const connectionOptions: any = {
     synchronize: false, // Always use migrations, never synchronize in production
     logging: process.env.NODE_ENV === "development",
     entities: [
-        Restaurant,
-        RestaurantAuth,
-        CustomerFeedback,
+        Organization,
+        OrganizationAuth,
+        Teacher,
+        TeacherAuth,
+        StudentFeedback,
         ExternalReview,
         AIInsight,
         Admin,
         Subscription,
-        GoogleIntegration,
-        MetaIntegration,
         ReviewPageSettings,
         ActionableItem,
         TeamMember,

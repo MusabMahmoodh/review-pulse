@@ -77,7 +77,7 @@ export default function LoginPage() {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="owner@restaurant.com"
+                  placeholder="teacher@example.com"
                   value={formData.email}
                   onChange={handleChange}
                   required
@@ -121,7 +121,7 @@ export default function LoginPage() {
         <div className="mt-8 p-4 bg-muted/50 rounded-lg border">
           <p className="text-sm font-medium mb-2">Demo Account:</p>
           <p className="text-xs text-muted-foreground">
-            Email: demo@restaurant.com
+            Email: demo@teacher.com
             <br />
             Password: demo1234
           </p>

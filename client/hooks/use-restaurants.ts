@@ -1,24 +1,19 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { restaurantsApi } from "@/lib/api-client";
+import { teachersApi } from "@/lib/api-client";
 
-export function useRestaurantKeywords(restaurantId: string | null) {
+export function useReviewPageSettings(teacherId: string | null) {
   return useQuery({
-    queryKey: ["restaurants", "keywords", restaurantId],
-    queryFn: () => restaurantsApi.getKeywords(restaurantId!),
-    enabled: !!restaurantId,
-  });
-}
-
-export function useReviewPageSettings(restaurantId: string | null) {
-  return useQuery({
-    queryKey: ["restaurants", "review-page-settings", restaurantId],
-    queryFn: () => restaurantsApi.getReviewPageSettings(restaurantId!),
-    enabled: !!restaurantId,
+    queryKey: ["teachers", "review-page-settings", teacherId],
+    queryFn: () => teachersApi.getReviewPageSettings(teacherId!),
+    enabled: !!teacherId,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 }
+
+// Legacy alias for backward compatibility
+export const useRestaurantKeywords = () => null; // Removed - keywords not used for teachers
 
 
 

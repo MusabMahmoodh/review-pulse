@@ -1,10 +1,10 @@
 import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
-import { Restaurant } from "./Restaurant";
+import { Teacher } from "./Teacher";
 
 @Entity("review_page_settings")
 export class ReviewPageSettings {
   @PrimaryColumn()
-  restaurantId!: string;
+  teacherId!: string;
 
   @Column({ type: "text", default: "We Value Your Feedback" })
   welcomeMessage!: string;
@@ -28,9 +28,9 @@ export class ReviewPageSettings {
   updatedAt!: Date;
 
   // Relations
-  @OneToOne(() => Restaurant, (restaurant) => restaurant.reviewPageSettings)
-  @JoinColumn({ name: "restaurantId" })
-  restaurant!: Restaurant;
+  @OneToOne(() => Teacher, (teacher) => teacher.reviewPageSettings)
+  @JoinColumn({ name: "teacherId" })
+  teacher!: Teacher;
 }
 
 

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { TeamMember, Restaurant } from "../models";
+import { TeamMember, Teacher } from "../models";
 import { requireAuth } from "../middleware/auth";
 import { isPremium } from "../utils/subscription";
 
@@ -10,15 +10,15 @@ const router = Router();
  * @swagger
  * /api/team-members:
  *   get:
- *     summary: Get all team members for a restaurant
+ *     summary: Get all team members for a teacher
  *     tags: [TeamMembers]
  *     parameters:
  *       - in: query
- *         name: restaurantId
+ *         name: teacherId
  *         required: true
  *         schema:
  *           type: string
- *         description: Restaurant ID
+ *         description: Teacher ID
  *     responses:
  *       200:
  *         description: List of team members
@@ -29,14 +29,14 @@ const router = Router();
  */
 router.get("/", requireAuth, async (req, res) => {
   try {
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
 
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
+    if (!teacherId) {
+      return res.status(400).json({ error: "Teacher ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -47,7 +47,7 @@ router.get("/", requireAuth, async (req, res) => {
     const teamMemberRepo = AppDataSource.getRepository(TeamMember);
 
     const members = await teamMemberRepo.find({
-      where: { restaurantId },
+      where: { teacherId },
       order: { createdAt: "DESC" },
     });
 
@@ -71,10 +71,10 @@ router.get("/", requireAuth, async (req, res) => {
  *           schema:
  *             type: object
  *             required:
- *               - restaurantId
+ *               - teacherId
  *               - name
  *             properties:
- *               restaurantId:
+ *               teacherId:
  *                 type: string
  *               name:
  *                 type: string
@@ -95,14 +95,14 @@ router.get("/", requireAuth, async (req, res) => {
 router.post("/", requireAuth, async (req, res) => {
   try {
     const { name, email, phone, role } = req.body;
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
 
-    if (!restaurantId || !name) {
-      return res.status(400).json({ error: "Restaurant ID and name are required" });
+    if (!teacherId || !name) {
+      return res.status(400).json({ error: "Teacher ID and name are required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -110,18 +110,18 @@ router.post("/", requireAuth, async (req, res) => {
       });
     }
 
-    // Verify restaurant exists
-    const restaurantRepo = AppDataSource.getRepository(Restaurant);
-    const restaurant = await restaurantRepo.findOne({ where: { id: restaurantId } });
-    if (!restaurant) {
-      return res.status(404).json({ error: "Restaurant not found" });
+    // Verify teacher exists
+    const teacherRepo = AppDataSource.getRepository(Teacher);
+    const teacher = await teacherRepo.findOne({ where: { id: teacherId } });
+    if (!teacher) {
+      return res.status(404).json({ error: "Teacher not found" });
     }
 
     const teamMemberRepo = AppDataSource.getRepository(TeamMember);
 
     const member = teamMemberRepo.create({
       id: `member_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      restaurantId,
+      teacherId,
       name,
       email: email || undefined,
       phone: phone || undefined,
@@ -182,14 +182,14 @@ router.patch("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, phone, role } = req.body;
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
 
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
+    if (!teacherId) {
+      return res.status(400).json({ error: "Teacher ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -200,7 +200,7 @@ router.patch("/:id", requireAuth, async (req, res) => {
     const teamMemberRepo = AppDataSource.getRepository(TeamMember);
 
     const member = await teamMemberRepo.findOne({
-      where: { id, restaurantId },
+      where: { id, teacherId },
     });
 
     if (!member) {
@@ -248,14 +248,14 @@ router.patch("/:id", requireAuth, async (req, res) => {
 router.delete("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const restaurantId = req.restaurantId as string;
+    const teacherId = req.teacherId as string;
 
-    if (!restaurantId) {
-      return res.status(400).json({ error: "Restaurant ID required" });
+    if (!teacherId) {
+      return res.status(400).json({ error: "Teacher ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(restaurantId);
+    const hasPremium = await isPremium(teacherId, "teacher");
     if (!hasPremium) {
       return res.status(403).json({ 
         error: "Premium subscription required",
@@ -266,7 +266,7 @@ router.delete("/:id", requireAuth, async (req, res) => {
     const teamMemberRepo = AppDataSource.getRepository(TeamMember);
 
     const member = await teamMemberRepo.findOne({
-      where: { id, restaurantId },
+      where: { id, teacherId },
     });
 
     if (!member) {

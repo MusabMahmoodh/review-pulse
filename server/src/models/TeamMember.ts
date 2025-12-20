@@ -1,13 +1,17 @@
 import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from "typeorm";
-import { Restaurant } from "./Restaurant";
+import { Organization } from "./Organization";
+import { Teacher } from "./Teacher";
 
 @Entity("team_members")
 export class TeamMember {
   @PrimaryColumn()
   id!: string;
 
+  @Column({ nullable: true })
+  organizationId?: string; // For organization team members
+
   @Column()
-  restaurantId!: string;
+  teacherId!: string; // For teacher's team members (always required)
 
   @Column()
   name!: string;
@@ -19,7 +23,7 @@ export class TeamMember {
   phone?: string;
 
   @Column({ nullable: true })
-  role?: string; // e.g., "Manager", "Chef", "Server", etc.
+  role?: string; // e.g., "Teaching Assistant", "Coordinator", etc.
 
   @CreateDateColumn()
   createdAt!: Date;
@@ -28,9 +32,13 @@ export class TeamMember {
   updatedAt!: Date;
 
   // Relations
-  @ManyToOne(() => Restaurant)
-  @JoinColumn({ name: "restaurantId" })
-  restaurant!: Restaurant;
+  @ManyToOne(() => Organization, { nullable: true })
+  @JoinColumn({ name: "organizationId" })
+  organization?: Organization;
+
+  @ManyToOne(() => Teacher)
+  @JoinColumn({ name: "teacherId" })
+  teacher!: Teacher;
 }
 
 

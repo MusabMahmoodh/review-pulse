@@ -2,6 +2,8 @@
 
 Backend server for the Review Pulse application using Express, TypeORM, and PostgreSQL.
 
+Review Pulse helps teachers and educational institutes collect student feedback and turn it into AI-powered actionable insights.
+
 ## Setup
 
 1. Install dependencies:
@@ -21,15 +23,16 @@ PORT=3001
 NODE_ENV=development
 CLIENT_URL=http://localhost:3000
 
-# Serper API (for Google Reviews integration)
-# Get your API key from: https://serper.dev
-SERPER_API_KEY=your_serper_api_key
-
-# Encryption key for OAuth tokens (generate with: openssl rand -hex 32)
+# Encryption key for OAuth tokens (optional - only if using external integrations)
+# Generate with: openssl rand -hex 32
 ENCRYPTION_KEY=your_32_byte_hex_encryption_key
 
 # OpenAI API Key (for AI insights generation)
 OPENAI_API_KEY=your_openai_api_key
+
+# JWT Secret (generate with: openssl rand -hex 32)
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRES_IN=7d
 ```
 
 3. Make sure PostgreSQL is running and the database exists.
@@ -44,43 +47,51 @@ The server will run on `http://localhost:3001` by default.
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register a new restaurant
-- `POST /api/auth/login` - Login restaurant
+- `POST /api/auth/register/organization` - Register a new organization (institute)
+- `POST /api/auth/register/teacher` - Register a new teacher (standalone or under organization)
+- `POST /api/auth/login` - Login (supports both organization and teacher)
+- `GET /api/auth/me` - Get current authenticated user
 
 ### Feedback
-- `POST /api/feedback/submit` - Submit customer feedback
-- `GET /api/feedback/list?restaurantId=xxx` - List feedback for a restaurant
-- `GET /api/feedback/stats?restaurantId=xxx` - Get feedback statistics
+- `POST /api/feedback/submit` - Submit student feedback
+- `GET /api/feedback/list?teacherId=xxx` - List feedback for a teacher
+- `GET /api/feedback/stats?teacherId=xxx` - Get feedback statistics
 
-### Restaurants
-- `GET /api/restaurants/keywords?restaurantId=xxx` - Get restaurant keywords
+### Teachers
+- `GET /api/teachers` - List teachers (for organizations)
+- `POST /api/teachers` - Add teacher to organization
+- `GET /api/teachers/:id` - Get teacher details
 
 ### Admin
 - `POST /api/admin/login` - Admin login
-- `GET /api/admin/restaurants` - List all restaurants (admin)
-- `PATCH /api/admin/restaurants/status` - Update restaurant status
+- `GET /api/admin/teachers` - List all teachers (admin)
+- `GET /api/admin/organizations` - List all organizations (admin)
+- `PATCH /api/admin/teachers/status` - Update teacher status
 
-### External Reviews
-- `GET /api/external-reviews/list?restaurantId=xxx` - List external reviews
-- `POST /api/external-reviews/sync` - Sync external reviews from Google via Serper API
-  - Use `platforms: ["google"]` for Google reviews via Serper API
-  - Required: `placeId` parameter (Google Place ID)
+### External Reviews (Optional)
+- `GET /api/external-reviews/list?teacherId=xxx` - List external reviews (if integrated)
+- Note: External reviews integration is optional. The core functionality uses QR-based student feedback.
 
 ### AI
-- `GET /api/ai/insights?restaurantId=xxx&timePeriod=xxx` - Get AI insights (optional timePeriod: 2days, week, month, 2months, 3months, 4months, 5months, 6months)
-- `POST /api/ai/generate-insights` - Generate AI insights with OpenAI (requires timePeriod: 2days, week, month, 2months, 3months, 4months, 5months, 6months)
-- `POST /api/ai/chat` - AI chat (placeholder)
+- `GET /api/ai/insights?teacherId=xxx&timePeriod=xxx` - Get AI insights (optional timePeriod: 2days, week, month, 2months, 3months, 4months, 5months, 6months)
+- `POST /api/ai/generate-insights` - Generate AI insights with OpenAI (requires timePeriod)
+- `POST /api/ai/chat` - AI chat for feedback analysis
 
 ## Database Models
 
-- `Restaurant` - Restaurant information
-- `RestaurantAuth` - Restaurant authentication credentials
-- `CustomerFeedback` - Customer feedback submissions
-- `ExternalReview` - External platform reviews (Google, Facebook, Instagram)
-- `GoogleIntegration` - Google OAuth integration data (tokens, location IDs)
+- `Organization` - Educational institute information
+- `OrganizationAuth` - Organization authentication credentials
+- `Teacher` - Teacher information (can belong to organization or standalone)
+- `TeacherAuth` - Teacher authentication credentials
+- `StudentFeedback` - Student feedback submissions (QR-based)
+- `ExternalReview` - External platform reviews (optional - Google, Facebook, Instagram)
+- `GoogleIntegration` - Google OAuth integration data (optional - tokens, location IDs)
+- `MetaIntegration` - Meta (Facebook/Instagram) OAuth integration data (optional)
 - `AIInsight` - AI-generated insights and recommendations
+- `ActionableItem` - Actionable items derived from feedback
 - `Admin` - Admin users
-- `Subscription` - Restaurant subscription plans
+- `Subscription` - Subscription plans (for organizations or teachers)
+- `TeamMember` - Team members (for organizations or teachers)
 
 ## Development
 
@@ -119,4 +130,3 @@ Swagger API documentation is available at:
 - **Development**: http://localhost:3001/api-docs
 
 The Swagger UI provides interactive API documentation where you can test all endpoints directly from your browser.
-

@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated color palette for restaurant feedback platform - warm, trustworthy tones */
+  /* Updated color palette for teacher and organization student feedback platform - warm, trustworthy tones */
   --background: oklch(0.99 0.005 85);
   --foreground: oklch(0.15 0.02 70);
   --card: oklch(1 0 0);

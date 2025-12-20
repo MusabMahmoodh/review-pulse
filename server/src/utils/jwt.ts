@@ -5,8 +5,12 @@ const JWT_SECRET: Secret = process.env.JWT_SECRET || "dev-secret-change-me";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
 export interface JwtPayload {
-  restaurantId: string;
+  teacherId?: string;
+  organizationId?: string;
+  adminId?: string;
   email: string;
+  userType?: "teacher" | "organization" | "admin";
+  role?: "super_admin" | "admin";
 }
 
 export function signAccessToken(payload: JwtPayload): string {

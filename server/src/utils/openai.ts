@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { CustomerFeedback } from "../models/CustomerFeedback";
+import { StudentFeedback } from "../models/StudentFeedback";
 import { ExternalReview } from "../models/ExternalReview";
 
 // Initialize OpenAI client
@@ -18,10 +18,9 @@ export interface InsightData {
  * Generate AI insights from feedback and reviews
  */
 export async function generateInsights(
-  feedback: CustomerFeedback[],
+  feedback: StudentFeedback[],
   reviews: ExternalReview[],
-  restaurantName?: string,
-  filter: "external" | "internal" | "overall" = "overall"
+  teacherName?: string
 ): Promise<InsightData> {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is not configured");
@@ -29,11 +28,12 @@ export async function generateInsights(
 
   // Prepare data for analysis
   const feedbackData = feedback.map((f) => ({
-    foodRating: f.foodRating,
-    staffRating: f.staffRating,
-    ambienceRating: f.ambienceRating,
+    teachingRating: f.teachingRating,
+    communicationRating: f.communicationRating,
+    materialRating: f.materialRating,
     overallRating: f.overallRating,
     suggestions: f.suggestions || "",
+    courseName: f.courseName || "",
     date: f.createdAt.toISOString(),
   }));
 
@@ -45,17 +45,17 @@ export async function generateInsights(
   }));
 
   // Calculate average ratings
-  const avgFoodRating =
+  const avgTeachingRating =
     feedbackData.length > 0
-      ? feedbackData.reduce((sum, f) => sum + f.foodRating, 0) / feedbackData.length
+      ? feedbackData.reduce((sum, f) => sum + f.teachingRating, 0) / feedbackData.length
       : 0;
-  const avgStaffRating =
+  const avgCommunicationRating =
     feedbackData.length > 0
-      ? feedbackData.reduce((sum, f) => sum + f.staffRating, 0) / feedbackData.length
+      ? feedbackData.reduce((sum, f) => sum + f.communicationRating, 0) / feedbackData.length
       : 0;
-  const avgAmbienceRating =
+  const avgMaterialRating =
     feedbackData.length > 0
-      ? feedbackData.reduce((sum, f) => sum + f.ambienceRating, 0) / feedbackData.length
+      ? feedbackData.reduce((sum, f) => sum + f.materialRating, 0) / feedbackData.length
       : 0;
   const avgOverallRating =
     feedbackData.length > 0
@@ -67,42 +67,35 @@ export async function generateInsights(
       ? reviewData.reduce((sum, r) => sum + r.rating, 0) / reviewData.length
       : 0;
 
-  // Build prompt with filter context
-  const filterContext = filter === "internal" 
-    ? " (analyzing only internal feedback from your review system)"
-    : filter === "external"
-    ? " (analyzing only external reviews from Google, Facebook, etc.)"
-    : " (analyzing both internal feedback and external reviews)";
-
   // Build prompt
-  const prompt = `You are an AI assistant analyzing customer feedback and reviews for a restaurant${restaurantName ? ` named "${restaurantName}"` : ""}${filterContext}.
+  const prompt = `You are an AI assistant analyzing student feedback for a teacher${teacherName ? ` named "${teacherName}"` : ""}.
 
 Analyze the following data and provide insights:
 
-**Internal Feedback (${feedbackData.length} entries):**
+**Student Feedback (${feedbackData.length} entries):**
 Average Ratings:
-- Food: ${avgFoodRating.toFixed(2)}/5
-- Staff: ${avgStaffRating.toFixed(2)}/5
-- Ambience: ${avgAmbienceRating.toFixed(2)}/5
+- Teaching Quality: ${avgTeachingRating.toFixed(2)}/5
+- Communication: ${avgCommunicationRating.toFixed(2)}/5
+- Materials: ${avgMaterialRating.toFixed(2)}/5
 - Overall: ${avgOverallRating.toFixed(2)}/5
 
 Feedback Comments:
 ${feedbackData
   .filter((f) => f.suggestions)
-  .map((f, i) => `${i + 1}. "${f.suggestions}" (Overall: ${f.overallRating}/5)`)
+  .map((f, i) => `${i + 1}. "${f.suggestions}" (Overall: ${f.overallRating}/5${f.courseName ? `, Course: ${f.courseName}` : ""})`)
   .join("\n") || "No comments provided"}
 
-**External Reviews (${reviewData.length} entries):**
+${reviewData.length > 0 ? `**External Reviews (${reviewData.length} entries):**
 Average Rating: ${avgExternalRating.toFixed(2)}/5
 
 Reviews:
 ${reviewData
   .map((r, i) => `${i + 1}. [${r.platform}] ${r.rating}/5: "${r.comment}"`)
-  .join("\n") || "No external reviews"}
+  .join("\n")}` : ""}
 
 Please provide a comprehensive analysis in the following JSON format:
 {
-  "summary": "A 2-3 sentence summary of the overall customer sentiment and key findings",
+  "summary": "A 2-3 sentence summary of the overall student sentiment and key findings",
   "recommendations": ["Actionable recommendation 1", "Actionable recommendation 2", "Actionable recommendation 3"],
   "sentiment": "positive" | "neutral" | "negative",
   "keyTopics": ["Topic 1", "Topic 2", "Topic 3", "Topic 4", "Topic 5"]
@@ -111,8 +104,8 @@ Please provide a comprehensive analysis in the following JSON format:
 Requirements:
 - Summary should be concise but informative
 - Recommendations should be specific and actionable
-- Sentiment should reflect overall customer satisfaction
-- Key topics should be the most frequently mentioned themes (food quality, service, ambiance, pricing, etc.)
+- Sentiment should reflect overall student satisfaction
+- Key topics should be the most frequently mentioned themes (teaching methods, communication, course materials, clarity, engagement, etc.)
 - Return ONLY valid JSON, no additional text`;
 
   try {
@@ -122,7 +115,7 @@ Requirements:
         {
           role: "system",
           content:
-            "You are an expert restaurant consultant analyzing customer feedback. Provide insights in JSON format only.",
+            "You are an expert educational consultant analyzing student feedback. Provide insights in JSON format only.",
         },
         {
           role: "user",
@@ -164,16 +157,17 @@ Requirements:
  * Build context for chat (shared between streaming and non-streaming)
  */
 function buildChatContext(
-  feedback: CustomerFeedback[],
+  feedback: StudentFeedback[],
   reviews: ExternalReview[],
-  restaurantName?: string
+  teacherName?: string
 ): string {
   const feedbackData = feedback.map((f) => ({
-    foodRating: f.foodRating,
-    staffRating: f.staffRating,
-    ambienceRating: f.ambienceRating,
+    teachingRating: f.teachingRating,
+    communicationRating: f.communicationRating,
+    materialRating: f.materialRating,
     overallRating: f.overallRating,
     suggestions: f.suggestions || "",
+    courseName: f.courseName || "",
     date: f.createdAt.toISOString(),
   }));
 
@@ -184,17 +178,17 @@ function buildChatContext(
     date: r.reviewDate.toISOString(),
   }));
 
-  const avgFoodRating =
+  const avgTeachingRating =
     feedbackData.length > 0
-      ? feedbackData.reduce((sum, f) => sum + f.foodRating, 0) / feedbackData.length
+      ? feedbackData.reduce((sum, f) => sum + f.teachingRating, 0) / feedbackData.length
       : 0;
-  const avgStaffRating =
+  const avgCommunicationRating =
     feedbackData.length > 0
-      ? feedbackData.reduce((sum, f) => sum + f.staffRating, 0) / feedbackData.length
+      ? feedbackData.reduce((sum, f) => sum + f.communicationRating, 0) / feedbackData.length
       : 0;
-  const avgAmbienceRating =
+  const avgMaterialRating =
     feedbackData.length > 0
-      ? feedbackData.reduce((sum, f) => sum + f.ambienceRating, 0) / feedbackData.length
+      ? feedbackData.reduce((sum, f) => sum + f.materialRating, 0) / feedbackData.length
       : 0;
   const avgOverallRating =
     feedbackData.length > 0
@@ -205,39 +199,39 @@ function buildChatContext(
       ? reviewData.reduce((sum, r) => sum + r.rating, 0) / reviewData.length
       : 0;
 
-  return `You are a senior AI business advisor helping a restaurant owner${restaurantName ? ` of "${restaurantName}"` : ""} understand and act on customer feedback.
+  return `You are a senior AI educational advisor helping a teacher${teacherName ? ` named "${teacherName}"` : ""} understand and act on student feedback.
 
-Your role is to analyze customer feedback and reviews and convert them into clear business insights and actionable recommendations.
+Your role is to analyze student feedback and convert it into clear teaching insights and actionable recommendations.
 
 ---
 
 ## Scope & Intent Handling
 
 You should answer questions related to:
-- Customer feedback, reviews, and ratings
-- Specific dishes, food items, menu items, or ingredients
-- Restaurant operations: staff behavior, service quality, food quality, ambience, pricing
-- Business insights and improvements based on feedback data
+- Student feedback, ratings, and comments
+- Teaching methods, communication, course materials
+- Specific topics, courses, or subjects mentioned in feedback
+- Teaching effectiveness and improvements based on feedback data
 
 ### Interpreting Short or Vague Questions
-If the user asks a short or one-word question (e.g., "dosai?", "biryani?", "staff?", "service?"):
-- Interpret it as: **"What are customers saying about this based on the provided feedback?"**
+If the user asks a short or one-word question (e.g., "mathematics?", "communication?", "materials?"):
+- Interpret it as: **"What are students saying about this based on the provided feedback?"**
 - Do NOT ask clarifying questions
 - Proceed directly with analysis using available data
 
 ---
 
 ## Out-of-Scope Handling
-Only redirect questions that are **clearly unrelated** to restaurants or customer feedback
-(e.g., history, science, mythology, personal biographies).
+Only redirect questions that are **clearly unrelated** to teaching or student feedback
+(e.g., history, science facts, mythology, personal biographies).
 
 For such questions, respond with:
-"I'm focused on helping you understand your restaurant's customer feedback. Could you ask a question about your reviews, dishes, or restaurant operations instead?"
+"I'm focused on helping you understand your student feedback. Could you ask a question about your teaching, courses, or student feedback instead?"
 
 ---
 
 ## Evidence & Accuracy Rules
-- Search through **ALL internal feedback and ALL external reviews** before answering
+- Search through **ALL student feedback** before answering
 - Base insights strictly on the provided data
 - Do NOT invent trends or feedback
 - If evidence is limited or mixed, say so clearly and summarize what is available
@@ -248,24 +242,24 @@ For such questions, respond with:
 
 ## Data Provided
 
-### Internal Feedback
+### Student Feedback
 - Total: ${feedbackData.length}
 - Avg Ratings:
-  - Food: ${avgFoodRating.toFixed(2)}/5
-  - Staff: ${avgStaffRating.toFixed(2)}/5
-  - Ambience: ${avgAmbienceRating.toFixed(2)}/5
+  - Teaching Quality: ${avgTeachingRating.toFixed(2)}/5
+  - Communication: ${avgCommunicationRating.toFixed(2)}/5
+  - Materials: ${avgMaterialRating.toFixed(2)}/5
   - Overall: ${avgOverallRating.toFixed(2)}/5
 
-### Internal Comments
+### Student Comments
 ${feedbackData
   .filter((f) => f.suggestions)
-  .map((f, i) => `${i + 1}. "${f.suggestions}" (Overall: ${f.overallRating}/5)`)
-  .join("\n") || "No internal comments provided"}
+  .map((f, i) => `${i + 1}. "${f.suggestions}" (Overall: ${f.overallRating}/5${f.courseName ? `, Course: ${f.courseName}` : ""})`)
+  .join("\n") || "No comments provided"}
 
-### External Reviews (ALL ${reviewData.length})
+${reviewData.length > 0 ? `### External Reviews (${reviewData.length})
 ${reviewData
   .map((r, i) => `${i + 1}. [${r.platform}] ${r.rating}/5 — "${r.comment}"`)
-  .join("\n") || "No external reviews"}
+  .join("\n")}` : ""}
 
 ---
 
@@ -275,13 +269,13 @@ ${reviewData
 
 ## Key Insights
 - Insight statement  
-  > "Relevant customer quote"
+  > "Relevant student quote"
 
 ## Top Actionable Recommendations (Max 5)
 1. **Action title**
    - Why it matters (based on feedback)
    - Supporting evidence:
-     > "Customer quote"
+     > "Student quote"
 
 ---
 
@@ -294,19 +288,19 @@ ${reviewData
 }
 
 /**
- * Chat with AI about restaurant feedback
+ * Chat with AI about student feedback
  */
 export async function chatAboutFeedback(
   message: string,
-  feedback: CustomerFeedback[],
+  feedback: StudentFeedback[],
   reviews: ExternalReview[],
-  restaurantName?: string
+  teacherName?: string
 ): Promise<string> {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is not configured");
   }
 
-  const context = buildChatContext(feedback, reviews, restaurantName);
+  const context = buildChatContext(feedback, reviews, teacherName);
 
   try {
     const completion = await openai.chat.completions.create({
@@ -338,20 +332,20 @@ export async function chatAboutFeedback(
 }
 
 /**
- * Chat with AI about restaurant feedback (streaming version)
+ * Chat with AI about student feedback (streaming version)
  * Returns an async generator that yields chunks of the response
  */
 export async function* chatAboutFeedbackStream(
   message: string,
-  feedback: CustomerFeedback[],
+  feedback: StudentFeedback[],
   reviews: ExternalReview[],
-  restaurantName?: string
+  teacherName?: string
 ): AsyncGenerator<string, void, unknown> {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is not configured");
   }
 
-  const context = buildChatContext(feedback, reviews, restaurantName);
+  const context = buildChatContext(feedback, reviews, teacherName);
 
   try {
     const stream = await openai.chat.completions.create({

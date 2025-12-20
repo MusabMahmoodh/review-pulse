@@ -7,9 +7,7 @@ import { swaggerSpec } from "./config/swagger";
 import { AppDataSource } from "./data-source";
 import authRoutes from "./routes/auth";
 import feedbackRoutes from "./routes/feedback";
-import restaurantRoutes from "./routes/restaurants";
 import adminRoutes from "./routes/admin";
-import externalReviewsRoutes from "./routes/external-reviews";
 import aiRoutes from "./routes/ai";
 import actionableItemsRoutes from "./routes/actionable-items";
 import teamMembersRoutes from "./routes/team-members";
@@ -34,9 +32,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/feedback", feedbackRoutes);
-app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/external-reviews", externalReviewsRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/actionable-items", actionableItemsRoutes);
 app.use("/api/team-members", teamMembersRoutes);

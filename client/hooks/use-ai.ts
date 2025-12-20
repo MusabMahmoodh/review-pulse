@@ -3,11 +3,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { aiApi, TimePeriod } from "@/lib/api-client";
 
-export function useAIInsights(restaurantId: string | null, timePeriod?: TimePeriod) {
+export function useAIInsights(teacherId: string | null, timePeriod?: TimePeriod) {
   return useQuery({
-    queryKey: ["ai", "insights", restaurantId, timePeriod],
-    queryFn: () => aiApi.getInsights(restaurantId!, timePeriod),
-    enabled: !!restaurantId,
+    queryKey: ["ai", "insights", teacherId, timePeriod],
+    queryFn: () => aiApi.getInsights(teacherId!, timePeriod),
+    enabled: !!teacherId,
   });
 }
 
@@ -15,18 +15,18 @@ export function useGenerateInsights() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ restaurantId, timePeriod = "month", filter = "overall" }: { restaurantId: string; timePeriod?: TimePeriod; filter?: "external" | "internal" | "overall" }) =>
-      aiApi.generateInsights(restaurantId, timePeriod, filter),
+    mutationFn: ({ teacherId, timePeriod = "month", filter = "overall" }: { teacherId: string; timePeriod?: TimePeriod; filter?: "external" | "internal" | "overall" }) =>
+      aiApi.generateInsights(teacherId, timePeriod, filter),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["ai", "insights", variables.restaurantId] });
+      queryClient.invalidateQueries({ queryKey: ["ai", "insights", variables.teacherId] });
     },
   });
 }
 
 export function useAIChat() {
   return useMutation({
-    mutationFn: ({ restaurantId, message }: { restaurantId: string; message: string }) =>
-      aiApi.chat(restaurantId, message),
+    mutationFn: ({ teacherId, message }: { teacherId: string; message: string }) =>
+      aiApi.chat(teacherId, message),
   });
 }
 
@@ -37,11 +37,11 @@ export function useAIChat() {
 export function useAIChatStream() {
   return {
     chatStream: async (
-      restaurantId: string,
+      teacherId: string,
       message: string,
       onChunk: (chunk: string) => void
     ): Promise<void> => {
-      return aiApi.chatStream(restaurantId, message, onChunk);
+      return aiApi.chatStream(teacherId, message, onChunk);
     },
   };
 }

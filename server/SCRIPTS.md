@@ -45,7 +45,7 @@ ADMIN_PASSWORD=admin123
 
 ### Bootstrap Demo Data
 
-Create a demo restaurant with sample feedback, external reviews, and AI insights for testing.
+Create a demo teacher with sample feedback, external reviews, and AI insights for testing.
 
 **Usage:**
 ```bash
@@ -53,24 +53,24 @@ npm run data:bootstrap
 ```
 
 **What it creates:**
-- **Restaurant:** "The Culinary Corner"
-  - Email: `demo@restaurant.com`
+- **Teacher:** "Dr. John Smith"
+  - Email: `demo@teacher.com`
   - Password: `demo123`
-  - Restaurant ID: Auto-generated
-- **Feedback:** 6 sample feedback entries with various ratings
+  - Teacher ID: Auto-generated
+- **Feedback:** 6 sample student feedback entries with various ratings
 - **External Reviews:** 3 reviews from Google, Facebook, and Instagram
 - **AI Insight:** 1 AI-generated insight with recommendations
 
 **Demo Credentials:**
 ```
-Email: demo@restaurant.com
+Email: demo@teacher.com
 Password: demo123
 ```
 
 **Notes:**
-- The script checks if a demo restaurant already exists
+- The script checks if a demo teacher already exists
 - If it exists, the script will exit without creating duplicates
-- Delete the existing demo restaurant first if you want to recreate it
+- Delete the existing demo teacher first if you want to recreate it
 - All dates are set to recent dates (within the last week)
 
 ## Running Scripts
@@ -96,10 +96,10 @@ If you see this error, either:
 - Delete the existing admin from the database manually
 - Use the existing admin credentials
 
-### "Demo restaurant already exists"
+### "Demo teacher already exists"
 If you see this warning:
-- The demo restaurant is already in your database
-- Use the existing credentials: `demo@restaurant.com` / `demo123`
+- The demo teacher is already in your database
+- Use the existing credentials: `demo@teacher.com` / `demo123`
 - Or delete it from the database if you want to recreate it
 
 ### Database Connection Errors
@@ -107,17 +107,3 @@ Make sure:
 - Your `.env` file is configured correctly
 - PostgreSQL is running
 - The database exists and migrations have been run
-
-
-
-
-
-
-
-
-
-
-
-
-
-
