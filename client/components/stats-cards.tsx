@@ -3,7 +3,14 @@ import { Star, MessageSquare, TrendingUp, Users } from "lucide-react"
 import type { FeedbackStats } from "@/lib/types"
 
 interface StatsCardsProps {
-  stats: FeedbackStats
+  stats: FeedbackStats & {
+    recentTrend?: "improving" | "stable" | "declining"
+    externalReviewsCount?: {
+      google: number
+      facebook: number
+      instagram: number
+    }
+  }
 }
 
 export function StatsCards({ stats }: StatsCardsProps) {
@@ -22,18 +29,22 @@ export function StatsCards({ stats }: StatsCardsProps) {
       suffix: "",
       color: "text-chart-2",
     },
-    {
-      icon: TrendingUp,
-      label: "Trend",
-      value: stats.recentTrend.charAt(0).toUpperCase() + stats.recentTrend.slice(1),
-      suffix: "",
-      color:
-        stats.recentTrend === "improving"
-          ? "text-green-500"
-          : stats.recentTrend === "declining"
-            ? "text-red-500"
-            : "text-yellow-500",
-    },
+    ...(stats.recentTrend !== undefined
+      ? [
+          {
+            icon: TrendingUp,
+            label: "Trend",
+            value: stats.recentTrend.charAt(0).toUpperCase() + stats.recentTrend.slice(1),
+            suffix: "",
+            color:
+              stats.recentTrend === "improving"
+                ? "text-green-500"
+                : stats.recentTrend === "declining"
+                  ? "text-red-500"
+                  : "text-yellow-500",
+          },
+        ]
+      : []),
   ]
 
   return (

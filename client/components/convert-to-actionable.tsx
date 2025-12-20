@@ -31,7 +31,8 @@ import {
 import Link from "next/link"
 
 interface ConvertToActionableProps {
-  teacherId: string | null
+  teacherId?: string | null
+  organizationId?: string
   sourceType: "comment" | "ai_suggestion"
   sourceId: string
   sourceText: string
@@ -41,6 +42,7 @@ interface ConvertToActionableProps {
 
 export function ConvertToActionable({
   teacherId,
+  organizationId,
   sourceType,
   sourceId,
   sourceText,
@@ -57,14 +59,15 @@ export function ConvertToActionable({
   const [deadline, setDeadline] = useState("")
   const createMutation = useCreateActionableItem()
   
-  const { data: teamMembersData } = useTeamMembers(teacherId)
+  const { data: teamMembersData } = useTeamMembers(teacherId || null)
   const teamMembers = teamMembersData?.members || []
   
   // Check if this source is already linked to an actionable item
   const { data: linkedItemData, isLoading: checkingLink } = useActionableItemBySource(
-    teacherId,
+    teacherId || null,
     sourceType,
-    sourceId
+    sourceId,
+    organizationId
   )
   
   const linkedItem = linkedItemData?.item
@@ -86,7 +89,8 @@ export function ConvertToActionable({
 
     createMutation.mutate(
       {
-        teacherId,
+        teacherId: teacherId || undefined,
+        organizationId,
         title: title.trim(),
         description: description.trim() || undefined,
         sourceType,

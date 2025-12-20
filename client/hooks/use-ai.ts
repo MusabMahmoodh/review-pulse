@@ -3,11 +3,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { aiApi, TimePeriod } from "@/lib/api-client";
 
-export function useAIInsights(teacherId: string | null, timePeriod?: TimePeriod) {
+export function useAIInsights(teacherId: string | null, timePeriod?: TimePeriod, organizationId?: string) {
   return useQuery({
-    queryKey: ["ai", "insights", teacherId, timePeriod],
-    queryFn: () => aiApi.getInsights(teacherId!, timePeriod),
-    enabled: !!teacherId,
+    queryKey: ["ai", "insights", teacherId, organizationId, timePeriod],
+    queryFn: () => aiApi.getInsights(teacherId, timePeriod, organizationId),
+    enabled: !!teacherId || !!organizationId,
   });
 }
 
@@ -15,18 +15,18 @@ export function useGenerateInsights() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ teacherId, timePeriod = "month", filter = "overall" }: { teacherId: string; timePeriod?: TimePeriod; filter?: "external" | "internal" | "overall" }) =>
-      aiApi.generateInsights(teacherId, timePeriod, filter),
+    mutationFn: ({ teacherId, organizationId, timePeriod = "month", filter = "overall" }: { teacherId?: string | null; organizationId?: string; timePeriod?: TimePeriod; filter?: "external" | "internal" | "overall" }) =>
+      aiApi.generateInsights(teacherId || null, timePeriod, filter, organizationId),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["ai", "insights", variables.teacherId] });
+      queryClient.invalidateQueries({ queryKey: ["ai", "insights", variables.teacherId, variables.organizationId] });
     },
   });
 }
 
 export function useAIChat() {
   return useMutation({
-    mutationFn: ({ teacherId, message }: { teacherId: string; message: string }) =>
-      aiApi.chat(teacherId, message),
+    mutationFn: ({ teacherId, organizationId, message }: { teacherId?: string | null; organizationId?: string; message: string }) =>
+      aiApi.chat(teacherId || null, message, organizationId),
   });
 }
 
@@ -37,11 +37,12 @@ export function useAIChat() {
 export function useAIChatStream() {
   return {
     chatStream: async (
-      teacherId: string,
+      teacherId: string | null,
       message: string,
-      onChunk: (chunk: string) => void
+      onChunk: (chunk: string) => void,
+      organizationId?: string
     ): Promise<void> => {
-      return aiApi.chatStream(teacherId, message, onChunk);
+      return aiApi.chatStream(teacherId, message, onChunk, organizationId);
     },
   };
 }

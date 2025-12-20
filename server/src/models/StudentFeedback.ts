@@ -1,5 +1,6 @@
 import { Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, OneToMany } from "typeorm";
 import { Teacher } from "./Teacher";
+import { Organization } from "./Organization";
 import { Class } from "./Class";
 import { FeedbackTag } from "./FeedbackTag";
 
@@ -8,8 +9,11 @@ export class StudentFeedback {
   @PrimaryColumn()
   id!: string;
 
-  @Column()
-  teacherId!: string;
+  @Column({ nullable: true })
+  teacherId?: string; // Optional: feedback can be for a specific teacher or organization
+
+  @Column({ nullable: true })
+  organizationId?: string; // Optional: feedback can be for an organization
 
   @Column({ nullable: true })
   classId?: string; // Optional: feedback can be associated with a specific class
@@ -45,9 +49,13 @@ export class StudentFeedback {
   createdAt!: Date;
 
   // Relations
-  @ManyToOne(() => Teacher, (teacher) => teacher.feedback)
+  @ManyToOne(() => Teacher, (teacher) => teacher.feedback, { nullable: true })
   @JoinColumn({ name: "teacherId" })
-  teacher!: Teacher;
+  teacher?: Teacher;
+
+  @ManyToOne(() => Organization, { nullable: true })
+  @JoinColumn({ name: "organizationId" })
+  organization?: Organization;
 
   @ManyToOne(() => Class, (classEntity) => classEntity.feedback, { nullable: true })
   @JoinColumn({ name: "classId" })

@@ -69,5 +69,29 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   return next();
 }
 
+export function requireOrganization(req: Request, res: Response, next: NextFunction) {
+  const token = extractTokenFromHeader(req.headers.authorization);
+
+  if (!token) {
+    return res.status(401).json({ error: "Missing or invalid authorization header" });
+  }
+
+  const payload = verifyAccessToken(token);
+
+  if (!payload) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+
+  if (!payload.organizationId || payload.userType !== "organization") {
+    return res.status(403).json({ error: "Organization access required" });
+  }
+
+  req.organizationId = payload.organizationId;
+  req.userType = "organization";
+  req.email = payload.email;
+
+  return next();
+}
+
 
 

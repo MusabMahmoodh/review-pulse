@@ -212,7 +212,8 @@ export const authApi = {
 // Feedback API
 export const feedbackApi = {
   submit: async (data: {
-    teacherId: string;
+    teacherId?: string;
+    organizationId?: string;
     classId?: string;
     studentName?: string;
     studentContact?: string;
@@ -234,10 +235,18 @@ export const feedbackApi = {
     });
   },
 
-  list: async (teacherId: string, tagId?: string) => {
-    const params = new URLSearchParams({ teacherId });
-    if (tagId) {
-      params.append("tagId", tagId);
+  list: async (teacherId: string | null, queryString?: string) => {
+    // If teacherId is null, it means organization-level access
+    const params = new URLSearchParams();
+    if (teacherId) {
+      params.append("teacherId", teacherId);
+    }
+    if (queryString) {
+      // Parse additional query params
+      const additionalParams = new URLSearchParams(queryString);
+      additionalParams.forEach((value, key) => {
+        params.append(key, value);
+      });
     }
     return fetchApi<{
       feedback: Array<{
@@ -259,11 +268,26 @@ export const feedbackApi = {
           color?: string;
           description?: string;
         }>;
+        teacher?: {
+          id: string;
+          name: string;
+          email: string;
+        };
       }>;
-    }>(`/api/feedback/list?${params.toString()}`);
+    }>(`/api/feedback/list${params.toString() ? `?${params.toString()}` : ""}`);
   },
 
-  stats: async (teacherId: string) => {
+  stats: async (teacherId: string | null, queryString?: string) => {
+    const params = new URLSearchParams();
+    if (teacherId) {
+      params.append("teacherId", teacherId);
+    }
+    if (queryString) {
+      const additionalParams = new URLSearchParams(queryString);
+      additionalParams.forEach((value, key) => {
+        params.append(key, value);
+      });
+    }
     return fetchApi<{
       stats: {
         totalFeedback: number;
@@ -280,7 +304,7 @@ export const feedbackApi = {
           instagram: number;
         };
       };
-    }>(`/api/feedback/stats?teacherId=${teacherId}`);
+    }>(`/api/feedback/stats${params.toString() ? `?${params.toString()}` : ""}`);
   },
 };
 
@@ -801,60 +825,91 @@ export const metaAuthApi = {
 export type TimePeriod = "2days" | "week" | "month" | "2months" | "3months" | "4months" | "5months" | "6months";
 
 export const aiApi = {
-  getInsights: async (teacherId: string, timePeriod?: TimePeriod) => {
-    const params = new URLSearchParams({ teacherId });
+  getInsights: async (teacherId: string | null, timePeriod?: TimePeriod, organizationId?: string) => {
+    const params = new URLSearchParams();
+    if (teacherId) {
+      params.append("teacherId", teacherId);
+    }
+    if (organizationId) {
+      params.append("organizationId", organizationId);
+    }
     if (timePeriod) {
       params.append("timePeriod", timePeriod);
     }
     return fetchApi<{
       insight: {
         id: string;
-        teacherId: string;
+        teacherId?: string;
+        organizationId?: string;
         summary: string;
         recommendations: string[];
         sentiment: "positive" | "neutral" | "negative";
         keyTopics: string[];
         generatedAt: string;
       } | null;
-    }>(`/api/ai/insights?${params.toString()}`);
+    }>(`/api/ai/insights${params.toString() ? `?${params.toString()}` : ""}`);
   },
 
-  generateInsights: async (teacherId: string, timePeriod: TimePeriod = "month", filter: "external" | "internal" | "overall" = "overall") => {
+  generateInsights: async (teacherId: string | null, timePeriod: TimePeriod = "month", filter: "external" | "internal" | "overall" = "overall", organizationId?: string) => {
+    const body: any = { timePeriod, filter };
+    if (teacherId) {
+      body.teacherId = teacherId;
+    }
+    if (organizationId) {
+      body.organizationId = organizationId;
+    }
     return fetchApi<{
       success: boolean;
       insight: any;
       message: string;
     }>("/api/ai/generate-insights", {
       method: "POST",
-      body: JSON.stringify({ teacherId, timePeriod, filter }),
+      body: JSON.stringify(body),
     });
   },
 
-  chat: async (teacherId: string, message: string) => {
+  chat: async (teacherId: string | null, message: string, organizationId?: string) => {
+    const body: any = { message };
+    if (teacherId) {
+      body.teacherId = teacherId;
+    }
+    if (organizationId) {
+      body.organizationId = organizationId;
+    }
     return fetchApi<{
       success: boolean;
       response: string;
     }>("/api/ai/chat", {
       method: "POST",
-      body: JSON.stringify({ teacherId, message }),
+      body: JSON.stringify(body),
       timeout: 120000, // 2 minutes timeout for AI chat
     });
   },
 
   /**
    * Stream chat response from AI
-   * @param teacherId - Teacher ID
+   * @param teacherId - Teacher ID (optional if organizationId provided)
    * @param message - User message
    * @param onChunk - Callback for each chunk of the stream
+   * @param organizationId - Organization ID (optional if teacherId provided)
    * @returns Promise that resolves when stream completes
    */
   chatStream: async (
-    teacherId: string,
+    teacherId: string | null,
     message: string,
-    onChunk: (chunk: string) => void
+    onChunk: (chunk: string) => void,
+    organizationId?: string
   ): Promise<void> => {
     const url = `${API_BASE_URL}/api/ai/chat/stream`;
     const token = getBrowserToken();
+
+    const body: any = { message };
+    if (teacherId) {
+      body.teacherId = teacherId;
+    }
+    if (organizationId) {
+      body.organizationId = organizationId;
+    }
 
     const response = await fetch(url, {
       method: "POST",
@@ -862,7 +917,7 @@ export const aiApi = {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ teacherId, message }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -928,15 +983,22 @@ export const aiApi = {
 
 // Actionable Items API
 export const actionableItemsApi = {
-  list: async (teacherId: string, completed?: boolean) => {
-    const params = new URLSearchParams({ teacherId });
+  list: async (teacherId: string | null, completed?: boolean, organizationId?: string) => {
+    const params = new URLSearchParams();
+    if (teacherId) {
+      params.append("teacherId", teacherId);
+    }
+    if (organizationId) {
+      params.append("organizationId", organizationId);
+    }
     if (completed !== undefined) {
       params.append("completed", String(completed));
     }
     return fetchApi<{
       items: Array<{
         id: string;
-        teacherId: string;
+        teacherId?: string;
+        organizationId?: string;
         title: string;
         description?: string;
         completed: boolean;
@@ -948,11 +1010,12 @@ export const actionableItemsApi = {
         createdAt: string;
         updatedAt: string;
       }>;
-    }>(`/api/actionable-items?${params.toString()}`);
+    }>(`/api/actionable-items${params.toString() ? `?${params.toString()}` : ""}`);
   },
 
   create: async (data: {
-    teacherId: string;
+    teacherId?: string;
+    organizationId?: string;
     title: string;
     description?: string;
     sourceType: "comment" | "ai_suggestion";
@@ -1021,16 +1084,22 @@ export const actionableItemsApi = {
     });
   },
 
-  getBySource: async (teacherId: string, sourceType: "comment" | "ai_suggestion", sourceId: string) => {
+  getBySource: async (teacherId: string | null, sourceType: "comment" | "ai_suggestion", sourceId: string, organizationId?: string) => {
     const params = new URLSearchParams({
-      teacherId,
       sourceType,
       sourceId,
     });
+    if (teacherId) {
+      params.append("teacherId", teacherId);
+    }
+    if (organizationId) {
+      params.append("organizationId", organizationId);
+    }
     return fetchApi<{
       item: {
         id: string;
-        teacherId: string;
+        teacherId?: string;
+        organizationId?: string;
         title: string;
         description?: string;
         completed: boolean;
@@ -1123,6 +1192,132 @@ export const teamMembersApi = {
     }>(`/api/team-members/${id}`, {
       method: "DELETE",
     });
+  },
+};
+
+// Organizations API
+export const organizationsApi = {
+  // Teacher Management
+  getTeachers: async () => {
+    return fetchApi<{
+      teachers: Array<{
+        id: string;
+        name: string;
+        email: string;
+        phone: string;
+        address?: string;
+        subject?: string;
+        department?: string;
+        status: "active" | "blocked";
+        qrCode: string;
+        createdAt: string;
+        updatedAt: string;
+        stats: {
+          totalFeedback: number;
+          feedbackCount: number;
+          reviewCount: number;
+          averageRating: number;
+        };
+      }>;
+    }>("/api/organizations/teachers");
+  },
+
+  createTeacher: async (data: {
+    name: string;
+    email: string;
+    password: string;
+    phone: string;
+    address?: string;
+    subject?: string;
+    department?: string;
+  }) => {
+    return fetchApi<{
+      success: boolean;
+      teacher: {
+        id: string;
+        name: string;
+        email: string;
+        phone: string;
+        organizationId: string;
+      };
+    }>("/api/organizations/teachers", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateTeacher: async (teacherId: string, data: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    subject?: string;
+    department?: string;
+    status?: "active" | "blocked";
+  }) => {
+    return fetchApi<{
+      success: boolean;
+      teacher: {
+        id: string;
+        name: string;
+        email: string;
+        phone: string;
+        organizationId: string;
+        status: "active" | "blocked";
+      };
+    }>(`/api/organizations/teachers/${teacherId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteTeacher: async (teacherId: string) => {
+    return fetchApi<{
+      success: boolean;
+      message: string;
+    }>(`/api/organizations/teachers/${teacherId}`, {
+      method: "DELETE",
+    });
+  },
+
+  // Feedback & Stats
+  getFeedback: async (params?: {
+    teacherId?: string;
+    tagId?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.teacherId) queryParams.append("teacherId", params.teacherId);
+    if (params?.tagId) queryParams.append("tagId", params.tagId);
+    const query = queryParams.toString();
+    return fetchApi<{
+      feedback: Array<any>;
+      stats: {
+        totalFeedback: number;
+        averageRatings: {
+          teaching: number;
+          communication: number;
+          material: number;
+          overall: number;
+        };
+        teacherCount: number;
+      };
+    }>(`/api/organizations/feedback${query ? `?${query}` : ""}`);
+  },
+
+  getStats: async () => {
+    return fetchApi<{
+      stats: {
+        totalTeachers: number;
+        totalFeedback: number;
+        totalReviews: number;
+        averageRatings: {
+          teaching: number;
+          communication: number;
+          material: number;
+          overall: number;
+        };
+      };
+    }>("/api/organizations/stats");
   },
 };
 

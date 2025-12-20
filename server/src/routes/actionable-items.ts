@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { ActionableItem, Teacher, StudentFeedback, ExternalReview, AIInsight, TeamMember } from "../models";
+import { ActionableItem, Teacher, Organization, StudentFeedback, ExternalReview, AIInsight, TeamMember } from "../models";
 import { requireAuth } from "../middleware/auth";
 import { isPremium } from "../utils/subscription";
 
@@ -35,27 +35,41 @@ const router = Router();
  */
 router.get("/", requireAuth, async (req, res) => {
   try {
-    const teacherId = req.teacherId as string;
+    const teacherId = req.teacherId as string | undefined;
+    const organizationId = req.organizationId as string | undefined;
     const completed = req.query.completed as string | undefined;
 
-    if (!teacherId) {
-      return res.status(400).json({ error: "Teacher ID required" });
+    if (!teacherId && !organizationId) {
+      return res.status(400).json({ error: "Teacher ID or organization ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(teacherId, "teacher");
-    if (!hasPremium) {
-      return res.status(403).json({ 
-        error: "Premium subscription required",
-        requiresPremium: true,
-      });
+    if (teacherId) {
+      const hasPremium = await isPremium(teacherId, "teacher");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
+    } else if (organizationId) {
+      const hasPremium = await isPremium(organizationId, "organization");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
     }
 
     const actionableItemRepo = AppDataSource.getRepository(ActionableItem);
 
-    const query = actionableItemRepo
-      .createQueryBuilder("item")
-      .where("item.teacherId = :teacherId", { teacherId });
+    const query = actionableItemRepo.createQueryBuilder("item");
+    if (teacherId) {
+      query.where("item.teacherId = :teacherId", { teacherId });
+    } else if (organizationId) {
+      query.where("item.organizationId = :organizationId", { organizationId });
+    }
 
     if (completed !== undefined) {
       query.andWhere("item.completed = :completed", { completed: completed === "true" });
@@ -106,12 +120,13 @@ router.get("/", requireAuth, async (req, res) => {
  */
 router.get("/by-source", requireAuth, async (req, res) => {
   try {
-    const teacherId = req.teacherId as string;
+    const teacherId = req.teacherId as string | undefined;
+    const organizationId = req.organizationId as string | undefined;
     const sourceType = req.query.sourceType as string;
     const sourceId = req.query.sourceId as string;
 
-    if (!teacherId || !sourceType || !sourceId) {
-      return res.status(400).json({ error: "Teacher ID, sourceType, and sourceId are required" });
+    if ((!teacherId && !organizationId) || !sourceType || !sourceId) {
+      return res.status(400).json({ error: "Teacher ID or organization ID, sourceType, and sourceId are required" });
     }
 
     if (sourceType !== "comment" && sourceType !== "ai_suggestion") {
@@ -119,22 +134,38 @@ router.get("/by-source", requireAuth, async (req, res) => {
     }
 
     // Check premium access
-    const hasPremium = await isPremium(teacherId, "teacher");
-    if (!hasPremium) {
-      return res.status(403).json({ 
-        error: "Premium subscription required",
-        requiresPremium: true,
-      });
+    if (teacherId) {
+      const hasPremium = await isPremium(teacherId, "teacher");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
+    } else if (organizationId) {
+      const hasPremium = await isPremium(organizationId, "organization");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
     }
 
     const actionableItemRepo = AppDataSource.getRepository(ActionableItem);
 
+    const whereClause: any = {
+      sourceType: sourceType as "comment" | "ai_suggestion",
+      sourceId,
+    };
+    if (teacherId) {
+      whereClause.teacherId = teacherId;
+    } else if (organizationId) {
+      whereClause.organizationId = organizationId;
+    }
+
     const item = await actionableItemRepo.findOne({
-      where: {
-        teacherId,
-        sourceType: sourceType as "comment" | "ai_suggestion",
-        sourceId,
-      },
+      where: whereClause,
     });
 
     if (!item) {
@@ -190,9 +221,10 @@ router.get("/by-source", requireAuth, async (req, res) => {
 router.post("/", requireAuth, async (req, res) => {
   try {
     const { title, description, sourceType, sourceId, sourceText, assignedTo, deadline } = req.body;
-    const teacherId = req.teacherId as string;
+    const teacherId = req.teacherId as string | undefined;
+    const organizationId = req.organizationId as string | undefined;
 
-    if (!teacherId || !title || !sourceType || !sourceId) {
+    if ((!teacherId && !organizationId) || !title || !sourceType || !sourceId) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -201,12 +233,22 @@ router.post("/", requireAuth, async (req, res) => {
     }
 
     // Check premium access
-    const hasPremium = await isPremium(teacherId, "teacher");
-    if (!hasPremium) {
-      return res.status(403).json({ 
-        error: "Premium subscription required",
-        requiresPremium: true,
-      });
+    if (teacherId) {
+      const hasPremium = await isPremium(teacherId, "teacher");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
+    } else if (organizationId) {
+      const hasPremium = await isPremium(organizationId, "organization");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
     }
 
     // Verify source exists
@@ -214,15 +256,32 @@ router.post("/", requireAuth, async (req, res) => {
       const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
       const reviewRepo = AppDataSource.getRepository(ExternalReview);
       
-      const feedback = await feedbackRepo.findOne({ where: { id: sourceId, teacherId } });
-      const review = await reviewRepo.findOne({ where: { id: sourceId, teacherId } });
+      let feedback, review;
+      if (teacherId) {
+        feedback = await feedbackRepo.findOne({ where: { id: sourceId, teacherId } });
+        review = await reviewRepo.findOne({ where: { id: sourceId, teacherId } });
+      } else if (organizationId) {
+        feedback = await feedbackRepo.findOne({ where: { id: sourceId, organizationId } });
+        // Reviews are teacher-specific, so check all teachers in org
+        const teacherRepo = AppDataSource.getRepository(Teacher);
+        const teachers = await teacherRepo.find({ where: { organizationId } });
+        const teacherIds = teachers.map(t => t.id);
+        if (teacherIds.length > 0) {
+          review = await reviewRepo.findOne({ where: { id: sourceId, teacherId: teacherIds[0] } });
+        }
+      }
       
       if (!feedback && !review) {
         return res.status(404).json({ error: "Source comment not found" });
       }
     } else if (sourceType === "ai_suggestion") {
       const insightRepo = AppDataSource.getRepository(AIInsight);
-      const insight = await insightRepo.findOne({ where: { id: sourceId, teacherId } });
+      let insight;
+      if (teacherId) {
+        insight = await insightRepo.findOne({ where: { id: sourceId, teacherId } });
+      } else if (organizationId) {
+        insight = await insightRepo.findOne({ where: { id: sourceId, organizationId } });
+      }
       
       if (!insight) {
         return res.status(404).json({ error: "Source AI insight not found" });
@@ -231,8 +290,8 @@ router.post("/", requireAuth, async (req, res) => {
 
     const actionableItemRepo = AppDataSource.getRepository(ActionableItem);
 
-    // Verify assignedTo team member exists if provided
-    if (assignedTo) {
+    // Verify assignedTo team member exists if provided (only for teachers)
+    if (assignedTo && teacherId) {
       const teamMemberRepo = AppDataSource.getRepository(TeamMember);
       const teamMember = await teamMemberRepo.findOne({
         where: { id: assignedTo, teacherId },
@@ -244,7 +303,8 @@ router.post("/", requireAuth, async (req, res) => {
 
     const item = actionableItemRepo.create({
       id: `actionable_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      teacherId,
+      teacherId: teacherId || undefined,
+      organizationId: organizationId || undefined,
       title,
       description: description || undefined,
       sourceType,
@@ -307,33 +367,51 @@ router.patch("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, completed, assignedTo, deadline } = req.body;
-    const teacherId = req.teacherId as string;
+    const teacherId = req.teacherId as string | undefined;
+    const organizationId = req.organizationId as string | undefined;
 
-    if (!teacherId) {
-      return res.status(400).json({ error: "Teacher ID required" });
+    if (!teacherId && !organizationId) {
+      return res.status(400).json({ error: "Teacher ID or organization ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(teacherId, "teacher");
-    if (!hasPremium) {
-      return res.status(403).json({ 
-        error: "Premium subscription required",
-        requiresPremium: true,
-      });
+    if (teacherId) {
+      const hasPremium = await isPremium(teacherId, "teacher");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
+    } else if (organizationId) {
+      const hasPremium = await isPremium(organizationId, "organization");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
     }
 
     const actionableItemRepo = AppDataSource.getRepository(ActionableItem);
 
+    const whereClause: any = { id };
+    if (teacherId) {
+      whereClause.teacherId = teacherId;
+    } else if (organizationId) {
+      whereClause.organizationId = organizationId;
+    }
+
     const item = await actionableItemRepo.findOne({
-      where: { id, teacherId },
+      where: whereClause,
     });
 
     if (!item) {
       return res.status(404).json({ error: "Actionable item not found" });
     }
 
-    // Verify assignedTo team member exists if provided
-    if (assignedTo !== undefined) {
+    // Verify assignedTo team member exists if provided (only for teachers)
+    if (assignedTo !== undefined && teacherId) {
       if (assignedTo) {
         const teamMemberRepo = AppDataSource.getRepository(TeamMember);
         const teamMember = await teamMemberRepo.findOne({
@@ -387,25 +465,43 @@ router.patch("/:id", requireAuth, async (req, res) => {
 router.delete("/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const teacherId = req.teacherId as string;
+    const teacherId = req.teacherId as string | undefined;
+    const organizationId = req.organizationId as string | undefined;
 
-    if (!teacherId) {
-      return res.status(400).json({ error: "Teacher ID required" });
+    if (!teacherId && !organizationId) {
+      return res.status(400).json({ error: "Teacher ID or organization ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(teacherId, "teacher");
-    if (!hasPremium) {
-      return res.status(403).json({ 
-        error: "Premium subscription required",
-        requiresPremium: true,
-      });
+    if (teacherId) {
+      const hasPremium = await isPremium(teacherId, "teacher");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
+    } else if (organizationId) {
+      const hasPremium = await isPremium(organizationId, "organization");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
     }
 
     const actionableItemRepo = AppDataSource.getRepository(ActionableItem);
 
+    const whereClause: any = { id };
+    if (teacherId) {
+      whereClause.teacherId = teacherId;
+    } else if (organizationId) {
+      whereClause.organizationId = organizationId;
+    }
+
     const item = await actionableItemRepo.findOne({
-      where: { id, teacherId },
+      where: whereClause,
     });
 
     if (!item) {

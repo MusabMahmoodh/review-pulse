@@ -4,11 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { actionableItemsApi } from "@/lib/api-client";
 import type { ActionableItem } from "@/lib/types";
 
-export function useActionableItems(teacherId: string | null, completed?: boolean) {
+export function useActionableItems(teacherId: string | null, completed?: boolean, organizationId?: string) {
   return useQuery<{ items: ActionableItem[] }>({
-    queryKey: ["actionable-items", teacherId, completed],
+    queryKey: ["actionable-items", teacherId, organizationId, completed],
     queryFn: async () => {
-      const response = await actionableItemsApi.list(teacherId!, completed);
+      const response = await actionableItemsApi.list(teacherId, completed, organizationId);
       return {
       items: response.items.map((item) => ({
         ...item,
@@ -18,7 +18,7 @@ export function useActionableItems(teacherId: string | null, completed?: boolean
       })) as ActionableItem[],
       };
     },
-    enabled: !!teacherId,
+    enabled: !!teacherId || !!organizationId,
   });
 }
 
@@ -28,10 +28,10 @@ export function useCreateActionableItem() {
   return useMutation({
     mutationFn: actionableItemsApi.create,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["actionable-items", variables.teacherId] });
+      queryClient.invalidateQueries({ queryKey: ["actionable-items", variables.teacherId, variables.organizationId] });
       // Also invalidate the by-source query so it shows "Linked" instead of "Convert"
       queryClient.invalidateQueries({ 
-        queryKey: ["actionable-item", "by-source", variables.teacherId, variables.sourceType, variables.sourceId] 
+        queryKey: ["actionable-item", "by-source", variables.teacherId, variables.organizationId, variables.sourceType, variables.sourceId] 
       });
     },
   });
@@ -67,13 +67,14 @@ export function useDeleteActionableItem() {
 export function useActionableItemBySource(
   teacherId: string | null,
   sourceType: "comment" | "ai_suggestion",
-  sourceId: string | null
+  sourceId: string | null,
+  organizationId?: string
 ) {
   return useQuery<{ item: ActionableItem } | null>({
-    queryKey: ["actionable-item", "by-source", teacherId, sourceType, sourceId],
+    queryKey: ["actionable-item", "by-source", teacherId, organizationId, sourceType, sourceId],
     queryFn: async () => {
       try {
-        const response = await actionableItemsApi.getBySource(teacherId!, sourceType, sourceId!);
+        const response = await actionableItemsApi.getBySource(teacherId, sourceType, sourceId!, organizationId);
         return {
         item: {
           ...response.item,
@@ -91,7 +92,7 @@ export function useActionableItemBySource(
         throw error;
       }
     },
-    enabled: !!teacherId && !!sourceId,
+    enabled: (!!teacherId || !!organizationId) && !!sourceId,
     retry: false, // Don't retry on 404
   });
 }

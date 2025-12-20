@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { AIInsight, Teacher, StudentFeedback, ExternalReview } from "../models";
+import { AIInsight, Teacher, Organization, StudentFeedback, ExternalReview } from "../models";
 import { generateInsights, chatAboutFeedback, chatAboutFeedbackStream } from "../utils/openai";
 import { MoreThanOrEqual } from "typeorm";
 import { requireAuth } from "../middleware/auth";
@@ -108,27 +108,41 @@ function getStartDate(period: TimePeriod): Date {
  */
 router.get("/insights", requireAuth, async (req, res) => {
   try {
-    const teacherId = req.teacherId as string;
+    const teacherId = req.teacherId as string | undefined;
+    const organizationId = req.organizationId as string | undefined;
     const timePeriod = req.query.timePeriod as TimePeriod | undefined;
 
-    if (!teacherId) {
-      return res.status(400).json({ error: "Teacher ID required" });
+    if (!teacherId && !organizationId) {
+      return res.status(400).json({ error: "Teacher ID or organization ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(teacherId, "teacher");
-    if (!hasPremium) {
-      return res.status(403).json({ 
-        error: "Premium subscription required",
-        requiresPremium: true,
-      });
+    if (teacherId) {
+      const hasPremium = await isPremium(teacherId, "teacher");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
+    } else if (organizationId) {
+      const hasPremium = await isPremium(organizationId, "organization");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
     }
 
     const insightRepo = AppDataSource.getRepository(AIInsight);
 
-    let query = insightRepo
-      .createQueryBuilder("insight")
-      .where("insight.teacherId = :teacherId", { teacherId });
+    let query = insightRepo.createQueryBuilder("insight");
+    if (teacherId) {
+      query = query.where("insight.teacherId = :teacherId", { teacherId });
+    } else if (organizationId) {
+      query = query.where("insight.organizationId = :organizationId", { organizationId });
+    }
 
     // If time period is specified, filter insights generated within that period
     if (timePeriod) {
@@ -210,7 +224,8 @@ router.get("/insights", requireAuth, async (req, res) => {
 router.post("/generate-insights", requireAuth, async (req, res) => {
   try {
     const { timePeriod = "month", filter = "overall" } = req.body;
-    const teacherId = req.teacherId as string;
+    const teacherId = req.teacherId as string | undefined;
+    const organizationId = req.organizationId as string | undefined;
     
     // Validate filter type
     const validFilters = ["external", "internal", "overall"];
@@ -220,17 +235,27 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
       });
     }
 
-    if (!teacherId) {
-      return res.status(400).json({ error: "Teacher ID required" });
+    if (!teacherId && !organizationId) {
+      return res.status(400).json({ error: "Teacher ID or organization ID required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(teacherId, "teacher");
-    if (!hasPremium) {
-      return res.status(403).json({ 
-        error: "Premium subscription required",
-        requiresPremium: true,
-      });
+    if (teacherId) {
+      const hasPremium = await isPremium(teacherId, "teacher");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
+    } else if (organizationId) {
+      const hasPremium = await isPremium(organizationId, "organization");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
     }
 
     // Validate time period
@@ -251,35 +276,68 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
     }
 
     const teacherRepo = AppDataSource.getRepository(Teacher);
+    const orgRepo = AppDataSource.getRepository(Organization);
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const reviewRepo = AppDataSource.getRepository(ExternalReview);
     const insightRepo = AppDataSource.getRepository(AIInsight);
 
-    const teacher = await teacherRepo.findOne({ where: { id: teacherId } });
-    if (!teacher) {
-      return res.status(404).json({ error: "Teacher not found" });
+    let teacher: Teacher | null = null;
+    let organization: Organization | null = null;
+    let teacherIds: string[] = [];
+
+    if (teacherId) {
+      teacher = await teacherRepo.findOne({ where: { id: teacherId } });
+      if (!teacher) {
+        return res.status(404).json({ error: "Teacher not found" });
+      }
+      teacherIds = [teacherId];
+    } else if (organizationId) {
+      organization = await orgRepo.findOne({ where: { id: organizationId } });
+      if (!organization) {
+        return res.status(404).json({ error: "Organization not found" });
+      }
+      // Get all teachers in organization
+      const teachers = await teacherRepo.find({ where: { organizationId } });
+      teacherIds = teachers.map(t => t.id);
     }
 
     // Calculate start date based on time period
     const startDate = getStartDate(timePeriod);
 
     // Get feedback for analysis within the time period
-    let feedback = await feedbackRepo.find({
-      where: {
-        teacherId,
-        createdAt: MoreThanOrEqual(startDate),
-      },
-      order: { createdAt: "DESC" },
-    });
+    let feedback: StudentFeedback[] = [];
+    if (teacherId) {
+      feedback = await feedbackRepo.find({
+        where: {
+          teacherId,
+          createdAt: MoreThanOrEqual(startDate),
+        },
+        order: { createdAt: "DESC" },
+      });
+    } else if (organizationId) {
+      // Get organization-level feedback and all teachers' feedback
+      const orgFeedback = await feedbackRepo.find({
+        where: {
+          organizationId,
+          createdAt: MoreThanOrEqual(startDate),
+        },
+        order: { createdAt: "DESC" },
+      });
+      const teachersFeedback = await feedbackRepo.find({
+        where: teacherIds.map(id => ({ teacherId: id, createdAt: MoreThanOrEqual(startDate) })),
+        order: { createdAt: "DESC" },
+      });
+      feedback = [...orgFeedback, ...teachersFeedback];
+    }
 
-    // Get external reviews for analysis within the time period
-    let reviews = await reviewRepo.find({
-      where: {
-        teacherId,
-        reviewDate: MoreThanOrEqual(startDate),
-      },
-      order: { reviewDate: "DESC" },
-    });
+    // Get external reviews for analysis within the time period (only for teachers)
+    let reviews: ExternalReview[] = [];
+    if (teacherIds.length > 0) {
+      reviews = await reviewRepo.find({
+        where: teacherIds.map(id => ({ teacherId: id, reviewDate: MoreThanOrEqual(startDate) })),
+        order: { reviewDate: "DESC" },
+      });
+    }
 
     // Filter data based on filter type
     if (filter === "internal") {
@@ -307,13 +365,14 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
 
     // Generate insights using OpenAI
     let insightData;
+    const entityName = teacherId ? teacher?.name : organization?.name || "Organization";
     console.log("Generating insights...");
     console.log(`Filter: ${filter}`);
     console.log(`Feedback count: ${feedback.length}`);
     console.log(`Reviews count: ${reviews.length}`);
-    console.log(teacher.name);
+    console.log(entityName);
     try {
-      insightData = await generateInsights(feedback, reviews, teacher.name);
+      insightData = await generateInsights(feedback, reviews, entityName);
     } catch (error: any) {
       console.error("OpenAI error:", error);
       return res.status(500).json({
@@ -324,7 +383,8 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
     // Save insight to database
     const insight = insightRepo.create({
       id: `insight_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      teacherId,
+      teacherId: teacherId || undefined,
+      organizationId: organizationId || undefined,
       summary: insightData.summary,
       recommendations: insightData.recommendations,
       sentiment: insightData.sentiment,
@@ -385,54 +445,96 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
 router.post("/chat", requireAuth, async (req, res) => {
   try {
     const { message } = req.body;
-    const teacherId = req.teacherId as string;
+    const teacherId = req.teacherId as string | undefined;
+    const organizationId = req.organizationId as string | undefined;
 
-    if (!teacherId || !message) {
+    if ((!teacherId && !organizationId) || !message) {
       return res.status(400).json({ error: "Message required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(teacherId, "teacher");
-    if (!hasPremium) {
-      return res.status(403).json({ 
-        error: "Premium subscription required",
-        requiresPremium: true,
-      });
+    if (teacherId) {
+      const hasPremium = await isPremium(teacherId, "teacher");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
+    } else if (organizationId) {
+      const hasPremium = await isPremium(organizationId, "organization");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
     }
 
     const teacherRepo = AppDataSource.getRepository(Teacher);
+    const orgRepo = AppDataSource.getRepository(Organization);
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const reviewRepo = AppDataSource.getRepository(ExternalReview);
 
-    const teacher = await teacherRepo.findOne({ where: { id: teacherId } });
-    if (!teacher) {
-      return res.status(404).json({ error: "Teacher not found" });
+    let teacher: Teacher | null = null;
+    let organization: Organization | null = null;
+    let teacherIds: string[] = [];
+    let entityName = "";
+
+    if (teacherId) {
+      teacher = await teacherRepo.findOne({ where: { id: teacherId } });
+      if (!teacher) {
+        return res.status(404).json({ error: "Teacher not found" });
+      }
+      entityName = teacher.name;
+      teacherIds = [teacherId];
+    } else if (organizationId) {
+      organization = await orgRepo.findOne({ where: { id: organizationId } });
+      if (!organization) {
+        return res.status(404).json({ error: "Organization not found" });
+      }
+      entityName = organization.name;
+      const teachers = await teacherRepo.find({ where: { organizationId } });
+      teacherIds = teachers.map(t => t.id);
     }
 
     // Get recent feedback and reviews for context (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const feedback = await feedbackRepo.find({
-      where: {
-        teacherId,
-        createdAt: MoreThanOrEqual(thirtyDaysAgo),
-      },
-      order: { createdAt: "DESC" },
-    });
+    let feedback: StudentFeedback[] = [];
+    if (teacherId) {
+      feedback = await feedbackRepo.find({
+        where: {
+          teacherId,
+          createdAt: MoreThanOrEqual(thirtyDaysAgo),
+        },
+        order: { createdAt: "DESC" },
+      });
+    } else if (organizationId) {
+      const orgFeedback = await feedbackRepo.find({
+        where: {
+          organizationId,
+          createdAt: MoreThanOrEqual(thirtyDaysAgo),
+        },
+        order: { createdAt: "DESC" },
+      });
+      const teachersFeedback = await feedbackRepo.find({
+        where: teacherIds.map(id => ({ teacherId: id, createdAt: MoreThanOrEqual(thirtyDaysAgo) })),
+        order: { createdAt: "DESC" },
+      });
+      feedback = [...orgFeedback, ...teachersFeedback];
+    }
 
     const reviews = await reviewRepo.find({
-      where: {
-        teacherId,
-        reviewDate: MoreThanOrEqual(thirtyDaysAgo),
-      },
+      where: teacherIds.map(id => ({ teacherId: id, reviewDate: MoreThanOrEqual(thirtyDaysAgo) })),
       order: { reviewDate: "DESC" },
     });
 
     // Generate AI response using OpenAI
     let aiResponse;
     try {
-      aiResponse = await chatAboutFeedback(message, feedback, reviews, teacher.name);
+      aiResponse = await chatAboutFeedback(message, feedback, reviews, entityName);
     } catch (error: any) {
       console.error("OpenAI chat error:", error);
       return res.status(500).json({
@@ -486,47 +588,89 @@ router.post("/chat", requireAuth, async (req, res) => {
 router.post("/chat/stream", requireAuth, async (req, res) => {
   try {
     const { message } = req.body;
-    const teacherId = req.teacherId as string;
+    const teacherId = req.teacherId as string | undefined;
+    const organizationId = req.organizationId as string | undefined;
 
-    if (!teacherId || !message) {
+    if ((!teacherId && !organizationId) || !message) {
       return res.status(400).json({ error: "Message required" });
     }
 
     // Check premium access
-    const hasPremium = await isPremium(teacherId, "teacher");
-    if (!hasPremium) {
-      return res.status(403).json({ 
-        error: "Premium subscription required",
-        requiresPremium: true,
-      });
+    if (teacherId) {
+      const hasPremium = await isPremium(teacherId, "teacher");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
+    } else if (organizationId) {
+      const hasPremium = await isPremium(organizationId, "organization");
+      if (!hasPremium) {
+        return res.status(403).json({ 
+          error: "Premium subscription required",
+          requiresPremium: true,
+        });
+      }
     }
 
     const teacherRepo = AppDataSource.getRepository(Teacher);
+    const orgRepo = AppDataSource.getRepository(Organization);
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const reviewRepo = AppDataSource.getRepository(ExternalReview);
 
-    const teacher = await teacherRepo.findOne({ where: { id: teacherId } });
-    if (!teacher) {
-      return res.status(404).json({ error: "Teacher not found" });
+    let teacher: Teacher | null = null;
+    let organization: Organization | null = null;
+    let teacherIds: string[] = [];
+    let entityName = "";
+
+    if (teacherId) {
+      teacher = await teacherRepo.findOne({ where: { id: teacherId } });
+      if (!teacher) {
+        return res.status(404).json({ error: "Teacher not found" });
+      }
+      entityName = teacher.name;
+      teacherIds = [teacherId];
+    } else if (organizationId) {
+      organization = await orgRepo.findOne({ where: { id: organizationId } });
+      if (!organization) {
+        return res.status(404).json({ error: "Organization not found" });
+      }
+      entityName = organization.name;
+      const teachers = await teacherRepo.find({ where: { organizationId } });
+      teacherIds = teachers.map(t => t.id);
     }
 
     // Get recent feedback and reviews for context (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const feedback = await feedbackRepo.find({
-      where: {
-        teacherId,
-        createdAt: MoreThanOrEqual(thirtyDaysAgo),
-      },
-      order: { createdAt: "DESC" },
-    });
+    let feedback: StudentFeedback[] = [];
+    if (teacherId) {
+      feedback = await feedbackRepo.find({
+        where: {
+          teacherId,
+          createdAt: MoreThanOrEqual(thirtyDaysAgo),
+        },
+        order: { createdAt: "DESC" },
+      });
+    } else if (organizationId) {
+      const orgFeedback = await feedbackRepo.find({
+        where: {
+          organizationId,
+          createdAt: MoreThanOrEqual(thirtyDaysAgo),
+        },
+        order: { createdAt: "DESC" },
+      });
+      const teachersFeedback = await feedbackRepo.find({
+        where: teacherIds.map(id => ({ teacherId: id, createdAt: MoreThanOrEqual(thirtyDaysAgo) })),
+        order: { createdAt: "DESC" },
+      });
+      feedback = [...orgFeedback, ...teachersFeedback];
+    }
 
     const reviews = await reviewRepo.find({
-      where: {
-        teacherId,
-        reviewDate: MoreThanOrEqual(thirtyDaysAgo),
-      },
+      where: teacherIds.map(id => ({ teacherId: id, reviewDate: MoreThanOrEqual(thirtyDaysAgo) })),
       order: { reviewDate: "DESC" },
     });
 
@@ -538,7 +682,7 @@ router.post("/chat/stream", requireAuth, async (req, res) => {
 
     // Generate streaming AI response
     try {
-      const stream = chatAboutFeedbackStream(message, feedback, reviews, teacher.name);
+      const stream = chatAboutFeedbackStream(message, feedback, reviews, entityName);
       
       for await (const chunk of stream) {
         // Send chunk as SSE data

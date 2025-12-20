@@ -1,13 +1,17 @@
 import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from "typeorm";
 import { Teacher } from "./Teacher";
+import { Organization } from "./Organization";
 
 @Entity("actionable_items")
 export class ActionableItem {
   @PrimaryColumn()
   id!: string;
 
-  @Column()
-  teacherId!: string;
+  @Column({ nullable: true })
+  teacherId?: string; // Optional: item can be for a teacher or organization
+
+  @Column({ nullable: true })
+  organizationId?: string; // Optional: item can be for an organization
 
   @Column({ type: "text" })
   title!: string;
@@ -40,8 +44,12 @@ export class ActionableItem {
   updatedAt!: Date;
 
   // Relations
-  @ManyToOne(() => Teacher)
+  @ManyToOne(() => Teacher, { nullable: true })
   @JoinColumn({ name: "teacherId" })
-  teacher!: Teacher;
+  teacher?: Teacher;
+
+  @ManyToOne(() => Organization, { nullable: true })
+  @JoinColumn({ name: "organizationId" })
+  organization?: Organization;
 }
 

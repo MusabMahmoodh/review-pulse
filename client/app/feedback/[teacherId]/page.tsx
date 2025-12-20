@@ -24,19 +24,25 @@ interface PageProps {
 
 export default function FeedbackPage({ params }: PageProps) {
   const resolvedParams = use(params)
-  const teacherId = resolvedParams.teacherId
+  const teacherIdOrOrgId = resolvedParams.teacherId
   const searchParams = useSearchParams()
   const classId = searchParams.get("class") || undefined
   const { toast } = useToast()
   const [submitted, setSubmitted] = useState(false)
   const submitMutation = useSubmitFeedback()
-  const { data: settings } = useReviewPageSettings(teacherId)
   
-  // Fetch class information if classId is provided
+  // Check if it's an organization ID (starts with "org_") or teacher ID
+  const isOrganizationId = teacherIdOrOrgId.startsWith("org_")
+  const teacherId = isOrganizationId ? undefined : teacherIdOrOrgId
+  const organizationId = isOrganizationId ? teacherIdOrOrgId : undefined
+  
+  const { data: settings } = useReviewPageSettings(teacherId || undefined)
+  
+  // Fetch class information if classId is provided (only for teachers)
   const { data: classData } = useQuery({
     queryKey: ["class", classId],
     queryFn: () => classesApi.get(classId!),
-    enabled: !!classId,
+    enabled: !!classId && !!teacherId,
   })
 
   const [formData, setFormData] = useState({
@@ -50,8 +56,11 @@ export default function FeedbackPage({ params }: PageProps) {
     tagIds: [] as string[],
   })
 
-  // Fetch available tags for this teacher
-  const { data: tagsData } = useTags({ teacherId })
+  // Fetch available tags for this teacher or organization
+  const { data: tagsData } = useTags({ 
+    teacherId: teacherId || undefined, 
+    organizationId: organizationId || undefined 
+  })
   const availableTags = tagsData?.tags || []
 
   // Use settings or defaults
@@ -75,7 +84,8 @@ export default function FeedbackPage({ params }: PageProps) {
 
     submitMutation.mutate(
       {
-        teacherId: teacherId,
+        teacherId: teacherId || undefined,
+        organizationId: organizationId || undefined,
         classId: classId,
         teachingRating: formData.teachingRating,
         communicationRating: formData.communicationRating,

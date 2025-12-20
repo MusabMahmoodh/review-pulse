@@ -12,9 +12,10 @@ interface FeedbackListProps {
   loading: boolean
   compact?: boolean
   teacherId?: string | null
+  organizationId?: string
 }
 
-export function FeedbackList({ feedback, loading, compact = false, teacherId }: FeedbackListProps) {
+export function FeedbackList({ feedback, loading, compact = false, teacherId, organizationId }: FeedbackListProps) {
   if (loading) {
     return (
       <div className="space-y-3">
@@ -77,6 +78,14 @@ export function FeedbackList({ feedback, loading, compact = false, teacherId }: 
                         ))}
                       </div>
                     )}
+                    {/* Show teacher name if organization view */}
+                    {organizationId && (item as any).teacher && (
+                      <div className="mt-2">
+                        <Badge variant="outline" className="text-xs">
+                          Teacher: {(item as any).teacher.name}
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                   <Badge variant="secondary" className="flex items-center gap-1 flex-shrink-0">
                     <Star className="h-3 w-3 fill-current" />
@@ -112,10 +121,11 @@ export function FeedbackList({ feedback, loading, compact = false, teacherId }: 
                 {item.suggestions && (
                   <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                     <p className="text-sm">{item.suggestions}</p>
-                    {teacherId && (
+                    {(teacherId || organizationId) && (
                       <div className="flex justify-end pt-2">
                         <ConvertToActionable
-                          teacherId={teacherId}
+                          teacherId={teacherId || undefined}
+                          organizationId={organizationId}
                           sourceType="comment"
                           sourceId={item.id}
                           sourceText={item.suggestions}

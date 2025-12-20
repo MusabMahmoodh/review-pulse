@@ -9,22 +9,80 @@ import { FeedbackList } from "@/components/feedback-list"
 import { StatsCards } from "@/components/stats-cards"
 import { RatingsChart } from "@/components/ratings-chart"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
-import { useFeedbackList, useFeedbackStats, useAIInsights, useAuth } from "@/hooks"
+import { useFeedbackList, useFeedbackStats, useAIInsights, useAuth, useOrganizationFeedback, useOrganizationStats, useOrganizationTeachers, useActionableItems } from "@/hooks"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useState, useMemo } from "react"
+import { Badge } from "@/components/ui/badge"
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const teacherId = user?.id || null
+  const isOrganization = user?.userType === "organization"
+  const teacherId = isOrganization ? null : (user?.id || null)
+  const organizationId = isOrganization ? user?.id : undefined
   const isMobile = useIsMobile()
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string | null>(null)
 
-  const { data: feedbackData, isLoading: feedbackLoading } = useFeedbackList(teacherId)
-  const { data: statsData, isLoading: statsLoading } = useFeedbackStats(teacherId)
-  const { data: insightsData, isLoading: insightsLoading } = useAIInsights(teacherId)
+  // Use organization hooks if organization, otherwise teacher hooks
+  // For organization, fetch all feedback first (without filter) to show counts in chips
+  const { data: orgFeedbackAllData } = useOrganizationFeedback({})
+  const { data: orgFeedbackData, isLoading: orgFeedbackLoading } = useOrganizationFeedback({ 
+    teacherId: selectedTeacherId === "org" ? undefined : (selectedTeacherId || undefined) 
+  })
+  const { data: orgStatsData, isLoading: orgStatsLoading } = useOrganizationStats()
+  const { data: orgTeachersData, isLoading: orgTeachersLoading } = useOrganizationTeachers()
+  const { data: orgActionableItems, isLoading: orgActionableLoading } = useActionableItems(null, undefined, organizationId)
+  
+  const { data: teacherFeedbackData, isLoading: teacherFeedbackLoading } = useFeedbackList(teacherId)
+  const { data: teacherStatsData, isLoading: teacherStatsLoading } = useFeedbackStats(teacherId)
+  const { data: insightsData, isLoading: insightsLoading } = useAIInsights(teacherId, undefined, organizationId)
+  const { data: teacherActionableItems, isLoading: teacherActionableLoading } = useActionableItems(teacherId)
 
-  const feedback = feedbackData?.feedback || []
-  const stats = statsData?.stats || null
+  // For organization, use filtered feedback, but use all feedback for grouping
+  const allFeedback = isOrganization ? (orgFeedbackAllData?.feedback || []) : (teacherFeedbackData?.feedback || [])
+  const feedback = isOrganization ? (orgFeedbackData?.feedback || []) : (teacherFeedbackData?.feedback || [])
+  
+  // Filter feedback based on selectedTeacherId for organization
+  const displayFeedback = useMemo(() => {
+    if (!isOrganization) return feedback
+    if (selectedTeacherId === "org") {
+      // Show only organization-level feedback (no teacherId)
+      return feedback.filter(item => !item.teacherId && item.organizationId)
+    } else if (selectedTeacherId) {
+      // Show only selected teacher's feedback
+      return feedback.filter(item => item.teacherId === selectedTeacherId)
+    }
+    // Show all feedback
+    return feedback
+  }, [feedback, selectedTeacherId, isOrganization])
+  
+  const stats = isOrganization ? orgStatsData?.stats : teacherStatsData?.stats
   const aiInsight = insightsData?.insight || null
-  const loading = feedbackLoading || statsLoading || insightsLoading
+  const actionableItems = isOrganization ? (orgActionableItems?.items || []) : (teacherActionableItems?.items || [])
+  const teachers = orgTeachersData?.teachers || []
+  
+  const loading = isOrganization 
+    ? (orgFeedbackLoading || orgStatsLoading || orgTeachersLoading || orgActionableLoading) 
+    : (teacherFeedbackLoading || teacherStatsLoading || insightsLoading || teacherActionableLoading)
+
+  // Group feedback by teacher for organization view (using allFeedback for counts)
+  const feedbackByTeacher = useMemo(() => {
+    if (!isOrganization) return { grouped: {}, orgLevelFeedback: [] }
+    const grouped: Record<string, typeof allFeedback> = {}
+    const orgLevelFeedback: typeof allFeedback = []
+    
+    allFeedback.forEach((item) => {
+      if (item.teacherId && (item as any).teacher) {
+        if (!grouped[item.teacherId]) {
+          grouped[item.teacherId] = []
+        }
+        grouped[item.teacherId].push(item)
+      } else if (item.organizationId && !item.teacherId) {
+        orgLevelFeedback.push(item)
+      }
+    })
+    
+    return { grouped, orgLevelFeedback }
+  }, [allFeedback, isOrganization])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -35,8 +93,8 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3">
               <Logo width={40} height={40} />
               <div>
-                <h1 className="text-lg font-semibold leading-none">{user?.name || "Teacher Dashboard"}</h1>
-                <p className="text-xs text-muted-foreground mt-0.5">Dashboard Overview</p>
+                <h1 className="text-lg font-semibold leading-none">{user?.name || (isOrganization ? "Organization Dashboard" : "Teacher Dashboard")}</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">{isOrganization ? "Organization Overview" : "Dashboard Overview"}</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -70,6 +128,35 @@ export default function DashboardPage() {
         {/* Quick Actions - Hidden on mobile since these are in bottom nav */}
         {!isMobile && (
           <div className="grid gap-6 md:grid-cols-2">
+            {/* Teachers Management Card - Only for organizations */}
+            {isOrganization && (
+              <Link href="/dashboard/teachers" className="block">
+                <Card className="group relative overflow-hidden border-2 border-green-200/50 dark:border-green-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-green-300/70 dark:hover:border-green-700/70">
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-100/80 via-emerald-100/80 to-teal-100/80 dark:from-green-950/80 dark:via-emerald-950/80 dark:to-teal-950/80" />
+                  <div className="absolute inset-0 bg-gradient-to-tr from-green-200/40 via-transparent to-emerald-200/40 dark:from-green-800/40 dark:to-emerald-800/40" />
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent dark:via-white/10" />
+                  <CardContent className="relative p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="p-2 rounded-lg bg-green-500/20 dark:bg-green-400/20">
+                            <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          </div>
+                          <span className="font-bold text-lg text-green-900 dark:text-green-100">
+                            Manage Teachers
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-1">
+                          Add, edit, and manage teachers in your organization
+                        </p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-green-600 dark:text-green-400 transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110 shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            )}
+            
             {/* AI Insights Card */}
             <Link href="/dashboard/ai-insights" className="block">
             <Card className="group relative overflow-hidden border-2 border-purple-200/50 dark:border-purple-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-purple-300/70 dark:hover:border-purple-700/70">
@@ -144,8 +231,141 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Classes Card */}
-        {!isMobile && (
+        {/* Organization-specific: Teachers Feedback Chips */}
+        {isOrganization && teachers.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Feedback by Teacher</CardTitle>
+              <p className="text-sm text-muted-foreground">Click on a teacher to filter their feedback</p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Badge
+                  variant={selectedTeacherId === null ? "default" : "outline"}
+                  className="cursor-pointer px-4 py-2"
+                  onClick={() => setSelectedTeacherId(null)}
+                >
+                  All Feedback ({allFeedback.length})
+                </Badge>
+                {feedbackByTeacher.orgLevelFeedback && feedbackByTeacher.orgLevelFeedback.length > 0 && (
+                  <Badge
+                    variant={selectedTeacherId === "org" ? "default" : "outline"}
+                    className="cursor-pointer px-4 py-2"
+                    onClick={() => setSelectedTeacherId("org")}
+                  >
+                    Organization Level ({feedbackByTeacher.orgLevelFeedback.length})
+                  </Badge>
+                )}
+                {teachers.map((teacher) => {
+                  const teacherFeedback = feedbackByTeacher.grouped?.[teacher.id] || []
+                  return (
+                    <Badge
+                      key={teacher.id}
+                      variant={selectedTeacherId === teacher.id ? "default" : "outline"}
+                      className="cursor-pointer px-4 py-2"
+                      onClick={() => setSelectedTeacherId(teacher.id)}
+                    >
+                      {teacher.name} ({teacherFeedback.length})
+                    </Badge>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Organization-specific: AI Insights Preview */}
+        {isOrganization && aiInsight && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-purple-600" />
+                  AI Insights
+                </CardTitle>
+                <Link href="/dashboard/ai-insights">
+                  <Button variant="outline" size="sm">View Details</Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium mb-1">Summary</p>
+                  <p className="text-sm text-muted-foreground">{aiInsight.summary}</p>
+                </div>
+                {aiInsight.recommendations && aiInsight.recommendations.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium mb-1">Top Recommendations</p>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      {aiInsight.recommendations.slice(0, 3).map((rec, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-primary">•</span>
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Badge variant={aiInsight.sentiment === "positive" ? "default" : aiInsight.sentiment === "negative" ? "destructive" : "secondary"}>
+                    {aiInsight.sentiment}
+                  </Badge>
+                  {aiInsight.keyTopics && aiInsight.keyTopics.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {aiInsight.keyTopics.slice(0, 3).map((topic, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs">
+                          {topic}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Organization-specific: Actionable Items Preview */}
+        {isOrganization && actionableItems.length > 0 && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <CheckSquare className="h-5 w-5 text-blue-600" />
+                  Actionable Items
+                </CardTitle>
+                <Link href="/dashboard/actionable-items">
+                  <Button variant="outline" size="sm">View All ({actionableItems.length})</Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {actionableItems.slice(0, 3).map((item) => (
+                  <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/50">
+                    <div className={`h-5 w-5 rounded border-2 flex items-center justify-center mt-0.5 ${
+                      item.completed ? "bg-primary border-primary" : "border-muted-foreground/30"
+                    }`}>
+                      {item.completed && <CheckSquare className="h-3 w-3 text-primary-foreground" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium ${item.completed ? "line-through text-muted-foreground" : ""}`}>
+                        {item.title}
+                      </p>
+                      {item.description && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{item.description}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Classes Card - Only for teachers */}
+        {!isMobile && !isOrganization && (
           <Link href="/dashboard/classes" className="block">
             <Card className="group relative overflow-hidden border-2 border-orange-200/50 dark:border-orange-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-orange-300/70 dark:hover:border-orange-700/70">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-100/80 via-amber-100/80 to-yellow-100/80 dark:from-orange-950/80 dark:via-amber-950/80 dark:to-yellow-950/80" />
@@ -202,8 +422,8 @@ export default function DashboardPage() {
           </Link>
         )}
 
-        {/* Team Members Card - Hidden on mobile since it's in bottom nav */}
-        {!isMobile && (
+        {/* Team Members Card - Hidden on mobile since it's in bottom nav, only for teachers */}
+        {!isMobile && !isOrganization && (
           <Link href="/dashboard/team-members" className="block">
             <Card className="group relative overflow-hidden border-2 border-green-200/50 dark:border-green-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-green-300/70 dark:hover:border-green-700/70">
               <div className="absolute inset-0 bg-gradient-to-br from-green-100/80 via-emerald-100/80 to-teal-100/80 dark:from-green-950/80 dark:via-emerald-950/80 dark:to-teal-950/80" />
@@ -244,7 +464,7 @@ export default function DashboardPage() {
             <CardContent className="px-4 sm:px-6 pb-6">
               <div className="w-full overflow-x-auto -mx-2 px-2">
                 <div className="min-w-[280px]">
-                  <RatingsChart feedback={feedback} />
+                  <RatingsChart feedback={displayFeedback} />
                 </div>
               </div>
             </CardContent>
@@ -266,8 +486,14 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="px-0 pb-0">
-              <FeedbackList feedback={feedback.slice(0, 3)} loading={loading} compact teacherId={teacherId} />
-              {feedback.length > 3 && (
+              <FeedbackList 
+                feedback={displayFeedback.slice(0, 3)} 
+                loading={loading} 
+                compact 
+                teacherId={teacherId}
+                organizationId={organizationId}
+              />
+              {displayFeedback.length > 3 && (
                 <Link href="/dashboard/feedback">
                   <div className="px-6 py-4 border-t text-center hover:bg-muted/50 transition-colors">
                     <span className="text-sm font-medium text-primary">View All Feedback</span>

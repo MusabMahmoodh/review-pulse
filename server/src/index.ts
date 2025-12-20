@@ -13,6 +13,7 @@ import actionableItemsRoutes from "./routes/actionable-items";
 import teamMembersRoutes from "./routes/team-members";
 import classesRoutes from "./routes/classes";
 import tagsRoutes from "./routes/tags";
+import organizationsRoutes from "./routes/organizations";
 
 // Load environment variables 222
 dotenv.config();
@@ -40,6 +41,7 @@ app.use("/api/actionable-items", actionableItemsRoutes);
 app.use("/api/team-members", teamMembersRoutes);
 app.use("/api/classes", classesRoutes);
 app.use("/api/tags", tagsRoutes);
+app.use("/api/organizations", organizationsRoutes);
 
 // Health check
 /**

@@ -34,7 +34,8 @@ const router = Router();
 router.get("/", requireAuth, async (req, res) => {
   try {
     const teacherId = req.teacherId as string | undefined;
-    const organizationId = req.query.organizationId as string | undefined;
+    const organizationId = req.organizationId as string | undefined;
+    const queryOrganizationId = req.query.organizationId as string | undefined;
     const includeInactive = req.query.includeInactive === "true";
 
     const tagRepo = AppDataSource.getRepository(Tag);
@@ -73,14 +74,21 @@ router.get("/", requireAuth, async (req, res) => {
         where: whereConditions,
         order: { createdAt: "DESC" },
       });
-    } else if (organizationId) {
-      // Get organization-level tags only
-      const whereCondition: any = { organizationId, isActive: true };
+    } else if (organizationId || queryOrganizationId) {
+      // Get organization-level tags
+      const orgId = organizationId || queryOrganizationId;
+      
+      // Verify organization access if authenticated as organization
+      if (organizationId && queryOrganizationId && organizationId !== queryOrganizationId) {
+        return res.status(403).json({ error: "Cannot access other organization's tags" });
+      }
+
+      const whereCondition: any = { organizationId: orgId, isActive: true };
       if (includeInactive) {
         tags = await tagRepo.find({
           where: [
-            { organizationId, isActive: true },
-            { organizationId, isActive: false },
+            { organizationId: orgId, isActive: true },
+            { organizationId: orgId, isActive: false },
           ],
           order: { createdAt: "DESC" },
         });
@@ -134,6 +142,7 @@ router.post("/", requireAuth, async (req, res) => {
   try {
     const { name, description, color, teacherId, organizationId } = req.body;
     const authenticatedTeacherId = req.teacherId as string | undefined;
+    const authenticatedOrganizationId = req.organizationId as string | undefined;
 
     if (!name || name.trim().length === 0) {
       return res.status(400).json({ error: "Tag name is required" });
@@ -158,6 +167,16 @@ router.post("/", requireAuth, async (req, res) => {
         return res.status(403).json({ error: "Cannot create tags for other teachers" });
       }
 
+      // If authenticated as organization, verify teacher belongs to organization
+      if (authenticatedOrganizationId) {
+        const teacher = await teacherRepo.findOne({
+          where: { id: teacherId, organizationId: authenticatedOrganizationId },
+        });
+        if (!teacher) {
+          return res.status(403).json({ error: "Teacher not found in organization" });
+        }
+      }
+
       const teacher = await teacherRepo.findOne({ where: { id: teacherId } });
       if (!teacher) {
         return res.status(404).json({ error: "Teacher not found" });
@@ -169,6 +188,11 @@ router.post("/", requireAuth, async (req, res) => {
       const org = await orgRepo.findOne({ where: { id: organizationId } });
       if (!org) {
         return res.status(404).json({ error: "Organization not found" });
+      }
+
+      // If authenticated as organization, verify it's their own organization
+      if (authenticatedOrganizationId && organizationId !== authenticatedOrganizationId) {
+        return res.status(403).json({ error: "Cannot create tags for other organizations" });
       }
 
       // If authenticated as a teacher, verify they belong to this organization
@@ -248,8 +272,10 @@ router.patch("/:tagId", requireAuth, async (req, res) => {
     const { tagId } = req.params;
     const { name, description, color, isActive } = req.body;
     const authenticatedTeacherId = req.teacherId as string | undefined;
+    const authenticatedOrganizationId = req.organizationId as string | undefined;
 
     const tagRepo = AppDataSource.getRepository(Tag);
+    const teacherRepo = AppDataSource.getRepository(Teacher);
     const tag = await tagRepo.findOne({ where: { id: tagId } });
 
     if (!tag) {
@@ -263,12 +289,27 @@ router.patch("/:tagId", requireAuth, async (req, res) => {
       }
 
       if (tag.organizationId) {
-        const teacherRepo = AppDataSource.getRepository(Teacher);
         const teacher = await teacherRepo.findOne({
           where: { id: authenticatedTeacherId, organizationId: tag.organizationId },
         });
         if (!teacher) {
           return res.status(403).json({ error: "Cannot update organization tags if not a member" });
+        }
+      }
+    }
+
+    if (authenticatedOrganizationId) {
+      if (tag.organizationId && tag.organizationId !== authenticatedOrganizationId) {
+        return res.status(403).json({ error: "Cannot update tags for other organizations" });
+      }
+
+      if (tag.teacherId) {
+        // Organization can update teacher tags if teacher belongs to organization
+        const teacher = await teacherRepo.findOne({
+          where: { id: tag.teacherId, organizationId: authenticatedOrganizationId },
+        });
+        if (!teacher) {
+          return res.status(403).json({ error: "Teacher not found in organization" });
         }
       }
     }
@@ -308,8 +349,10 @@ router.delete("/:tagId", requireAuth, async (req, res) => {
   try {
     const { tagId } = req.params;
     const authenticatedTeacherId = req.teacherId as string | undefined;
+    const authenticatedOrganizationId = req.organizationId as string | undefined;
 
     const tagRepo = AppDataSource.getRepository(Tag);
+    const teacherRepo = AppDataSource.getRepository(Teacher);
     const tag = await tagRepo.findOne({ where: { id: tagId } });
 
     if (!tag) {
@@ -323,12 +366,27 @@ router.delete("/:tagId", requireAuth, async (req, res) => {
       }
 
       if (tag.organizationId) {
-        const teacherRepo = AppDataSource.getRepository(Teacher);
         const teacher = await teacherRepo.findOne({
           where: { id: authenticatedTeacherId, organizationId: tag.organizationId },
         });
         if (!teacher) {
           return res.status(403).json({ error: "Cannot delete organization tags if not a member" });
+        }
+      }
+    }
+
+    if (authenticatedOrganizationId) {
+      if (tag.organizationId && tag.organizationId !== authenticatedOrganizationId) {
+        return res.status(403).json({ error: "Cannot delete tags for other organizations" });
+      }
+
+      if (tag.teacherId) {
+        // Organization can delete teacher tags if teacher belongs to organization
+        const teacher = await teacherRepo.findOne({
+          where: { id: tag.teacherId, organizationId: authenticatedOrganizationId },
+        });
+        if (!teacher) {
+          return res.status(403).json({ error: "Teacher not found in organization" });
         }
       }
     }

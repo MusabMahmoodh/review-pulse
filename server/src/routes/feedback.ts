@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { StudentFeedback, Teacher, ExternalReview, Class, Tag, FeedbackTag } from "../models";
+import { StudentFeedback, Teacher, Organization, ExternalReview, Class, Tag, FeedbackTag } from "../models";
 import { requireAuth } from "../middleware/auth";
 
 const router = Router();
@@ -75,6 +75,7 @@ router.post("/submit", async (req, res) => {
   try {
     const {
       teacherId,
+      organizationId,
       classId,
       studentName,
       studentContact,
@@ -88,8 +89,17 @@ router.post("/submit", async (req, res) => {
       tagIds, // Array of tag IDs that students can select
     } = req.body;
 
-    if (!teacherId || !teachingRating || !communicationRating || !materialRating || !overallRating) {
-      return res.status(400).json({ error: "Missing required fields" });
+    // Validate that either teacherId or organizationId is provided, but not both
+    if (!teacherId && !organizationId) {
+      return res.status(400).json({ error: "Either teacherId or organizationId must be provided" });
+    }
+
+    if (teacherId && organizationId) {
+      return res.status(400).json({ error: "Cannot specify both teacherId and organizationId" });
+    }
+
+    if (!teachingRating || !communicationRating || !materialRating || !overallRating) {
+      return res.status(400).json({ error: "Missing required rating fields" });
     }
 
     // Validate ratings
@@ -99,22 +109,41 @@ router.post("/submit", async (req, res) => {
     }
 
     const teacherRepo = AppDataSource.getRepository(Teacher);
+    const orgRepo = AppDataSource.getRepository(Organization);
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const classRepo = AppDataSource.getRepository(Class);
     const tagRepo = AppDataSource.getRepository(Tag);
     const feedbackTagRepo = AppDataSource.getRepository(FeedbackTag);
 
-    // Validate teacher exists
-    const teacher = await teacherRepo.findOne({ 
-      where: { id: teacherId },
-      relations: ["organization"],
-    });
-    if (!teacher) {
-      return res.status(404).json({ error: "Teacher not found" });
+    let teacher: Teacher | null = null;
+    let organization: Organization | null = null;
+    let targetOrganizationId: string | undefined = undefined;
+
+    // Validate teacher or organization exists
+    if (teacherId) {
+      teacher = await teacherRepo.findOne({ 
+        where: { id: teacherId },
+        relations: ["organization"],
+      });
+      if (!teacher) {
+        return res.status(404).json({ error: "Teacher not found" });
+      }
+      targetOrganizationId = teacher.organizationId || undefined;
+    } else if (organizationId) {
+      organization = await orgRepo.findOne({ 
+        where: { id: organizationId },
+      });
+      if (!organization) {
+        return res.status(404).json({ error: "Organization not found" });
+      }
+      targetOrganizationId = organizationId;
     }
 
-    // Validate class if provided
+    // Validate class if provided (only for teacher feedback)
     if (classId) {
+      if (!teacherId) {
+        return res.status(400).json({ error: "classId can only be used with teacherId" });
+      }
       const classEntity = await classRepo.findOne({
         where: { id: classId, teacherId, status: "active" },
       });
@@ -125,19 +154,26 @@ router.post("/submit", async (req, res) => {
 
     // Validate tags if provided
     if (tagIds && Array.isArray(tagIds) && tagIds.length > 0) {
-      // Get available tags for this teacher (teacher-specific + organization-level)
       const availableTagIds: string[] = [];
       
-      // Get teacher-specific tags
-      const teacherTags = await tagRepo.find({
-        where: { teacherId, isActive: true },
-      });
-      availableTagIds.push(...teacherTags.map(t => t.id));
+      if (teacherId) {
+        // Get teacher-specific tags
+        const teacherTags = await tagRepo.find({
+          where: { teacherId, isActive: true },
+        });
+        availableTagIds.push(...teacherTags.map(t => t.id));
 
-      // Get organization-level tags if teacher belongs to an organization
-      if (teacher.organizationId) {
+        // Get organization-level tags if teacher belongs to an organization
+        if (teacher && teacher.organizationId) {
+          const orgTags = await tagRepo.find({
+            where: { organizationId: teacher.organizationId, isActive: true },
+          });
+          availableTagIds.push(...orgTags.map(t => t.id));
+        }
+      } else if (organizationId) {
+        // Get organization-level tags
         const orgTags = await tagRepo.find({
-          where: { organizationId: teacher.organizationId, isActive: true },
+          where: { organizationId, isActive: true },
         });
         availableTagIds.push(...orgTags.map(t => t.id));
       }
@@ -154,7 +190,8 @@ router.post("/submit", async (req, res) => {
     // Create feedback entry
     const feedback = feedbackRepo.create({
       id: `feedback_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-      teacherId,
+      teacherId: teacherId || undefined,
+      organizationId: organizationId || undefined,
       classId: classId || undefined,
       studentName: studentName || undefined,
       studentContact: studentContact || undefined,
@@ -223,23 +260,65 @@ router.post("/submit", async (req, res) => {
  */
 router.get("/list", requireAuth, async (req, res) => {
   try {
-    const teacherId = req.teacherId as string;
+    const teacherId = req.teacherId as string | undefined;
+    const organizationId = req.organizationId as string | undefined;
     const classId = req.query.classId as string | undefined;
     const tagId = req.query.tagId as string | undefined; // Optional filter by tag
+    const filterTeacherId = req.query.filterTeacherId as string | undefined; // For org filtering by teacher
 
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const feedbackTagRepo = AppDataSource.getRepository(FeedbackTag);
+    const teacherRepo = AppDataSource.getRepository(Teacher);
 
-    const whereClause: any = { teacherId };
-    if (classId) {
-      whereClause.classId = classId;
+    let feedback: StudentFeedback[] = [];
+
+    if (teacherId) {
+      // Teacher viewing their own feedback
+      const whereClause: any = { teacherId };
+      if (classId) {
+        whereClause.classId = classId;
+      }
+
+      feedback = await feedbackRepo.find({
+        where: whereClause,
+        order: { createdAt: "DESC" },
+        relations: ["class"],
+      });
+    } else if (organizationId) {
+      // Organization viewing all teachers' feedback
+      const teachers = await teacherRepo.find({
+        where: { organizationId },
+      });
+      const teacherIds = teachers.map((t) => t.id);
+
+      if (teacherIds.length > 0) {
+        const whereConditions: any[] = teacherIds.map((id) => ({
+          teacherId: filterTeacherId && filterTeacherId === id ? filterTeacherId : id,
+        }));
+
+        if (filterTeacherId) {
+          // Filter by specific teacher
+          feedback = await feedbackRepo.find({
+            where: { teacherId: filterTeacherId },
+            order: { createdAt: "DESC" },
+            relations: ["class", "teacher"],
+          });
+        } else {
+          // All teachers' feedback
+          feedback = await feedbackRepo.find({
+            where: teacherIds.map((id) => ({ teacherId: id })),
+            order: { createdAt: "DESC" },
+            relations: ["class", "teacher"],
+          });
+        }
+
+        if (classId) {
+          feedback = feedback.filter((f) => f.classId === classId);
+        }
+      }
+    } else {
+      return res.status(400).json({ error: "Teacher ID or organization access required" });
     }
-
-    let feedback = await feedbackRepo.find({
-      where: whereClause,
-      order: { createdAt: "DESC" },
-      relations: ["class"],
-    });
 
     // Filter by tag if specified
     if (tagId) {
@@ -266,6 +345,13 @@ router.get("/list", requireAuth, async (req, res) => {
             color: ft.tag.color,
             description: ft.tag.description,
           })),
+          teacher: (f as any).teacher
+            ? {
+                id: (f as any).teacher.id,
+                name: (f as any).teacher.name,
+                email: (f as any).teacher.email,
+              }
+            : undefined,
         };
       })
     );
@@ -333,19 +419,60 @@ router.get("/list", requireAuth, async (req, res) => {
  */
 router.get("/stats", requireAuth, async (req, res) => {
   try {
-    const teacherId = req.teacherId as string;
+    const teacherId = req.teacherId as string | undefined;
+    const organizationId = req.organizationId as string | undefined;
+    const filterTeacherId = req.query.filterTeacherId as string | undefined; // For org filtering by teacher
 
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const externalReviewRepo = AppDataSource.getRepository(ExternalReview);
+    const teacherRepo = AppDataSource.getRepository(Teacher);
 
-    const feedback = await feedbackRepo.find({
-      where: { teacherId },
-      order: { createdAt: "DESC" },
-    });
+    let feedback: StudentFeedback[] = [];
+    let externalReviews: ExternalReview[] = [];
 
-    const externalReviews = await externalReviewRepo.find({
-      where: { teacherId },
-    });
+    if (teacherId) {
+      // Teacher viewing their own stats
+      feedback = await feedbackRepo.find({
+        where: { teacherId },
+        order: { createdAt: "DESC" },
+      });
+
+      externalReviews = await externalReviewRepo.find({
+        where: { teacherId },
+      });
+    } else if (organizationId) {
+      // Organization viewing aggregated stats
+      const teachers = await teacherRepo.find({
+        where: { organizationId },
+      });
+      const teacherIds = teachers.map((t) => t.id);
+
+      if (teacherIds.length > 0) {
+        if (filterTeacherId && teacherIds.includes(filterTeacherId)) {
+          // Filter by specific teacher
+          feedback = await feedbackRepo.find({
+            where: { teacherId: filterTeacherId },
+            order: { createdAt: "DESC" },
+          });
+
+          externalReviews = await externalReviewRepo.find({
+            where: { teacherId: filterTeacherId },
+          });
+        } else {
+          // All teachers' feedback
+          feedback = await feedbackRepo.find({
+            where: teacherIds.map((id) => ({ teacherId: id })),
+            order: { createdAt: "DESC" },
+          });
+
+          externalReviews = await externalReviewRepo.find({
+            where: teacherIds.map((id) => ({ teacherId: id })),
+          });
+        }
+      }
+    } else {
+      return res.status(400).json({ error: "Teacher ID or organization access required" });
+    }
 
     // Calculate averages from internal feedback
     const totalFeedback = feedback.length;
