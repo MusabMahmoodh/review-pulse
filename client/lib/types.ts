@@ -25,6 +25,18 @@ export interface Teacher {
   updatedAt: Date
 }
 
+export interface Tag {
+  id: string
+  name: string
+  description?: string
+  color?: string
+  teacherId?: string
+  organizationId?: string
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
 export interface StudentFeedback {
   id: string
   teacherId: string
@@ -39,6 +51,12 @@ export interface StudentFeedback {
   suggestions?: string
   courseName?: string
   createdAt: Date
+  tags?: Array<{
+    id: string
+    name: string
+    color?: string
+    description?: string
+  }>
 }
 
 export interface Class {

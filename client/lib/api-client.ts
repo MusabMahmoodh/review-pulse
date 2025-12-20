@@ -223,6 +223,7 @@ export const feedbackApi = {
     overallRating: number;
     suggestions?: string;
     courseName?: string;
+    tagIds?: string[];
   }) => {
     return fetchApi<{
       success: boolean;
@@ -233,7 +234,11 @@ export const feedbackApi = {
     });
   },
 
-  list: async (teacherId: string) => {
+  list: async (teacherId: string, tagId?: string) => {
+    const params = new URLSearchParams({ teacherId });
+    if (tagId) {
+      params.append("tagId", tagId);
+    }
     return fetchApi<{
       feedback: Array<{
         id: string;
@@ -248,8 +253,14 @@ export const feedbackApi = {
         suggestions?: string;
         courseName?: string;
         createdAt: string;
+        tags?: Array<{
+          id: string;
+          name: string;
+          color?: string;
+          description?: string;
+        }>;
       }>;
-    }>(`/api/feedback/list?teacherId=${teacherId}`);
+    }>(`/api/feedback/list?${params.toString()}`);
   },
 
   stats: async (teacherId: string) => {
@@ -631,6 +642,120 @@ export const adminApi = {
       method: "POST",
       body: JSON.stringify({ subscriptionId }),
     });
+  },
+};
+
+// Tags API
+export const tagsApi = {
+  list: async (params?: {
+    teacherId?: string;
+    organizationId?: string;
+    includeInactive?: boolean;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.teacherId) queryParams.append("teacherId", params.teacherId);
+    if (params?.organizationId) queryParams.append("organizationId", params.organizationId);
+    if (params?.includeInactive) queryParams.append("includeInactive", "true");
+
+    const queryString = queryParams.toString();
+    return fetchApi<{
+      tags: Array<{
+        id: string;
+        name: string;
+        description?: string;
+        color?: string;
+        teacherId?: string;
+        organizationId?: string;
+        isActive: boolean;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    }>(`/api/tags${queryString ? `?${queryString}` : ""}`);
+  },
+
+  create: async (data: {
+    name: string;
+    description?: string;
+    color?: string;
+    teacherId?: string;
+    organizationId?: string;
+  }) => {
+    return fetchApi<{
+      success: boolean;
+      tag: {
+        id: string;
+        name: string;
+        description?: string;
+        color?: string;
+        teacherId?: string;
+        organizationId?: string;
+        isActive: boolean;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>("/api/tags", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (
+    tagId: string,
+    data: {
+      name?: string;
+      description?: string;
+      color?: string;
+      isActive?: boolean;
+    }
+  ) => {
+    return fetchApi<{
+      success: boolean;
+      tag: {
+        id: string;
+        name: string;
+        description?: string;
+        color?: string;
+        teacherId?: string;
+        organizationId?: string;
+        isActive: boolean;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>(`/api/tags/${tagId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (tagId: string) => {
+    return fetchApi<{
+      success: boolean;
+      message: string;
+    }>(`/api/tags/${tagId}`, {
+      method: "DELETE",
+    });
+  },
+
+  getStats: async (tagId: string) => {
+    return fetchApi<{
+      tag: {
+        id: string;
+        name: string;
+        description?: string;
+        color?: string;
+        teacherId?: string;
+        organizationId?: string;
+        isActive: boolean;
+        createdAt: string;
+        updatedAt: string;
+      };
+      stats: {
+        feedbackCount: number;
+        reviewCount: number;
+        totalCount: number;
+        averageRating: number;
+      };
+    }>(`/api/tags/stats/${tagId}`);
   },
 };
 

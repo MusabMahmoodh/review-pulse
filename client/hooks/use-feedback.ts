@@ -4,11 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { feedbackApi } from "@/lib/api-client";
 import type { StudentFeedback } from "@/lib/types";
 
-export function useFeedbackList(teacherId: string | null) {
+export function useFeedbackList(teacherId: string | null, tagId?: string | null) {
   return useQuery<{ feedback: StudentFeedback[] }>({
-    queryKey: ["feedback", teacherId],
+    queryKey: ["feedback", teacherId, tagId],
     queryFn: async () => {
-      const response = await feedbackApi.list(teacherId!);
+      const response = await feedbackApi.list(teacherId!, tagId || undefined);
       return {
         feedback: response.feedback.map((item) => ({
           ...item,

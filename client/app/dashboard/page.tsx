@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { QrCode, LogOut, ChevronRight, Settings, Sparkles, BarChart3, MessageSquare, CheckSquare, Users, BookOpen } from "lucide-react"
+import { QrCode, LogOut, ChevronRight, Settings, Sparkles, BarChart3, MessageSquare, CheckSquare, Users, BookOpen, Tag } from "lucide-react"
 import { Logo } from "@/components/logo"
 import Link from "next/link"
 import { FeedbackList } from "@/components/feedback-list"
@@ -167,6 +167,35 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <ChevronRight className="h-5 w-5 text-orange-600 dark:text-orange-400 transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110 shrink-0" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
+
+        {/* Tags Card */}
+        {!isMobile && (
+          <Link href="/dashboard/tags" className="block">
+            <Card className="group relative overflow-hidden border-2 border-indigo-200/50 dark:border-indigo-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-indigo-300/70 dark:hover:border-indigo-700/70">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/80 via-violet-100/80 to-purple-100/80 dark:from-indigo-950/80 dark:via-violet-950/80 dark:to-purple-950/80" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-200/40 via-transparent to-violet-200/40 dark:from-indigo-800/40 dark:to-violet-800/40" />
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent dark:via-white/10" />
+              <CardContent className="relative p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="p-2 rounded-lg bg-indigo-500/20 dark:bg-indigo-400/20">
+                        <Tag className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                      </div>
+                      <span className="font-bold text-lg text-indigo-900 dark:text-indigo-100">
+                        Tags
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-1">
+                      Organize and categorize feedback with tags
+                    </p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-indigo-600 dark:text-indigo-400 transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110 shrink-0" />
                 </div>
               </CardContent>
             </Card>

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Star, User, Phone, Calendar } from "lucide-react"
 import type { StudentFeedback } from "@/lib/types"
 import { ConvertToActionable } from "@/components/convert-to-actionable"
+import { TagBadge } from "@/components/tag-badge"
 
 interface FeedbackListProps {
   feedback: StudentFeedback[]
@@ -69,6 +70,13 @@ export function FeedbackList({ feedback, loading, compact = false, teacherId }: 
                         </span>
                       )}
                     </div>
+                    {item.tags && item.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {item.tags.map((tag) => (
+                          <TagBadge key={tag.id} tag={tag} size="sm" />
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <Badge variant="secondary" className="flex items-center gap-1 flex-shrink-0">
                     <Star className="h-3 w-3 fill-current" />

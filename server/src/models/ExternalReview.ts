@@ -1,5 +1,6 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, OneToMany } from "typeorm";
 import { Teacher } from "./Teacher";
+import { ExternalReviewTag } from "./ExternalReviewTag";
 
 @Entity("external_reviews")
 export class ExternalReview {
@@ -31,4 +32,7 @@ export class ExternalReview {
   @ManyToOne(() => Teacher, (teacher) => teacher.externalReviews)
   @JoinColumn({ name: "teacherId" })
   teacher!: Teacher;
+
+  @OneToMany(() => ExternalReviewTag, (reviewTag) => reviewTag.review)
+  tags!: ExternalReviewTag[];
 }

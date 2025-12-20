@@ -13,9 +13,10 @@ import { Badge } from "@/components/ui/badge"
 import { Send, CheckCircle, Star, BookOpen } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast-simple"
-import { useSubmitFeedback, useReviewPageSettings } from "@/hooks"
+import { useSubmitFeedback, useReviewPageSettings, useTags } from "@/hooks"
 import { classesApi } from "@/lib/api-client"
 import { useQuery } from "@tanstack/react-query"
+import { TagSelector } from "@/components/tag-selector"
 
 interface PageProps {
   params: Promise<{ teacherId: string }>
@@ -46,7 +47,12 @@ export default function FeedbackPage({ params }: PageProps) {
     materialRating: 5,
     overallRating: 5,
     suggestions: "",
+    tagIds: [] as string[],
   })
+
+  // Fetch available tags for this teacher
+  const { data: tagsData } = useTags({ teacherId })
+  const availableTags = tagsData?.tags || []
 
   // Use settings or defaults
   const pageSettings = useMemo(() => ({
@@ -78,6 +84,7 @@ export default function FeedbackPage({ params }: PageProps) {
         studentName: formData.studentName || undefined,
         studentContact: formData.studentContact || undefined,
         suggestions: formData.suggestions || undefined,
+        tagIds: formData.tagIds.length > 0 ? formData.tagIds : undefined,
       },
       {
         onSuccess: () => {
@@ -290,6 +297,21 @@ export default function FeedbackPage({ params }: PageProps) {
                   />
                   <p className="text-xs text-muted-foreground">We'll only use this to stay connected with you</p>
                 </div>
+
+                {/* Tag Selector */}
+                {availableTags.length > 0 && (
+                  <div className="space-y-2">
+                    <TagSelector
+                      tags={availableTags}
+                      selectedTagIds={formData.tagIds}
+                      onSelectionChange={(tagIds) => setFormData({ ...formData, tagIds })}
+                      maxSelections={5}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Select tags that best describe your feedback (optional)
+                    </p>
+                  </div>
+                )}
               </div>
 
               <Button 

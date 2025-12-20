@@ -1,6 +1,7 @@
-import { Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, OneToMany } from "typeorm";
 import { Teacher } from "./Teacher";
 import { Class } from "./Class";
+import { FeedbackTag } from "./FeedbackTag";
 
 @Entity("student_feedback")
 export class StudentFeedback {
@@ -51,6 +52,9 @@ export class StudentFeedback {
   @ManyToOne(() => Class, (classEntity) => classEntity.feedback, { nullable: true })
   @JoinColumn({ name: "classId" })
   class?: Class;
+
+  @OneToMany(() => FeedbackTag, (feedbackTag) => feedbackTag.feedback)
+  tags!: FeedbackTag[];
 }
 
 

@@ -4,27 +4,49 @@ import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, Star, Filter, Calendar } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ChevronLeft, Star, Filter, Calendar, X } from "lucide-react"
 import Link from "next/link"
 import { FeedbackList } from "@/components/feedback-list"
 import { RatingsTrendChart } from "@/components/ratings-trend-chart"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
-import { useFeedbackList, useAuth } from "@/hooks"
+import { useFeedbackList, useAuth, useTags } from "@/hooks"
 import type { StudentFeedback } from "@/lib/types"
 import { ConvertToActionable } from "@/components/convert-to-actionable"
+import { TagBadge } from "@/components/tag-badge"
 
 export default function FeedbackPage() {
   const { user } = useAuth()
   const teacherId = user?.id || null
-  const { data: feedbackData, isLoading: loadingFeedback } = useFeedbackList(teacherId)
+  const organizationId = user?.userType === "organization" ? user.id : undefined
   
-  const allFeedback = feedbackData?.feedback || []
-
   // Filter states
   const [starFilter, setStarFilter] = useState<number | "all">("all")
   const [ratingTypeFilter, setRatingTypeFilter] = useState<"all" | "teaching" | "communication" | "material" | "overall">("all")
   const [timePeriod, setTimePeriod] = useState<"1month" | "3months" | "6months" | "1year">("3months")
   const [chartRatingType, setChartRatingType] = useState<"teaching" | "communication" | "material" | "overall">("overall")
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null)
+
+  // Fetch tags for filtering
+  const { data: tagsData } = useTags({
+    teacherId: user?.userType === "teacher" ? teacherId : undefined,
+    organizationId,
+  })
+  const availableTags = tagsData?.tags.filter(tag => tag.isActive) || []
+
+  // Fetch feedback with optional tag filter
+  const { data: feedbackData, isLoading: loadingFeedback } = useFeedbackList(
+    teacherId,
+    selectedTagId || undefined
+  )
+  
+  const allFeedback = feedbackData?.feedback || []
 
   const loading = loadingFeedback
 
@@ -213,6 +235,48 @@ export default function FeedbackPage() {
                 </Button>
               </div>
             </div>
+
+            {/* Tag Filter */}
+            {availableTags.length > 0 && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">Filter by Tag</label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Select
+                    value={selectedTagId || "all"}
+                    onValueChange={(value) => setSelectedTagId(value === "all" ? null : value)}
+                  >
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="All tags" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All tags</SelectItem>
+                      {availableTags.map((tag) => (
+                        <SelectItem key={tag.id} value={tag.id}>
+                          {tag.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedTagId && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setSelectedTagId(null)}
+                      className="h-9"
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Clear
+                    </Button>
+                  )}
+                  {selectedTagId && (
+                    <TagBadge
+                      tag={availableTags.find(t => t.id === selectedTagId)!}
+                      size="sm"
+                    />
+                  )}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

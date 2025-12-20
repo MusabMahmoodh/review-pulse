@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { StudentFeedback, Teacher, ExternalReview, Class } from "../models";
+import { StudentFeedback, Teacher, ExternalReview, Class, Tag, FeedbackTag } from "../models";
 import { requireAuth } from "../middleware/auth";
 
 const router = Router();
@@ -52,6 +52,11 @@ const router = Router();
  *                 type: string
  *               courseName:
  *                 type: string
+ *               tagIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of tag IDs to associate with this feedback
  *     responses:
  *       201:
  *         description: Feedback submitted successfully
@@ -80,6 +85,7 @@ router.post("/submit", async (req, res) => {
       overallRating,
       suggestions,
       courseName,
+      tagIds, // Array of tag IDs that students can select
     } = req.body;
 
     if (!teacherId || !teachingRating || !communicationRating || !materialRating || !overallRating) {
@@ -95,9 +101,14 @@ router.post("/submit", async (req, res) => {
     const teacherRepo = AppDataSource.getRepository(Teacher);
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const classRepo = AppDataSource.getRepository(Class);
+    const tagRepo = AppDataSource.getRepository(Tag);
+    const feedbackTagRepo = AppDataSource.getRepository(FeedbackTag);
 
     // Validate teacher exists
-    const teacher = await teacherRepo.findOne({ where: { id: teacherId } });
+    const teacher = await teacherRepo.findOne({ 
+      where: { id: teacherId },
+      relations: ["organization"],
+    });
     if (!teacher) {
       return res.status(404).json({ error: "Teacher not found" });
     }
@@ -109,6 +120,34 @@ router.post("/submit", async (req, res) => {
       });
       if (!classEntity) {
         return res.status(404).json({ error: "Class not found or inactive" });
+      }
+    }
+
+    // Validate tags if provided
+    if (tagIds && Array.isArray(tagIds) && tagIds.length > 0) {
+      // Get available tags for this teacher (teacher-specific + organization-level)
+      const availableTagIds: string[] = [];
+      
+      // Get teacher-specific tags
+      const teacherTags = await tagRepo.find({
+        where: { teacherId, isActive: true },
+      });
+      availableTagIds.push(...teacherTags.map(t => t.id));
+
+      // Get organization-level tags if teacher belongs to an organization
+      if (teacher.organizationId) {
+        const orgTags = await tagRepo.find({
+          where: { organizationId: teacher.organizationId, isActive: true },
+        });
+        availableTagIds.push(...orgTags.map(t => t.id));
+      }
+
+      // Validate all provided tag IDs are available
+      const invalidTags = tagIds.filter((tagId: string) => !availableTagIds.includes(tagId));
+      if (invalidTags.length > 0) {
+        return res.status(400).json({ 
+          error: `Invalid tag IDs: ${invalidTags.join(", ")}` 
+        });
       }
     }
 
@@ -129,6 +168,18 @@ router.post("/submit", async (req, res) => {
     });
 
     await feedbackRepo.save(feedback);
+
+    // Associate tags with feedback
+    if (tagIds && Array.isArray(tagIds) && tagIds.length > 0) {
+      const feedbackTags = tagIds.map((tagId: string) =>
+        feedbackTagRepo.create({
+          id: `feedback_tag_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+          feedbackId: feedback.id,
+          tagId,
+        })
+      );
+      await feedbackTagRepo.save(feedbackTags);
+    }
 
     return res.status(201).json({
       success: true,
@@ -174,21 +225,52 @@ router.get("/list", requireAuth, async (req, res) => {
   try {
     const teacherId = req.teacherId as string;
     const classId = req.query.classId as string | undefined;
+    const tagId = req.query.tagId as string | undefined; // Optional filter by tag
 
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
+    const feedbackTagRepo = AppDataSource.getRepository(FeedbackTag);
 
     const whereClause: any = { teacherId };
     if (classId) {
       whereClause.classId = classId;
     }
 
-    const feedback = await feedbackRepo.find({
+    let feedback = await feedbackRepo.find({
       where: whereClause,
       order: { createdAt: "DESC" },
       relations: ["class"],
     });
 
-    return res.json({ feedback });
+    // Filter by tag if specified
+    if (tagId) {
+      const feedbackWithTag = await feedbackTagRepo.find({
+        where: { tagId },
+        relations: ["feedback"],
+      });
+      const feedbackIds = new Set(feedbackWithTag.map(ft => ft.feedbackId));
+      feedback = feedback.filter(f => feedbackIds.has(f.id));
+    }
+
+    // Load tags for each feedback item
+    const feedbackWithTags = await Promise.all(
+      feedback.map(async (f) => {
+        const tags = await feedbackTagRepo.find({
+          where: { feedbackId: f.id },
+          relations: ["tag"],
+        });
+        return {
+          ...f,
+          tags: tags.map(ft => ({
+            id: ft.tag.id,
+            name: ft.tag.name,
+            color: ft.tag.color,
+            description: ft.tag.description,
+          })),
+        };
+      })
+    );
+
+    return res.json({ feedback: feedbackWithTags });
   } catch (error) {
     console.error("Error fetching feedback:", error);
     return res.status(500).json({ error: "Failed to fetch feedback" });

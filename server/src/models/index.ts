@@ -11,4 +11,7 @@ export { ReviewPageSettings } from "./ReviewPageSettings";
 export { ActionableItem } from "./ActionableItem";
 export { TeamMember } from "./TeamMember";
 export { Class } from "./Class";
+export { Tag } from "./Tag";
+export { FeedbackTag } from "./FeedbackTag";
+export { ExternalReviewTag } from "./ExternalReviewTag";
 

@@ -14,6 +14,9 @@ import { ReviewPageSettings } from "./models/ReviewPageSettings";
 import { ActionableItem } from "./models/ActionableItem";
 import { TeamMember } from "./models/TeamMember";
 import { Class } from "./models/Class";
+import { Tag } from "./models/Tag";
+import { FeedbackTag } from "./models/FeedbackTag";
+import { ExternalReviewTag } from "./models/ExternalReviewTag";
 
 // Load environment variables before creating DataSource
 dotenv.config();
@@ -46,6 +49,9 @@ const connectionOptions: any = {
         ActionableItem,
         TeamMember,
         Class,
+        Tag,
+        FeedbackTag,
+        ExternalReviewTag,
     ],
     migrations: [__dirname + "/migrations/**/*.ts"],
     migrationsTableName: "migrations",
