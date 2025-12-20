@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { StudentFeedback, Teacher, ExternalReview } from "../models";
+import { StudentFeedback, Teacher, ExternalReview, Class } from "../models";
 import { requireAuth } from "../middleware/auth";
 
 const router = Router();
@@ -70,6 +70,7 @@ router.post("/submit", async (req, res) => {
   try {
     const {
       teacherId,
+      classId,
       studentName,
       studentContact,
       studentId,
@@ -93,6 +94,7 @@ router.post("/submit", async (req, res) => {
 
     const teacherRepo = AppDataSource.getRepository(Teacher);
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
+    const classRepo = AppDataSource.getRepository(Class);
 
     // Validate teacher exists
     const teacher = await teacherRepo.findOne({ where: { id: teacherId } });
@@ -100,10 +102,21 @@ router.post("/submit", async (req, res) => {
       return res.status(404).json({ error: "Teacher not found" });
     }
 
+    // Validate class if provided
+    if (classId) {
+      const classEntity = await classRepo.findOne({
+        where: { id: classId, teacherId, status: "active" },
+      });
+      if (!classEntity) {
+        return res.status(404).json({ error: "Class not found or inactive" });
+      }
+    }
+
     // Create feedback entry
     const feedback = feedbackRepo.create({
       id: `feedback_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       teacherId,
+      classId: classId || undefined,
       studentName: studentName || undefined,
       studentContact: studentContact || undefined,
       studentId: studentId || undefined,
@@ -160,12 +173,19 @@ router.post("/submit", async (req, res) => {
 router.get("/list", requireAuth, async (req, res) => {
   try {
     const teacherId = req.teacherId as string;
+    const classId = req.query.classId as string | undefined;
 
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
 
+    const whereClause: any = { teacherId };
+    if (classId) {
+      whereClause.classId = classId;
+    }
+
     const feedback = await feedbackRepo.find({
-      where: { teacherId },
+      where: whereClause,
       order: { createdAt: "DESC" },
+      relations: ["class"],
     });
 
     return res.json({ feedback });

@@ -8,12 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ArrowLeft, Facebook, Instagram, Save, RefreshCw, Plus, X, CheckCircle2, AlertCircle, Loader2, Hash, Crown, Lock, Palette, MessageSquare, Star, MapPin } from "lucide-react"
+import { ArrowLeft, Save, Loader2, Crown, Palette, MessageSquare, BookOpen, Star } from "lucide-react"
 import { Logo } from "@/components/logo"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useAuth } from "@/hooks/use-auth"
-import { restaurantsApi, externalReviewsApi, metaAuthApi } from "@/lib/api-client"
+import { teachersApi } from "@/lib/api-client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { isPremiumRequiredError, isPremiumFromAuth } from "@/lib/premium"
 import { PremiumUpgrade } from "@/components/premium-upgrade"
@@ -25,26 +25,10 @@ function SettingsPageContent() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
-  const [newKeyword, setNewKeyword] = useState("")
   const [premiumError, setPremiumError] = useState<{ section?: string } | null>(null)
-  const [placeId, setPlaceId] = useState("")
 
-  const restaurantId = user?.id || null
+  const teacherId = user?.id || null
   const hasPremium = isPremiumFromAuth(user?.subscription)
-
-  // Fetch saved Place ID
-  const { data: placeIdData } = useQuery({
-    queryKey: ["restaurants", "google-place-id", restaurantId],
-    queryFn: () => restaurantsApi.getGooglePlaceId(restaurantId!),
-    enabled: !!restaurantId && isAuthenticated,
-  })
-
-  // Load saved placeId when data is available
-  useEffect(() => {
-    if (placeIdData?.placeId) {
-      setPlaceId(placeIdData.placeId)
-    }
-  }, [placeIdData?.placeId])
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -53,28 +37,11 @@ function SettingsPageContent() {
     }
   }, [authLoading, isAuthenticated, router])
 
-  // Fetch keywords
-  const { data: keywordsData, isLoading: keywordsLoading } = useQuery({
-    queryKey: ["restaurants", "keywords", restaurantId],
-    queryFn: () => restaurantsApi.getKeywords(restaurantId!),
-    enabled: !!restaurantId && isAuthenticated,
-  })
-
-  const keywords = keywordsData?.keywords || []
-
-  // Fetch Meta integration status
-  const { data: metaIntegration, isLoading: metaLoading } = useQuery({
-    queryKey: ["restaurants", "meta-integration", restaurantId],
-    queryFn: () => restaurantsApi.getMetaIntegration(restaurantId!),
-    enabled: !!restaurantId && isAuthenticated,
-    refetchInterval: 30000, // Refetch every 30 seconds to check status
-  })
-
   // Fetch review page settings
   const { data: reviewPageSettings, isLoading: reviewSettingsLoading } = useQuery({
-    queryKey: ["restaurants", "review-page-settings", restaurantId],
-    queryFn: () => restaurantsApi.getReviewPageSettings(restaurantId!),
-    enabled: !!restaurantId && isAuthenticated,
+    queryKey: ["teachers", "review-page-settings", teacherId],
+    queryFn: () => teachersApi.getReviewPageSettings(teacherId!),
+    enabled: !!teacherId && isAuthenticated,
   })
 
   const [reviewSettings, setReviewSettings] = useState({
@@ -98,40 +65,12 @@ function SettingsPageContent() {
     }
   }, [reviewPageSettings])
 
-  // Update keywords mutation
-  const updateKeywordsMutation = useMutation({
-    mutationFn: (keywords: string[]) => restaurantsApi.updateKeywords(restaurantId!, keywords),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["restaurants", "keywords", restaurantId] })
-      toast({
-        title: "Success",
-        description: "Social media keywords updated successfully",
-      })
-    },
-    onError: (error: any) => {
-      if (isPremiumRequiredError(error)) {
-        setPremiumError({ section: "keywords" })
-        toast({
-          title: "Premium Required",
-          description: "Social media features require a premium subscription. Please contact admin to upgrade.",
-          variant: "destructive",
-        })
-      } else {
-        toast({
-          title: "Error",
-          description: error?.data?.error || "Failed to update keywords",
-          variant: "destructive",
-        })
-      }
-    },
-  })
-
   // Update review page settings mutation
   const updateReviewSettingsMutation = useMutation({
     mutationFn: (settings: typeof reviewSettings) => 
-      restaurantsApi.updateReviewPageSettings(restaurantId!, settings),
+      teachersApi.updateReviewPageSettings(teacherId!, settings),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["restaurants", "review-page-settings", restaurantId] })
+      queryClient.invalidateQueries({ queryKey: ["teachers", "review-page-settings", teacherId] })
       toast({
         title: "Success",
         description: "Review page settings updated successfully",
@@ -155,200 +94,9 @@ function SettingsPageContent() {
     },
   })
 
-  // Sync reviews mutation
-  const syncMutation = useMutation({
-    mutationFn: ({ platforms, placeId }: { platforms?: string[]; placeId?: string }) => 
-      externalReviewsApi.sync(restaurantId!, platforms, placeId),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["external-reviews", restaurantId] })
-      queryClient.invalidateQueries({ queryKey: ["restaurants", "meta-integration", restaurantId] })
-      
-      const totalSynced = data.totalSynced || 0
-      const googleResult = data.results?.google
-      // const facebookResult = data.results?.facebook
-      
-      const successMessages: string[] = []
-      const errorMessages: string[] = []
-      
-      if (googleResult?.success) {
-        successMessages.push(`Google: ${googleResult.count} review${googleResult.count !== 1 ? "s" : ""}`)
-      } else if (googleResult?.error) {
-        errorMessages.push(`Google: ${googleResult.error}`)
-      }
-      
-      // if (facebookResult?.success) {
-      //   successMessages.push(`Facebook: ${facebookResult.count} review${facebookResult.count !== 1 ? "s" : ""}`)
-      // } else if (facebookResult?.error) {
-      //   errorMessages.push(`Facebook: ${facebookResult.error}`)
-      // }
-      
-      if (successMessages.length > 0) {
-        toast({
-          title: "Sync Complete",
-          description: successMessages.join(", "),
-        })
-      }
-      
-      if (errorMessages.length > 0) {
-        toast({
-          title: "Sync Issues",
-          description: errorMessages.join(", "),
-          variant: "destructive",
-        })
-      }
-      
-      if (successMessages.length === 0 && errorMessages.length === 0) {
-        toast({
-          title: "Sync Complete",
-          description: "External reviews synced successfully",
-        })
-      }
-    },
-    onError: (error: any) => {
-      if (isPremiumRequiredError(error)) {
-        setPremiumError({ section: "sync" })
-        toast({
-          title: "Premium Required",
-          description: "Social media sync requires a premium subscription. Please contact admin to upgrade.",
-          variant: "destructive",
-        })
-      } else {
-        toast({
-          title: "Error",
-          description: error?.data?.error || "Failed to sync reviews",
-          variant: "destructive",
-        })
-      }
-    },
-  })
-
-  // Handle OAuth callback messages from URL params
-  useEffect(() => {
-    const metaConnected = searchParams.get("meta_connected")
-    const metaError = searchParams.get("meta_error")
-
-    // if (metaConnected === "true") {
-    //   queryClient.invalidateQueries({ queryKey: ["restaurants", "meta-integration", restaurantId] })
-    //   toast({
-    //     title: "Success",
-    //     description: "Meta (Facebook & Instagram) account connected successfully!",
-    //   })
-    //   // Clean up URL
-    //   window.history.replaceState({}, "", "/dashboard/settings")
-    // }
-
-    // if (metaError) {
-    //   const errorMessages: Record<string, string> = {
-    //     missing_params: "Missing authorization parameters",
-    //     token_exchange_failed: "Failed to obtain access token from Meta",
-    //     no_pages: "No Facebook pages found. Please create a Facebook Page first.",
-    //     invalid_account: "Unable to determine Facebook account ID",
-    //     premium_required: "Premium subscription required. Please contact admin to upgrade.",
-    //     unknown: "An unknown error occurred during Meta authorization",
-    //   }
-
-    //   toast({
-    //     title: "Connection Failed",
-    //     description: errorMessages[metaError] || "Failed to connect Meta account",
-    //     variant: "destructive",
-    //   })
-    //   // Clean up URL
-    //   window.history.replaceState({}, "", "/dashboard/settings")
-    // }
-  }, [searchParams, queryClient, restaurantId, toast])
-
-  const handleAddKeyword = () => {
-    if (!newKeyword.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a keyword",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (keywords.length >= 5) {
-      toast({
-        title: "Limit Reached",
-        description: "Maximum 5 keywords allowed",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (keywords.includes(newKeyword.trim())) {
-      toast({
-        title: "Duplicate",
-        description: "This keyword already exists",
-        variant: "destructive",
-      })
-      return
-    }
-
-    updateKeywordsMutation.mutate([...keywords, newKeyword.trim()])
-    setNewKeyword("")
-  }
-
-  const handleRemoveKeyword = (index: number) => {
-    const updatedKeywords = keywords.filter((_, i) => i !== index)
-    updateKeywordsMutation.mutate(updatedKeywords)
-  }
-
-  const handleSave = async () => {
-    if (keywords.length < 3) {
-      toast({
-        title: "Error",
-        description: "Please add at least 3 keywords",
-        variant: "destructive",
-      })
-      return
-    }
-
-    updateKeywordsMutation.mutate(keywords)
-  }
-
-  const handleConnectMeta = () => {
-    if (!restaurantId) return
-    const authUrl = metaAuthApi.authorize(restaurantId)
-    window.location.href = authUrl
-  }
-
-  const handleSyncNow = async () => {
-    if (!placeId) {
-      toast({
-        title: "Place ID Required",
-        description: "Please enter a Google Place ID to sync reviews.",
-        variant: "destructive",
-      })
-      return
-    }
-    
-    syncMutation.mutate({ 
-      platforms: ["google"],
-      placeId: placeId
-    })
-  }
-
-  const formatLastSync = (dateString: string | null) => {
-    if (!dateString) return "Never"
-    
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
-
-    if (diffMins < 1) return "Just now"
-    if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? "s" : ""} ago`
-    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`
-    return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`
-  }
-
-  const isMetaConnected = metaIntegration?.connected && metaIntegration?.status === "active"
 
   // Loading state
-  if (authLoading || !isAuthenticated || !restaurantId) {
+  if (authLoading || !isAuthenticated || !teacherId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
         <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
@@ -389,389 +137,40 @@ function SettingsPageContent() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-24 md:pb-6">
-        {/* Social Keywords Section */}
-        {/* <Card className="overflow-hidden border-2">
-          <CardHeader className="bg-muted/30 pb-4">
-            <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Hash className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-lg">Social Media Keywords</CardTitle>
-                  <Badge className="text-xs bg-gradient-to-r from-yellow-500 to-yellow-600 text-yellow-950 border-yellow-400 shadow-sm font-semibold">
-                    <Crown className="h-3 w-3 mr-1 fill-yellow-900 text-yellow-900" />
-                    Premium
-                  </Badge>
-                </div>
-                <CardDescription className="text-xs mt-1">
-                 
-                  Add 3-5 keywords to find your restaurant mentions on social media
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-6 space-y-4">
-            {keywordsLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            ) : (!hasPremium || premiumError?.section === "keywords") ? (
-              <PremiumUpgrade 
-                feature="Social Media Keywords"
-                description="Track your restaurant mentions on social media with custom keywords. This feature requires a premium subscription."
-              />
-            ) : (
-              <>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="flex-1">
-                    <Input
-                      placeholder="e.g., #MyRestaurant or @restaurant_name"
-                      value={newKeyword}
-                      onChange={(e) => setNewKeyword(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && handleAddKeyword()}
-                      maxLength={50}
-                      disabled={updateKeywordsMutation.isPending}
-                      className="h-10"
-                    />
-                  </div>
-                  <Button 
-                    onClick={handleAddKeyword} 
-                    disabled={keywords.length >= 5 || updateKeywordsMutation.isPending} 
-                    size="default"
-                    className="h-10 sm:w-auto w-full"
-                  >
-                    {updateKeywordsMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Plus className="h-4 w-4 mr-2" />
-                    )}
-                    Add
-                  </Button>
-                </div>
-
-                {keywords.length > 0 && (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">Current Keywords</Label>
-                      <span className="text-xs text-muted-foreground">{keywords.length}/5</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2 min-h-[2.5rem]">
-                      {keywords.map((keyword, index) => (
-                        <Badge 
-                          key={index} 
-                          variant="secondary" 
-                          className="pr-1 text-sm py-1.5 px-3 h-auto"
-                        >
-                          <span className="mr-1.5">{keyword}</span>
-                          <button
-                            onClick={() => handleRemoveKeyword(index)}
-                            className="ml-1 hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
-                            disabled={updateKeywordsMutation.isPending}
-                            aria-label={`Remove ${keyword}`}
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <Button 
-                  onClick={handleSave} 
-                  disabled={updateKeywordsMutation.isPending || keywords.length < 3} 
-                  className="w-full h-10"
-                  size="default"
-                >
-                  {updateKeywordsMutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Keywords
-                    </>
-                  )}
-                </Button>
-              </>
-            )}
-          </CardContent>
-        </Card> */}
-
-        {/* Integration Status */}
+        {/* Classes Management */}
         <Card className="overflow-hidden border-2">
           <CardHeader className="bg-muted/30 pb-4">
             <div className="flex items-center gap-2">
               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <CheckCircle2 className="h-5 w-5 text-primary" />
+                <BookOpen className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-lg">Platform Integrations</CardTitle>
-                  <Badge className="text-xs bg-gradient-to-r from-yellow-500 to-yellow-600 text-yellow-950 border-yellow-400 shadow-sm font-semibold">
-                    <Crown className="h-3 w-3 mr-1 fill-yellow-900 text-yellow-900" />
-                    Premium
-                  </Badge>
-                </div>
+                <CardTitle className="text-lg">Class Management</CardTitle>
                 <CardDescription className="text-xs mt-1">
-                  Connect your social media and review platforms
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-6 space-y-6">
-            {!hasPremium || premiumError?.section === "integrations" ? (
-              <PremiumUpgrade 
-                feature="Platform Integrations"
-                description="Connect your Google Business Profile to sync reviews automatically. This feature requires a premium subscription."
-              />
-            ) : (
-              <>
-                {/* Meta Integration - Commented out for now */}
-            {/* <div className="space-y-3">
-              <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-2 rounded-lg transition-all ${
-                isMetaConnected 
-                  ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800" 
-                  : "bg-muted/30 border-border"
-              }`}>
-                <div className="flex items-center gap-3 flex-1">
-                  <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                    isMetaConnected 
-                      ? "bg-blue-100 dark:bg-blue-900" 
-                      : "bg-muted"
-                  }`}>
-                    <Facebook className={`h-6 w-6 ${
-                      isMetaConnected 
-                        ? "text-blue-600 dark:text-blue-400" 
-                        : "text-muted-foreground"
-                    }`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold text-sm">Facebook & Instagram</p>
-                      {isMetaConnected && (
-                        <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {metaLoading ? (
-                        <span className="flex items-center gap-1">
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          Loading...
-                        </span>
-                      ) : isMetaConnected ? (
-                        `Last synced: ${formatLastSync(metaIntegration?.lastSyncedAt || null)}`
-                      ) : (
-                        "Connect to sync reviews from Facebook and Instagram"
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {isMetaConnected ? (
-                    <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
-                      Connected
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="border-muted-foreground/30">
-                      Not Connected
-                    </Badge>
-                  )}
-                </div>
-              </div>
-
-              {!isMetaConnected && (
-                <Button 
-                  onClick={handleConnectMeta} 
-                  className="w-full h-10" 
-                  variant="outline"
-                  disabled={metaLoading || !restaurantId}
-                >
-                  {metaLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Connecting...
-                    </>
-                  ) : (
-                    <>
-                      <Facebook className="h-4 w-4 mr-2" />
-                      Connect Meta Account
-                    </>
-                  )}
-                </Button>
-              )}
-
-              {isMetaConnected && (
-                <div className="p-3 bg-blue-50/50 dark:bg-blue-950/10 rounded-lg border border-blue-200/50 dark:border-blue-800/50">
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    <span className="font-medium text-foreground">Connected:</span> Your Facebook Page
-                    {metaIntegration?.instagramBusinessAccountId && " and Instagram Business Account"}
-                    {metaIntegration?.instagramBusinessAccountId ? " are" : " is"} connected. 
-                    Reviews will sync automatically every 24 hours.
-                  </p>
-                </div>
-              )}
-            </div> */}
-
-            {/* Google Integration - Place ID */}
-            <div className="space-y-3">
-              <div className={`p-4 border-2 rounded-lg transition-all ${
-                placeId 
-                  ? "bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800" 
-                  : "bg-muted/30 border-border"
-              }`}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                    placeId 
-                      ? "bg-blue-100 dark:bg-blue-900" 
-                      : "bg-muted"
-                  }`}>
-                    <MapPin className={`h-6 w-6 ${
-                      placeId 
-                        ? "text-blue-600 dark:text-blue-400" 
-                        : "text-muted-foreground"
-                    }`} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm">Google Place ID</p>
-                    <p className="text-xs text-muted-foreground">
-                      Enter your Google Place ID to sync reviews from Google.
-                    </p>
-                  </div>
-                  {placeId && (
-                    <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
-                      Set
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Manual Place ID Input */}
-                <div className="space-y-2">
-                  <Label htmlFor="place-id">Google Place ID</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="place-id"
-                      placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4"
-                      value={placeId}
-                      onChange={(e) => setPlaceId(e.target.value)}
-                      className="flex-1"
-                    />
-                    {placeId && placeId !== placeIdData?.placeId && (
-                      <Button
-                        onClick={async () => {
-                          try {
-                            await restaurantsApi.updateGooglePlaceId(restaurantId!, placeId)
-                            toast({
-                              title: "Place ID Saved",
-                              description: "Google Place ID has been saved successfully.",
-                            })
-                            queryClient.invalidateQueries({ queryKey: ["restaurants", restaurantId] })
-                          } catch (error: any) {
-                            toast({
-                              title: "Error",
-                              description: error?.data?.error || "Failed to save Place ID",
-                              variant: "destructive",
-                            })
-                          }
-                        }}
-                        variant="outline"
-                        size="sm"
-                      >
-                        Save
-                      </Button>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Find your Place ID using{" "}
-                    <a
-                      href="https://developers.google.com/maps/documentation/places/web-service/place-id"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary underline hover:no-underline"
-                    >
-                      Google's Place ID Finder
-                    </a>
-                  </p>
-                </div>
-
-                {placeId && (
-                  <div className="p-3 bg-green-50/50 dark:bg-green-950/10 rounded-lg border border-green-200/50 dark:border-green-800/50 mt-3">
-                    <p className="text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">✓ Place ID saved:</span> {placeId}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      You can now sync reviews using this Place ID.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Sync Settings */}
-        <Card className="overflow-hidden border-2">
-          <CardHeader className="bg-muted/30 pb-4">
-            <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <RefreshCw className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <CardTitle className="text-lg">Sync Settings</CardTitle>
-                <CardDescription className="text-xs mt-1">
-                  External reviews are automatically synced every 24 hours
+                  Create and manage classes to organize feedback by class
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-6">
-            {!hasPremium || premiumError?.section === "sync" ? (
-              <PremiumUpgrade 
-                feature="Sync Settings"
-                description="Manually sync reviews from connected platforms. This feature requires a premium subscription."
-              />
-            ) : (
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border-2 rounded-lg bg-muted/20">
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm mb-1">Last Sync</p>
-                <p className="text-xs text-muted-foreground">
-                  {placeId
-                    ? "Ready to sync with Place ID"
-                    : "Enter Place ID to sync reviews"
-                  }
-                </p>
-              </div>
-              <Button 
-                onClick={handleSyncNow} 
-                disabled={
-                  syncMutation.isPending || 
-                  !restaurantId || 
-                  !placeId
-                } 
-                size="default"
-                variant="outline"
-                className="h-10 w-full sm:w-auto shrink-0"
-              >
-                {syncMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Syncing...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Sync Now
-                  </>
-                )}
-              </Button>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Create separate classes to collect feedback from different groups of students. Each class gets its own QR code and feedback link.
+              </p>
+              <Link href="/dashboard/classes">
+                <Button className="w-full" variant="outline">
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Manage Classes
+                </Button>
+              </Link>
+              {!hasPremium && (
+                <div className="p-3 bg-yellow-50/50 dark:bg-yellow-950/10 rounded-lg border border-yellow-200/50 dark:border-yellow-800/50">
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">Free Plan:</span> You can create 1 class. Upgrade to premium for unlimited classes.
+                  </p>
+                </div>
+              )}
             </div>
-            )}
           </CardContent>
         </Card>
 

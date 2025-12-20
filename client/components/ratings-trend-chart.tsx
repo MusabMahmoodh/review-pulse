@@ -2,12 +2,12 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import type { CustomerFeedback } from "@/lib/types"
+import type { StudentFeedback } from "@/lib/types"
 
 interface RatingsTrendChartProps {
-  feedback: CustomerFeedback[]
+  feedback: StudentFeedback[]
   timePeriod: "1month" | "3months" | "6months" | "1year"
-  ratingType: "food" | "staff" | "ambience" | "overall"
+  ratingType: "teaching" | "communication" | "material" | "overall"
 }
 
 export function RatingsTrendChart({ feedback, timePeriod, ratingType }: RatingsTrendChartProps) {
@@ -54,9 +54,9 @@ export function RatingsTrendChart({ feedback, timePeriod, ratingType }: RatingsT
       groups.set(key, { date: groupDate, ratings: [] })
     }
 
-    const rating = ratingType === "food" ? f.foodRating 
-      : ratingType === "staff" ? f.staffRating
-      : ratingType === "ambience" ? f.ambienceRating
+    const rating = ratingType === "teaching" ? f.teachingRating 
+      : ratingType === "communication" ? f.communicationRating
+      : ratingType === "material" ? f.materialRating
       : f.overallRating
 
     groups.get(key)!.ratings.push(rating)
@@ -83,9 +83,9 @@ export function RatingsTrendChart({ feedback, timePeriod, ratingType }: RatingsT
     .map(({ key, dateObj, ...rest }) => rest)
 
   const colors = {
-    food: "#8b5cf6", // purple
-    staff: "#ec4899", // pink
-    ambience: "#3b82f6", // blue
+    teaching: "#8b5cf6", // purple
+    communication: "#ec4899", // pink
+    material: "#3b82f6", // blue
     overall: "#6366f1", // indigo
   }
 

@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { QrCode, LogOut, ChevronRight, Settings, Sparkles, BarChart3, MessageSquare, Star, CheckSquare, Users } from "lucide-react"
+import { QrCode, LogOut, ChevronRight, Settings, Sparkles, BarChart3, MessageSquare, Star, CheckSquare, Users, BookOpen } from "lucide-react"
 import { Logo } from "@/components/logo"
 import Link from "next/link"
 import { FeedbackList } from "@/components/feedback-list"
@@ -10,16 +10,17 @@ import { StatsCards } from "@/components/stats-cards"
 import { RatingsChart } from "@/components/ratings-chart"
 import { ExternalReviews } from "@/components/external-reviews"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
-import { useFeedbackList, useFeedbackStats, useAIInsights } from "@/hooks"
+import { useFeedbackList, useFeedbackStats, useAIInsights, useAuth } from "@/hooks"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 export default function DashboardPage() {
-  const restaurantId = "rest_1765777607402_t8kmpnz"
+  const { user } = useAuth()
+  const teacherId = user?.id || null
   const isMobile = useIsMobile()
 
-  const { data: feedbackData, isLoading: feedbackLoading } = useFeedbackList(restaurantId)
-  const { data: statsData, isLoading: statsLoading } = useFeedbackStats(restaurantId)
-  const { data: insightsData, isLoading: insightsLoading } = useAIInsights(restaurantId)
+  const { data: feedbackData, isLoading: feedbackLoading } = useFeedbackList(teacherId)
+  const { data: statsData, isLoading: statsLoading } = useFeedbackStats(teacherId)
+  const { data: insightsData, isLoading: insightsLoading } = useAIInsights(teacherId)
 
   const feedback = feedbackData?.feedback || []
   const stats = statsData?.stats || null
@@ -35,7 +36,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3">
               <Logo width={40} height={40} />
               <div>
-                <h1 className="text-lg font-semibold leading-none">The Culinary Corner</h1>
+                <h1 className="text-lg font-semibold leading-none">{user?.name || "Teacher Dashboard"}</h1>
                 <p className="text-xs text-muted-foreground mt-0.5">Dashboard Overview</p>
               </div>
             </div>
@@ -144,6 +145,35 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Classes Card */}
+        {!isMobile && (
+          <Link href="/dashboard/classes" className="block">
+            <Card className="group relative overflow-hidden border-2 border-orange-200/50 dark:border-orange-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-orange-300/70 dark:hover:border-orange-700/70">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-100/80 via-amber-100/80 to-yellow-100/80 dark:from-orange-950/80 dark:via-amber-950/80 dark:to-yellow-950/80" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-orange-200/40 via-transparent to-amber-200/40 dark:from-orange-800/40 dark:to-amber-800/40" />
+              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent dark:via-white/10" />
+              <CardContent className="relative p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="p-2 rounded-lg bg-orange-500/20 dark:bg-orange-400/20">
+                        <BookOpen className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <span className="font-bold text-lg text-orange-900 dark:text-orange-100">
+                        Classes
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-1">
+                      Create and manage your classes
+                    </p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-orange-600 dark:text-orange-400 transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110 shrink-0" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
+
         {/* Team Members Card - Hidden on mobile since it's in bottom nav */}
         {!isMobile && (
           <Link href="/dashboard/team-members" className="block">
@@ -208,7 +238,7 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="px-0 pb-0">
-              <FeedbackList feedback={feedback.slice(0, 3)} loading={loading} compact restaurantId={restaurantId} />
+              <FeedbackList feedback={feedback.slice(0, 3)} loading={loading} compact teacherId={teacherId} />
               {feedback.length > 3 && (
                 <Link href="/dashboard/feedback">
                   <div className="px-6 py-4 border-t text-center hover:bg-muted/50 transition-colors">
@@ -229,7 +259,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="px-0 pb-0">
-            <ExternalReviews restaurantId={restaurantId} compact />
+            <ExternalReviews teacherId={teacherId} compact />
           </CardContent>
         </Card>
       </main>

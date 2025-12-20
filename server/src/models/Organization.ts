@@ -2,6 +2,7 @@ import { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn, OneT
 import { Teacher } from "./Teacher";
 import { OrganizationAuth } from "./OrganizationAuth";
 import { Subscription } from "./Subscription";
+import { Class } from "./Class";
 
 @Entity("organizations")
 export class Organization {
@@ -41,4 +42,7 @@ export class Organization {
 
   @OneToMany(() => Subscription, (subscription) => subscription.organization)
   subscriptions!: Subscription[];
+
+  @OneToMany(() => Class, (classEntity) => classEntity.organization)
+  classes!: Class[];
 }

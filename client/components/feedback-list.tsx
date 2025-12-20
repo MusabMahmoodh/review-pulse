@@ -3,17 +3,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Star, User, Phone, Calendar } from "lucide-react"
-import type { CustomerFeedback } from "@/lib/types"
+import type { StudentFeedback } from "@/lib/types"
 import { ConvertToActionable } from "@/components/convert-to-actionable"
 
 interface FeedbackListProps {
-  feedback: CustomerFeedback[]
+  feedback: StudentFeedback[]
   loading: boolean
   compact?: boolean
-  restaurantId?: string
+  teacherId?: string | null
 }
 
-export function FeedbackList({ feedback, loading, compact = false, restaurantId }: FeedbackListProps) {
+export function FeedbackList({ feedback, loading, compact = false, teacherId }: FeedbackListProps) {
   if (loading) {
     return (
       <div className="space-y-3">
@@ -32,7 +32,7 @@ export function FeedbackList({ feedback, loading, compact = false, restaurantId 
     return (
       <Card>
         <CardContent className="p-8 text-center text-muted-foreground">
-          <p>No feedback yet. Share your QR code to start collecting reviews!</p>
+          <p>No feedback yet. Share your QR code to start collecting student feedback!</p>
         </CardContent>
       </Card>
     )
@@ -48,10 +48,10 @@ export function FeedbackList({ feedback, loading, compact = false, restaurantId 
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <CardTitle className="text-base flex items-center gap-2 mb-1">
-                      {item.customerName ? (
+                      {item.studentName ? (
                         <>
                           <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className="truncate">{item.customerName}</span>
+                          <span className="truncate">{item.studentName}</span>
                         </>
                       ) : (
                         <span className="text-muted-foreground">Anonymous</span>
@@ -62,10 +62,10 @@ export function FeedbackList({ feedback, loading, compact = false, restaurantId 
                         <Calendar className="h-3 w-3" />
                         {new Date(item.createdAt).toLocaleDateString()}
                       </span>
-                      {item.customerContact && (
+                      {item.studentContact && (
                         <span className="flex items-center gap-1">
                           <Phone className="h-3 w-3" />
-                          {item.customerContact}
+                          {item.studentContact}
                         </span>
                       )}
                     </div>
@@ -79,24 +79,24 @@ export function FeedbackList({ feedback, loading, compact = false, restaurantId 
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Food</p>
+                    <p className="text-xs text-muted-foreground">Teaching</p>
                     <div className="flex items-center gap-1">
                       <Star className="h-3 w-3 fill-primary text-primary" />
-                      <span className="font-medium">{item.foodRating}</span>
+                      <span className="font-medium">{item.teachingRating}</span>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Staff</p>
+                    <p className="text-xs text-muted-foreground">Communication</p>
                     <div className="flex items-center gap-1">
                       <Star className="h-3 w-3 fill-primary text-primary" />
-                      <span className="font-medium">{item.staffRating}</span>
+                      <span className="font-medium">{item.communicationRating}</span>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Ambience</p>
+                    <p className="text-xs text-muted-foreground">Materials</p>
                     <div className="flex items-center gap-1">
                       <Star className="h-3 w-3 fill-primary text-primary" />
-                      <span className="font-medium">{item.ambienceRating}</span>
+                      <span className="font-medium">{item.materialRating}</span>
                     </div>
                   </div>
                 </div>
@@ -104,10 +104,10 @@ export function FeedbackList({ feedback, loading, compact = false, restaurantId 
                 {item.suggestions && (
                   <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                     <p className="text-sm">{item.suggestions}</p>
-                    {restaurantId && (
+                    {teacherId && (
                       <div className="flex justify-end pt-2">
                         <ConvertToActionable
-                          restaurantId={restaurantId}
+                          teacherId={teacherId}
                           sourceType="comment"
                           sourceId={item.id}
                           sourceText={item.suggestions}
@@ -125,7 +125,7 @@ export function FeedbackList({ feedback, loading, compact = false, restaurantId 
             <div className="space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{item.customerName || "Anonymous"}</p>
+                  <p className="text-sm font-medium">{item.studentName || "Anonymous"}</p>
                   <p className="text-xs text-muted-foreground">{new Date(item.createdAt).toLocaleDateString()}</p>
                 </div>
                 <Badge variant="secondary" className="flex items-center gap-1 flex-shrink-0">

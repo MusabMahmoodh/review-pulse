@@ -10,4 +10,5 @@ export { Subscription } from "./Subscription";
 export { ReviewPageSettings } from "./ReviewPageSettings";
 export { ActionableItem } from "./ActionableItem";
 export { TeamMember } from "./TeamMember";
+export { Class } from "./Class";
 

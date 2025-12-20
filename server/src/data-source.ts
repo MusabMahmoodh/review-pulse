@@ -13,6 +13,7 @@ import { Subscription } from "./models/Subscription";
 import { ReviewPageSettings } from "./models/ReviewPageSettings";
 import { ActionableItem } from "./models/ActionableItem";
 import { TeamMember } from "./models/TeamMember";
+import { Class } from "./models/Class";
 
 // Load environment variables before creating DataSource
 dotenv.config();
@@ -44,6 +45,7 @@ const connectionOptions: any = {
         ReviewPageSettings,
         ActionableItem,
         TeamMember,
+        Class,
     ],
     migrations: [__dirname + "/migrations/**/*.ts"],
     migrationsTableName: "migrations",

@@ -9,16 +9,17 @@ import Link from "next/link"
 import { FeedbackList } from "@/components/feedback-list"
 import { RatingsTrendChart } from "@/components/ratings-trend-chart"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
-import { useFeedbackList, useExternalReviews, useSyncExternalReviews } from "@/hooks"
+import { useFeedbackList, useExternalReviews, useSyncExternalReviews, useAuth } from "@/hooks"
 import { useToast } from "@/hooks/use-toast-simple"
-import type { CustomerFeedback, ExternalReview } from "@/lib/types"
+import type { StudentFeedback, ExternalReview } from "@/lib/types"
 import { ConvertToActionable } from "@/components/convert-to-actionable"
 
 export default function FeedbackPage() {
-  const restaurantId = "rest_1765777607402_t8kmpnz"
+  const { user } = useAuth()
+  const teacherId = user?.id || null
   const { toast } = useToast()
-  const { data: feedbackData, isLoading: loadingFeedback } = useFeedbackList(restaurantId)
-  const { data: externalReviewsData, isLoading: loadingExternal } = useExternalReviews(restaurantId)
+  const { data: feedbackData, isLoading: loadingFeedback } = useFeedbackList(teacherId)
+  const { data: externalReviewsData, isLoading: loadingExternal } = useExternalReviews(teacherId)
   const syncMutation = useSyncExternalReviews()
   
   const allFeedback = feedbackData?.feedback || []
@@ -27,15 +28,15 @@ export default function FeedbackPage() {
   // Filter states
   const [sourceTypeFilter, setSourceTypeFilter] = useState<"all" | "internal" | "external">("all")
   const [starFilter, setStarFilter] = useState<number | "all">("all")
-  const [ratingTypeFilter, setRatingTypeFilter] = useState<"all" | "food" | "staff" | "ambience" | "overall">("all")
+  const [ratingTypeFilter, setRatingTypeFilter] = useState<"all" | "teaching" | "communication" | "material" | "overall">("all")
   const [timePeriod, setTimePeriod] = useState<"1month" | "3months" | "6months" | "1year">("3months")
-  const [chartRatingType, setChartRatingType] = useState<"food" | "staff" | "ambience" | "overall">("overall")
+  const [chartRatingType, setChartRatingType] = useState<"teaching" | "communication" | "material" | "overall">("overall")
 
   const loading = loadingFeedback || loadingExternal
 
   const syncExternalReviews = async () => {
     syncMutation.mutate(
-      { restaurantId },
+      { teacherId },
       {
         onSuccess: () => {
           toast({
@@ -92,9 +93,9 @@ export default function FeedbackPage() {
     })
     
     const filteredFeedback = filteredByStars.feedback.filter((f) => {
-      const rating = ratingTypeFilter === "food" ? f.foodRating
-        : ratingTypeFilter === "staff" ? f.staffRating
-        : ratingTypeFilter === "ambience" ? f.ambienceRating
+      const rating = ratingTypeFilter === "teaching" ? f.teachingRating
+        : ratingTypeFilter === "communication" ? f.communicationRating
+        : ratingTypeFilter === "material" ? f.materialRating
         : f.overallRating
       
       return rating >= 4 || rating <= 2
@@ -276,27 +277,27 @@ export default function FeedbackPage() {
                 </Button>
                 <Button
                   size="sm"
-                  variant={ratingTypeFilter === "food" ? "default" : "outline"}
-                  onClick={() => setRatingTypeFilter("food")}
+                  variant={ratingTypeFilter === "teaching" ? "default" : "outline"}
+                  onClick={() => setRatingTypeFilter("teaching")}
                   disabled={sourceTypeFilter === "external"}
                 >
-                  Food
+                  Teaching
                 </Button>
                 <Button
                   size="sm"
-                  variant={ratingTypeFilter === "staff" ? "default" : "outline"}
-                  onClick={() => setRatingTypeFilter("staff")}
+                  variant={ratingTypeFilter === "communication" ? "default" : "outline"}
+                  onClick={() => setRatingTypeFilter("communication")}
                   disabled={sourceTypeFilter === "external"}
                 >
-                  Staff
+                  Communication
                 </Button>
                 <Button
                   size="sm"
-                  variant={ratingTypeFilter === "ambience" ? "default" : "outline"}
-                  onClick={() => setRatingTypeFilter("ambience")}
+                  variant={ratingTypeFilter === "material" ? "default" : "outline"}
+                  onClick={() => setRatingTypeFilter("material")}
                   disabled={sourceTypeFilter === "external"}
                 >
-                  Ambience
+                  Materials
                 </Button>
                 <Button
                   size="sm"
@@ -396,10 +397,10 @@ export default function FeedbackPage() {
                       {item.suggestions && (
                         <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                           <p className="text-sm">{item.suggestions}</p>
-                          {restaurantId && (
+                          {teacherId && (
                             <div className="flex justify-end pt-2">
                               <ConvertToActionable
-                                restaurantId={restaurantId}
+                                teacherId={teacherId}
                                 sourceType="comment"
                                 sourceId={item.id}
                                 sourceText={item.suggestions}
@@ -447,10 +448,10 @@ export default function FeedbackPage() {
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <p className="text-sm leading-relaxed">{review.comment}</p>
-                      {restaurantId && review.comment && (
+                      {teacherId && review.comment && (
                         <div className="flex justify-end pt-2 border-t">
                           <ConvertToActionable
-                            restaurantId={restaurantId}
+                            teacherId={teacherId}
                             sourceType="comment"
                             sourceId={review.id}
                             sourceText={review.comment}

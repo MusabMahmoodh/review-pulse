@@ -169,6 +169,7 @@ export const authApi = {
 export const feedbackApi = {
   submit: async (data: {
     teacherId: string;
+    classId?: string;
     studentName?: string;
     studentContact?: string;
     studentId?: string;
@@ -269,6 +270,123 @@ export const teachersApi = {
 
 // Legacy alias for backward compatibility (can be removed later)
 export const restaurantsApi = teachersApi;
+
+// Classes API
+export const classesApi = {
+  create: async (data: {
+    name: string;
+    description?: string;
+    teacherId?: string; // Required for organization-level class creation
+  }) => {
+    return fetchApi<{
+      success: boolean;
+      class: {
+        id: string;
+        name: string;
+        description?: string;
+        teacherId: string;
+        organizationId?: string;
+        qrCode: string;
+        qrCodeUrl: string;
+        status: "active" | "archived";
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>("/api/classes", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  list: async (params?: {
+    teacherId?: string;
+    status?: "active" | "archived";
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.teacherId) queryParams.append("teacherId", params.teacherId);
+    if (params?.status) queryParams.append("status", params.status);
+
+    const queryString = queryParams.toString();
+    return fetchApi<{
+      classes: Array<{
+        id: string;
+        name: string;
+        description?: string;
+        teacherId: string;
+        organizationId?: string;
+        qrCode: string;
+        qrCodeUrl: string;
+        status: "active" | "archived";
+        createdAt: string;
+        updatedAt: string;
+        teacher?: {
+          id: string;
+          name: string;
+          email: string;
+        };
+      }>;
+    }>(`/api/classes${queryString ? `?${queryString}` : ""}`);
+  },
+
+  get: async (classId: string) => {
+    return fetchApi<{
+      class: {
+        id: string;
+        name: string;
+        description?: string;
+        teacherId: string;
+        organizationId?: string;
+        qrCode: string;
+        qrCodeUrl: string;
+        status: "active" | "archived";
+        createdAt: string;
+        updatedAt: string;
+        teacher?: {
+          id: string;
+          name: string;
+          email: string;
+        };
+      };
+    }>(`/api/classes/${classId}`);
+  },
+
+  update: async (
+    classId: string,
+    data: {
+      name?: string;
+      description?: string;
+      status?: "active" | "archived";
+    }
+  ) => {
+    return fetchApi<{
+      success: boolean;
+      class: {
+        id: string;
+        name: string;
+        description?: string;
+        teacherId: string;
+        organizationId?: string;
+        qrCode: string;
+        qrCodeUrl: string;
+        status: "active" | "archived";
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>(`/api/classes/${classId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (classId: string) => {
+    return fetchApi<{
+      success: boolean;
+      message: string;
+    }>(`/api/classes/${classId}`, {
+      method: "DELETE",
+    });
+  },
+};
 
 // Admin API
 export const adminApi = {

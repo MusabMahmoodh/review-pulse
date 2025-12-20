@@ -8,6 +8,7 @@ import { ExternalReview } from "./ExternalReview";
 import { ReviewPageSettings } from "./ReviewPageSettings";
 import { Subscription } from "./Subscription";
 import { TeamMember } from "./TeamMember";
+import { Class } from "./Class";
 
 @Entity("teachers")
 export class Teacher {
@@ -75,4 +76,7 @@ export class Teacher {
 
   @OneToMany(() => TeamMember, (member) => member.teacher)
   teamMembers!: TeamMember[];
+
+  @OneToMany(() => Class, (classEntity) => classEntity.teacher)
+  classes!: Class[];
 }

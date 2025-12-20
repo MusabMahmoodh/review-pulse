@@ -17,19 +17,19 @@ export default function QRCodePage() {
   const [copied, setCopied] = useState(false)
   const qrCodeRef = useRef<HTMLDivElement>(null)
   
-  const restaurantId = user?.id || null
-  const feedbackUrl = restaurantId 
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/feedback/${restaurantId}`
+  const teacherId = user?.id || null
+  const feedbackUrl = teacherId 
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/feedback/${teacherId}`
     : ""
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!authLoading && !restaurantId) {
+    if (!authLoading && !teacherId) {
       if (typeof window !== "undefined") {
         window.location.href = "/login"
       }
     }
-  }, [authLoading, restaurantId])
+  }, [authLoading, teacherId])
 
   const handleCopyLink = async () => {
     if (!feedbackUrl) return
@@ -73,7 +73,7 @@ export default function QRCodePage() {
           const url = URL.createObjectURL(blob)
           const link = document.createElement("a")
           link.href = url
-          link.download = "restaurant-feedback-qr.png"
+          link.download = "teacher-feedback-qr.png"
           document.body.appendChild(link)
           link.click()
           document.body.removeChild(link)
@@ -139,7 +139,7 @@ export default function QRCodePage() {
   }
 
   // Don't render if not authenticated (redirect will happen)
-  if (!restaurantId || !feedbackUrl) {
+  if (!teacherId || !feedbackUrl) {
     return null
   }
 
@@ -161,7 +161,7 @@ export default function QRCodePage() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Your Feedback QR Code</CardTitle>
-            <CardDescription>Display this QR code at your restaurant for customers to scan</CardDescription>
+            <CardDescription>Display this QR code in your classroom for students to scan</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* QR Code Display */}
@@ -202,11 +202,12 @@ export default function QRCodePage() {
             <div className="bg-muted/50 rounded-lg p-4 space-y-2">
               <p className="font-medium text-sm">Tips for best results:</p>
               <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                <li>Print the QR code and display it on tables or at the counter</li>
+                <li>Print the QR code and display it in your classroom or on course materials</li>
                 <li>Make sure the QR code is easy to scan (good lighting, flat surface)</li>
                 <li>Consider adding instructions like "Scan to leave feedback"</li>
                 <li>Test the QR code with your phone before displaying</li>
                 <li>Share the link directly via WhatsApp, email, or other messaging apps</li>
+                <li>Create separate QR codes for different classes to track feedback by class</li>
               </ul>
             </div>
           </CardContent>

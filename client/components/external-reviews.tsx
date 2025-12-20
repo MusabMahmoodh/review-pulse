@@ -11,16 +11,16 @@ import { useExternalReviews, useSyncExternalReviews } from "@/hooks"
 import { ConvertToActionable } from "@/components/convert-to-actionable"
 
 interface ExternalReviewsProps {
-  restaurantId: string
+  teacherId: string | null
   compact?: boolean
 }
 
-export function ExternalReviews({ restaurantId, compact = false }: ExternalReviewsProps) {
+export function ExternalReviews({ teacherId, compact = false }: ExternalReviewsProps) {
   const { toast } = useToast()
   const [selectedPlatform, setSelectedPlatform] = useState<string>("all")
   const [showAllInCompact, setShowAllInCompact] = useState<boolean>(false)
 
-  const { data, isLoading: loading } = useExternalReviews(restaurantId)
+  const { data, isLoading: loading } = useExternalReviews(teacherId)
   const syncMutation = useSyncExternalReviews()
 
   const reviews = data?.reviews || []
@@ -31,8 +31,9 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
   }, [selectedPlatform])
 
   const syncReviews = async () => {
+    if (!teacherId) return
     syncMutation.mutate(
-      { restaurantId },
+      { teacherId },
       {
         onSuccess: () => {
           toast({
@@ -151,10 +152,10 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2">{review.comment}</p>
-                {restaurantId && review.comment && (
+                {teacherId && review.comment && (
                   <div className="flex justify-end pt-2">
                     <ConvertToActionable
-                      restaurantId={restaurantId}
+                      teacherId={teacherId}
                       sourceType="comment"
                       sourceId={review.id}
                       sourceText={review.comment}
@@ -289,10 +290,10 @@ export function ExternalReviews({ restaurantId, compact = false }: ExternalRevie
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm leading-relaxed">{review.comment}</p>
-                {restaurantId && review.comment && (
+                {teacherId && review.comment && (
                   <div className="flex justify-end pt-2 border-t">
                     <ConvertToActionable
-                      restaurantId={restaurantId}
+                      teacherId={teacherId}
                       sourceType="comment"
                       sourceId={review.id}
                       sourceText={review.comment}

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, MessageSquare, Sparkles, CheckSquare, Users, QrCode } from "lucide-react"
+import { Home, MessageSquare, Sparkles, CheckSquare, Users, QrCode, BookOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 
@@ -18,6 +18,11 @@ const navItems = [
     icon: MessageSquare,
   },
   {
+    href: "/dashboard/classes",
+    label: "Classes",
+    icon: BookOpen,
+  },
+  {
     href: "/dashboard/ai-insights",
     label: "AI",
     icon: Sparkles,
@@ -26,11 +31,6 @@ const navItems = [
     href: "/dashboard/actionable-items",
     label: "Tasks",
     icon: CheckSquare,
-  },
-  {
-    href: "/dashboard/team-members",
-    label: "Team",
-    icon: Users,
   },
   {
     href: "/qr-code",

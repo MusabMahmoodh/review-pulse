@@ -2,25 +2,25 @@
 
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import type { CustomerFeedback } from "@/lib/types"
+import type { StudentFeedback } from "@/lib/types"
 
 interface RatingsChartProps {
-  feedback: CustomerFeedback[]
+  feedback: StudentFeedback[]
 }
 
 export function RatingsChart({ feedback }: RatingsChartProps) {
   // Calculate average ratings
-  const avgFood = feedback.length > 0 ? feedback.reduce((sum, f) => sum + f.foodRating, 0) / feedback.length : 0
-  const avgStaff = feedback.length > 0 ? feedback.reduce((sum, f) => sum + f.staffRating, 0) / feedback.length : 0
-  const avgAmbience = feedback.length > 0 ? feedback.reduce((sum, f) => sum + f.ambienceRating, 0) / feedback.length : 0
+  const avgTeaching = feedback.length > 0 ? feedback.reduce((sum, f) => sum + f.teachingRating, 0) / feedback.length : 0
+  const avgCommunication = feedback.length > 0 ? feedback.reduce((sum, f) => sum + f.communicationRating, 0) / feedback.length : 0
+  const avgMaterial = feedback.length > 0 ? feedback.reduce((sum, f) => sum + f.materialRating, 0) / feedback.length : 0
   const avgOverall = feedback.length > 0 ? feedback.reduce((sum, f) => sum + f.overallRating, 0) / feedback.length : 0
 
   const colors = ["#8b5cf6", "#ec4899", "#3b82f6", "#6366f1"] // purple, pink, blue, indigo
 
   const chartData = [
-    { category: "Food", rating: Number(avgFood.toFixed(1)) },
-    { category: "Staff", rating: Number(avgStaff.toFixed(1)) },
-    { category: "Ambience", rating: Number(avgAmbience.toFixed(1)) },
+    { category: "Teaching", rating: Number(avgTeaching.toFixed(1)) },
+    { category: "Communication", rating: Number(avgCommunication.toFixed(1)) },
+    { category: "Materials", rating: Number(avgMaterial.toFixed(1)) },
     { category: "Overall", rating: Number(avgOverall.toFixed(1)) },
   ]
 
