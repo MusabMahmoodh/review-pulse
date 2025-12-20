@@ -1,8 +1,8 @@
-# Review Pulse Server
+# Guestra Server
 
-Backend server for the Review Pulse application using Express, TypeORM, and PostgreSQL.
+Backend server for the Guestra application using Express, TypeORM, and PostgreSQL.
 
-Review Pulse helps teachers and educational institutes collect student feedback and turn it into AI-powered actionable insights.
+Guestra helps teachers and educational institutes collect student feedback and turn it into AI-powered actionable insights.
 
 ## Setup
 
@@ -101,7 +101,7 @@ The server uses TypeORM with PostgreSQL with migrations enabled. **Never use `sy
 
 1. Create your PostgreSQL database:
 ```sql
-CREATE DATABASE review_pulse;
+CREATE DATABASE guestra;
 ```
 
 2. Run migrations to set up the schema:

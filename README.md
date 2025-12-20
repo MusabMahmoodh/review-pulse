@@ -1,8 +1,8 @@
-# Review Pulse
+# Guestra
 
 **Collect student feedback. Improve teaching with AI insights.**
 
-Review Pulse is a feedback collection platform designed for teachers and educational institutes. Students scan QR codes to leave feedback, and teachers get AI-powered insights and actionable items to improve their teaching.
+Guestra is a feedback collection platform designed for teachers and educational institutes. Students scan QR codes to leave feedback, and teachers get AI-powered insights and actionable items to improve their teaching.
 
 ## Features
 
@@ -32,8 +32,8 @@ Review Pulse is a feedback collection platform designed for teachers and educati
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/review-pulse.git
-cd review-pulse
+git clone https://github.com/yourusername/guestra.git
+cd guestra
 ```
 
 2. **Set up the backend**
@@ -74,7 +74,7 @@ Visit `http://localhost:3000` to see the application.
 ## Project Structure
 
 ```
-review-pulse/
+guestra/
 ├── client/          # Next.js frontend application
 ├── server/          # Express backend API
 ├── docs/           # Documentation files

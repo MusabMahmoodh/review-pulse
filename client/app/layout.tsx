@@ -11,7 +11,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Review Pulse - Teacher & Organization Student Feedback",
+  title: "Guestra - Teacher & Organization Student Feedback",
   description: "Collect and analyze student feedback to improve your teaching and educational services",
   generator: "v0.app",
   icons: {

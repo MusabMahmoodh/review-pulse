@@ -1,8 +1,8 @@
 # Development Setup Guide
 
-This guide covers setting up Review Pulse for development using **free cloud services** for easy access and collaboration.
+This guide covers setting up Guestra for development using **free cloud services** for easy access and collaboration.
 
-Review Pulse helps teachers and educational institutes collect student feedback and turn it into AI-powered actionable insights.
+Guestra helps teachers and educational institutes collect student feedback and turn it into AI-powered actionable insights.
 
 ## Architecture Overview
 
@@ -39,7 +39,7 @@ Review Pulse helps teachers and educational institutes collect student feedback 
 1. Go to [Supabase](https://supabase.com) and sign up (free)
 2. Click **"New Project"**
 3. Fill in project details:
-   - **Name**: `review-pulse-dev`
+   - **Name**: `guestra-dev`
    - **Database Password**: Generate and save password
    - **Region**: Choose closest region
    - **Pricing Plan**: **Free** (up to 500MB database, 2GB bandwidth)
@@ -91,7 +91,7 @@ npm run admin:create admin@dev.com devpassword123
 1. Click **"New Project"**
 2. Select **"Deploy from GitHub repo"**
 3. Connect your GitHub account
-4. Select `review-pulse` repository
+4. Select `guestra` repository
 5. Select the `server` directory as root
 
 ### 2.3 Configure Environment Variables
@@ -169,7 +169,7 @@ railway run npm run migration:run
 ### 3.2 Import Project
 
 1. Click **"Add New"** → **"Project"**
-2. Import your `review-pulse` repository
+2. Import your `guestra` repository
 3. Configure project:
    - **Framework Preset**: Next.js
    - **Root Directory**: `client`
@@ -204,8 +204,8 @@ NEXT_PUBLIC_API_URL=https://your-railway-app.up.railway.app
 ### 4.1 Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/review-pulse.git
-cd review-pulse
+git clone https://github.com/yourusername/guestra.git
+cd guestra
 ```
 
 ### 4.2 Backend Setup

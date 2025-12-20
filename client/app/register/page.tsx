@@ -167,7 +167,7 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
             <Logo width={40} height={40} />
-            <span className="text-2xl font-bold">Review Pulse</span>
+            <span className="text-2xl font-bold">Guestra</span>
           </Link>
         </div>
 

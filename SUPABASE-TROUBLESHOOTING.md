@@ -9,7 +9,7 @@
 Supabase free tier projects pause after 1 week of inactivity. You need to resume the project:
 
 1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
-2. Find your project: `review-pulse-dev`
+2. Find your project: `guestra-dev`
 3. If you see a "Resume" or "Restore" button, click it
 4. Wait 1-2 minutes for the project to resume
 5. Try connecting again
@@ -31,7 +31,7 @@ The code automatically enables SSL for Supabase, but verify your `.env` file:
 DB_HOST=db.jedhrenbyvcvipxsylge.supabase.co
 DB_PORT=5432
 DB_USER=postgres
-DB_PASSWORD=review-pulse-dev
+DB_PASSWORD=guestra-dev
 DB_NAME=postgres
 ```
 
@@ -47,7 +47,7 @@ DB_NAME=postgres
 
 **Using psql (if installed):**
 ```bash
-psql "postgresql://postgres:review-pulse-dev@db.jedhrenbyvcvipxsylge.supabase.co:5432/postgres?sslmode=require"
+psql "postgresql://postgres:guestra-dev@db.jedhrenbyvcvipxsylge.supabase.co:5432/postgres?sslmode=require"
 ```
 
 **Using Node.js test script:**
@@ -59,7 +59,7 @@ const client = new Client({
   host: 'db.jedhrenbyvcvipxsylge.supabase.co',
   port: 5432,
   user: 'postgres',
-  password: 'review-pulse-dev',
+  password: 'guestra-dev',
   database: 'postgres',
   ssl: {
     rejectUnauthorized: false

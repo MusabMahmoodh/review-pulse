@@ -214,7 +214,7 @@ Teachers ask questions like:
 - **Feedback resolution tracking**: Track which feedback items have been addressed and their outcomes
 
 ### Customization & Branding
-- **White-label options**: Remove Review Pulse branding for enterprise customers
+- **White-label options**: Remove Guestra branding for enterprise customers
 - **Custom branding**: Add institute logo, colors, and branding to feedback forms
 - **Custom domain support**: Use institute's own domain for feedback forms
 - **Customizable feedback forms**: Full control over form fields, questions, and design

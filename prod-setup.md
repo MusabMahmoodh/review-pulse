@@ -1,6 +1,6 @@
 # Production Setup Guide
 
-This guide covers deploying Review Pulse to production using **AWS Amplify** (frontend), **Hostinger** (backend), and **Supabase** (database).
+This guide covers deploying Guestra to production using **AWS Amplify** (frontend), **Hostinger** (backend), and **Supabase** (database).
 
 ## Architecture Overview
 
@@ -32,7 +32,7 @@ This guide covers deploying Review Pulse to production using **AWS Amplify** (fr
 1. Go to [Supabase](https://supabase.com) and sign up/login
 2. Click **"New Project"**
 3. Fill in project details:
-   - **Name**: `review-pulse-prod`
+   - **Name**: `guestra-prod`
    - **Database Password**: Generate a strong password (save it!)
    - **Region**: Choose closest to your users
    - **Pricing Plan**: Select appropriate plan
@@ -114,8 +114,8 @@ apt install -y git
 ```bash
 # Clone your repository
 cd /var/www
-git clone https://github.com/yourusername/review-pulse.git
-cd review-pulse/server
+git clone https://github.com/yourusername/guestra.git
+cd guestra/server
 
 # Install dependencies
 npm install --production
@@ -169,10 +169,10 @@ npm run migration:run
 npm run build  # If you have a build script, or use ts-node
 
 # Start with PM2
-pm2 start src/index.ts --name review-pulse-api --interpreter ts-node
+pm2 start src/index.ts --name guestra-api --interpreter ts-node
 
 # Or if compiled to JS:
-pm2 start dist/index.js --name review-pulse-api
+pm2 start dist/index.js --name guestra-api
 
 # Save PM2 configuration
 pm2 save
@@ -188,7 +188,7 @@ pm2 startup
 apt install -y nginx
 
 # Create Nginx config
-nano /etc/nginx/sites-available/review-pulse
+nano /etc/nginx/sites-available/guestra
 ```
 
 Add configuration:
@@ -214,7 +214,7 @@ server {
 
 ```bash
 # Enable site
-ln -s /etc/nginx/sites-available/review-pulse /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/guestra /etc/nginx/sites-enabled/
 
 # Test configuration
 nginx -t
@@ -268,7 +268,7 @@ ufw enable
 1. Go to [AWS Amplify Console](https://console.aws.amazon.com/amplify)
 2. Click **"New App"** → **"Host web app"**
 3. Connect your Git provider (GitHub, GitLab, Bitbucket)
-4. Select your repository: `review-pulse`
+4. Select your repository: `guestra`
 5. Select branch: `main` or `production`
 
 ### 3.3 Configure Build Settings
@@ -360,7 +360,7 @@ frontend:
 **PM2 Monitoring:**
 ```bash
 pm2 monit
-pm2 logs review-pulse-api
+pm2 logs guestra-api
 ```
 
 **Set up monitoring:**
@@ -375,12 +375,12 @@ pm2 logs review-pulse-api
 ### 6.1 Update Backend
 
 ```bash
-cd /var/www/review-pulse
+cd /var/www/guestra
 git pull origin main
 cd server
 npm install --production
 npm run migration:run  # If new migrations
-pm2 restart review-pulse-api
+pm2 restart guestra-api
 ```
 
 ### 6.2 Update Frontend
@@ -408,13 +408,13 @@ Supabase provides automatic backups, but you can also:
 
 ```bash
 # Check PM2 logs
-pm2 logs review-pulse-api
+pm2 logs guestra-api
 
 # Check if port is in use
 netstat -tulpn | grep 3001
 
 # Restart service
-pm2 restart review-pulse-api
+pm2 restart guestra-api
 ```
 
 ### Database Connection Issues

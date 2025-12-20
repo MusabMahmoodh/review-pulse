@@ -4,11 +4,11 @@ import { SwaggerDefinition } from "swagger-jsdoc";
 const swaggerDefinition: SwaggerDefinition = {
   openapi: "3.0.0",
   info: {
-    title: "Review Pulse API",
+    title: "Guestra API",
     version: "1.0.0",
-    description: "API documentation for Review Pulse - Teacher and Organization student feedback management platform",
+    description: "API documentation for Guestra - Teacher and Organization student feedback management platform",
     contact: {
-      name: "Review Pulse Support",
+      name: "Guestra Support",
     },
   },
   servers: [

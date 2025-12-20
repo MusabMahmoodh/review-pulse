@@ -1,6 +1,6 @@
 # Utility Scripts
 
-This directory contains utility scripts for managing the Review Pulse server.
+This directory contains utility scripts for managing the Guestra server.
 
 ## Admin Management
 
@@ -15,7 +15,7 @@ npm run admin:create [email] [password] [role]
 
 **Examples:**
 ```bash
-# Create admin with default credentials (admin@reviewpulse.com / admin123)
+# Create admin with default credentials (admin@guestra.com / admin123)
 npm run admin:create
 
 # Create admin with custom email and password
@@ -28,7 +28,7 @@ npm run admin:create admin@example.com mypassword123 super_admin
 **Environment Variables:**
 You can also set default values in `.env`:
 ```env
-ADMIN_EMAIL=admin@reviewpulse.com
+ADMIN_EMAIL=admin@guestra.com
 ADMIN_PASSWORD=admin123
 ```
 

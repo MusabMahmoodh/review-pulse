@@ -92,7 +92,7 @@ export default function HomePage() {
                 : "opacity-0 translate-y-4"
             }`}
           >
-            Review Pulse helps teachers and institutes turn student feedback into AI-powered, actionable insights — so you know exactly
+            Guestra helps teachers and institutes turn student feedback into AI-powered, actionable insights — so you know exactly
             what to improve in your teaching.
           </p>
 
@@ -231,7 +231,7 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-5xl mx-auto space-y-12">
           <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Review Pulse turns feedback into decisions.</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-balance">Guestra turns feedback into decisions.</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="text-center group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
@@ -362,7 +362,7 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-5xl mx-auto space-y-12">
           <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Why teachers and institutes choose Review Pulse</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-balance">Why teachers and institutes choose Guestra</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
@@ -446,7 +446,7 @@ export default function HomePage() {
             </Card>
           </div>
           <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
-            <p className="text-lg text-muted-foreground">If student feedback matters, Review Pulse fits.</p>
+            <p className="text-lg text-muted-foreground">If student feedback matters, Guestra fits.</p>
           </div>
         </div>
       </section>
@@ -581,7 +581,7 @@ export default function HomePage() {
             <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/5 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
             <h2 className="text-3xl md:text-4xl font-bold text-balance relative z-10">Your students are already talking.</h2>
             <p className="text-lg opacity-90 text-pretty max-w-2xl mx-auto relative z-10">
-              Review Pulse tells you what to do next.
+              Guestra tells you what to do next.
             </p>
             <div className="pt-2 relative z-10">
               <Link href="/register">
@@ -600,7 +600,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t mt-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="container mx-auto px-4 py-8 text-center text-sm text-muted-foreground">
-          <p>© 2025 Review Pulse. All rights reserved.</p>
+          <p>© 2025 Guestra. All rights reserved.</p>
           <p className="mt-2 text-xs">every feedback is a teaching opportunity</p>
         </div>
       </footer>

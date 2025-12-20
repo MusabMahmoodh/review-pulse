@@ -12,7 +12,7 @@ async function createAdmin() {
     await AppDataSource.initialize();
 
     // Get admin details from command line arguments or use defaults
-    const email = process.argv[2] || process.env.ADMIN_EMAIL || "admin@reviewpulse2.com";
+    const email = process.argv[2] || process.env.ADMIN_EMAIL || "admin@guestra.com";
     const password = process.argv[3] || process.env.ADMIN_PASSWORD || "admin123";
     const role = (process.argv[4] as "super_admin" | "admin") || "super_admin";
 
