@@ -55,18 +55,27 @@ async function fetchApi<T>(
       const errorData = await response.json().catch(() => ({}));
       
       // Handle 401 Unauthorized - redirect to login
+      // But don't redirect on public pages like feedback submission
       if (response.status === 401 && typeof window !== "undefined") {
-        // Clear invalid token
-        try {
-          window.localStorage.removeItem(TOKEN_KEY);
-        } catch {
-          // Ignore localStorage errors
-        }
-        
-        // Redirect to login page if not already there
         const currentPath = window.location.pathname;
-        if (currentPath !== "/login" && currentPath !== "/register") {
-          window.location.href = "/login";
+        const isPublicPage = currentPath.startsWith("/feedback/") || 
+                            currentPath === "/login" || 
+                            currentPath === "/register" ||
+                            currentPath === "/";
+        
+        // Only redirect if not on a public page
+        if (!isPublicPage) {
+          // Clear invalid token
+          try {
+            window.localStorage.removeItem(TOKEN_KEY);
+          } catch {
+            // Ignore localStorage errors
+          }
+          
+          // Redirect to login page if not already there
+          if (currentPath !== "/login" && currentPath !== "/register") {
+            window.location.href = "/login";
+          }
         }
       }
       

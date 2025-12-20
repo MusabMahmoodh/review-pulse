@@ -89,15 +89,15 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Logo width={40} height={40} />
-              <div>
-                <h1 className="text-lg font-semibold leading-none">{user?.name || (isOrganization ? "Organization Dashboard" : "Teacher Dashboard")}</h1>
-                <p className="text-xs text-muted-foreground mt-0.5">{isOrganization ? "Organization Overview" : "Dashboard Overview"}</p>
+          <div className="flex h-16 items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <Logo width={isMobile ? 32 : 40} height={isMobile ? 32 : 40} className="shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h1 className="text-sm sm:text-lg font-semibold leading-none truncate">{user?.name || (isOrganization ? (isMobile ? "Organization" : "Organization Dashboard") : (isMobile ? "Dashboard" : "Teacher Dashboard"))}</h1>
+                <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">{isOrganization ? "Organization Overview" : "Dashboard Overview"}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               <Link href="/dashboard/settings">
                 <Button size="sm" variant="ghost" className="h-9 w-9 p-0">
                   <Settings className="h-4 w-4" />
@@ -235,40 +235,42 @@ export default function DashboardPage() {
         {isOrganization && teachers.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Feedback by Teacher</CardTitle>
-              <p className="text-sm text-muted-foreground">Click on a teacher to filter their feedback</p>
+              <CardTitle className="text-base sm:text-lg">Feedback by Teacher</CardTitle>
+              <p className="text-xs sm:text-sm text-muted-foreground">Click on a teacher to filter their feedback</p>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge
-                  variant={selectedTeacherId === null ? "default" : "outline"}
-                  className="cursor-pointer px-4 py-2"
-                  onClick={() => setSelectedTeacherId(null)}
-                >
-                  All Feedback ({allFeedback.length})
-                </Badge>
-                {feedbackByTeacher.orgLevelFeedback && feedbackByTeacher.orgLevelFeedback.length > 0 && (
+              <div className="w-full overflow-x-auto -mx-1 px-1 pb-2 sm:overflow-visible sm:mx-0 sm:px-0">
+                <div className="flex gap-2 min-w-max sm:min-w-0 sm:flex-wrap">
                   <Badge
-                    variant={selectedTeacherId === "org" ? "default" : "outline"}
-                    className="cursor-pointer px-4 py-2"
-                    onClick={() => setSelectedTeacherId("org")}
+                    variant={selectedTeacherId === null ? "default" : "outline"}
+                    className="cursor-pointer px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap shrink-0"
+                    onClick={() => setSelectedTeacherId(null)}
                   >
-                    Organization Level ({feedbackByTeacher.orgLevelFeedback.length})
+                    All ({allFeedback.length})
                   </Badge>
-                )}
-                {teachers.map((teacher) => {
-                  const teacherFeedback = feedbackByTeacher.grouped?.[teacher.id] || []
-                  return (
+                  {feedbackByTeacher.orgLevelFeedback && feedbackByTeacher.orgLevelFeedback.length > 0 && (
                     <Badge
-                      key={teacher.id}
-                      variant={selectedTeacherId === teacher.id ? "default" : "outline"}
-                      className="cursor-pointer px-4 py-2"
-                      onClick={() => setSelectedTeacherId(teacher.id)}
+                      variant={selectedTeacherId === "org" ? "default" : "outline"}
+                      className="cursor-pointer px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap shrink-0"
+                      onClick={() => setSelectedTeacherId("org")}
                     >
-                      {teacher.name} ({teacherFeedback.length})
+                      Org Level ({feedbackByTeacher.orgLevelFeedback.length})
                     </Badge>
-                  )
-                })}
+                  )}
+                  {teachers.map((teacher) => {
+                    const teacherFeedback = feedbackByTeacher.grouped?.[teacher.id] || []
+                    return (
+                      <Badge
+                        key={teacher.id}
+                        variant={selectedTeacherId === teacher.id ? "default" : "outline"}
+                        className="cursor-pointer px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm whitespace-nowrap shrink-0"
+                        onClick={() => setSelectedTeacherId(teacher.id)}
+                      >
+                        {teacher.name} ({teacherFeedback.length})
+                      </Badge>
+                    )
+                  })}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -278,13 +280,13 @@ export default function DashboardPage() {
         {isOrganization && aiInsight && (
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-purple-600" />
-                  AI Insights
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2 min-w-0">
+                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 shrink-0" />
+                  <span className="truncate">AI Insights</span>
                 </CardTitle>
                 <Link href="/dashboard/ai-insights">
-                  <Button variant="outline" size="sm">View Details</Button>
+                  <Button variant="outline" size="sm" className="shrink-0 text-xs sm:text-sm">View Details</Button>
                 </Link>
               </div>
             </CardHeader>
@@ -330,13 +332,13 @@ export default function DashboardPage() {
         {isOrganization && actionableItems.length > 0 && (
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <CheckSquare className="h-5 w-5 text-blue-600" />
-                  Actionable Items
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-base sm:text-lg flex items-center gap-2 min-w-0">
+                  <CheckSquare className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 shrink-0" />
+                  <span className="truncate">Actionable Items</span>
                 </CardTitle>
                 <Link href="/dashboard/actionable-items">
-                  <Button variant="outline" size="sm">View All ({actionableItems.length})</Button>
+                  <Button variant="outline" size="sm" className="shrink-0 text-xs sm:text-sm">View All ({actionableItems.length})</Button>
                 </Link>
               </div>
             </CardHeader>
@@ -452,16 +454,16 @@ export default function DashboardPage() {
         )}
 
         {/* Charts and Analytics Section */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
           {/* Ratings Chart */}
           <Card className="overflow-hidden">
             <CardHeader className="pb-4">
               <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Ratings Overview</CardTitle>
+                <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <CardTitle className="text-base sm:text-lg">Ratings Overview</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="px-4 sm:px-6 pb-6">
+            <CardContent className="px-2 sm:px-4 md:px-6 pb-4 sm:pb-6">
               <div className="w-full overflow-x-auto -mx-2 px-2">
                 <div className="min-w-[280px]">
                   <RatingsChart feedback={displayFeedback} />
@@ -473,13 +475,13 @@ export default function DashboardPage() {
           {/* Recent Feedback */}
           <Card className="overflow-hidden">
             <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg">Recent Feedback</CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                  <CardTitle className="text-base sm:text-lg truncate">Recent Feedback</CardTitle>
                 </div>
                 {feedback.length > 3 && (
-                  <Link href="/dashboard/feedback" className="text-xs text-primary hover:underline">
+                  <Link href="/dashboard/feedback" className="text-xs text-primary hover:underline shrink-0">
                     View all
                   </Link>
                 )}
@@ -495,8 +497,8 @@ export default function DashboardPage() {
               />
               {displayFeedback.length > 3 && (
                 <Link href="/dashboard/feedback">
-                  <div className="px-6 py-4 border-t text-center hover:bg-muted/50 transition-colors">
-                    <span className="text-sm font-medium text-primary">View All Feedback</span>
+                  <div className="px-4 sm:px-6 py-3 sm:py-4 border-t text-center hover:bg-muted/50 transition-colors">
+                    <span className="text-xs sm:text-sm font-medium text-primary">View All Feedback</span>
                   </div>
                 </Link>
               )}
