@@ -13,9 +13,11 @@ import { useFeedbackList, useFeedbackStats, useAIInsights, useAuth, useOrganizat
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useState, useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
+import { useRouter } from "next/navigation"
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const router = useRouter()
   const isOrganization = user?.userType === "organization"
   const teacherId = isOrganization ? null : (user?.id || null)
   const organizationId = isOrganization ? user?.id : undefined
@@ -108,7 +110,15 @@ export default function DashboardPage() {
                   <QrCode className="h-4 w-4" />
                 </Button>
               </Link>
-              <Button size="sm" variant="ghost" className="h-9 w-9 p-0">
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-9 w-9 p-0"
+                onClick={() => {
+                  logout()
+                  router.push("/login")
+                }}
+              >
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
