@@ -852,24 +852,26 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-foreground">{rec}</p>
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t gap-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2 pt-2 border-t">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-xs h-7"
+                          className="text-xs h-7 w-full sm:w-auto"
                           onClick={() => setSelectedRecommendation(rec)}
                         >
                           <Eye className="h-3 w-3 mr-1.5" />
                           View Supporting Reviews
                         </Button>
                         {hasPremium && (
-                          <ConvertToActionable
-                            restaurantId={restaurantId}
-                            sourceType="ai_suggestion"
-                            sourceId={insight.id}
-                            sourceText={rec}
-                            defaultTitle={rec.substring(0, 50) + (rec.length > 50 ? "..." : "")}
-                          />
+                          <div className="w-full sm:w-auto">
+                            <ConvertToActionable
+                              restaurantId={restaurantId}
+                              sourceType="ai_suggestion"
+                              sourceId={insight.id}
+                              sourceText={rec}
+                              defaultTitle={rec.substring(0, 50) + (rec.length > 50 ? "..." : "")}
+                            />
+                          </div>
                         )}
                       </div>
                     </div>

@@ -524,3 +524,4 @@ async function bootstrapDataSinhala() {
 
 bootstrapDataSinhala();
 
+
