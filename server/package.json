@@ -41,6 +41,8 @@
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/data-source.ts",
     "migration:show": "typeorm-ts-node-commonjs migration:show -d src/data-source.ts",
     "admin:create": "ts-node src/scripts/create-admin.ts",
-    "data:bootstrap": "ts-node src/scripts/bootstrap-data.ts"
+    "data:bootstrap": "ts-node src/scripts/bootstrap-data.ts",
+    "data:bootstrap:sinhala": "ts-node src/scripts/bootstrap-data-sinhala.ts",
+    "data:bootstrap:tamil": "ts-node src/scripts/bootstrap-data-tamil.ts"
   }
 }

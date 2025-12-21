@@ -31,12 +31,14 @@ import {
   Clock,
   AlertCircle,
   Wand2,
+  Eye,
 } from "lucide-react"
 import type { AIInsight } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast-simple"
-import { useGenerateInsights, useFeedbackStats } from "@/hooks"
+import { useGenerateInsights, useFeedbackStats, useFeedbackList, useOrganizationFeedback } from "@/hooks"
 import type { TimePeriod } from "@/lib/api-client"
 import { ConvertToActionable } from "@/components/convert-to-actionable"
+import { SupportingReviewsDialog } from "@/components/supporting-reviews-dialog"
 
 interface AIInsightsContentProps {
   restaurantId: string
@@ -61,8 +63,23 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("month")
   const [filter, setFilter] = useState<"external" | "internal" | "overall">("overall")
   const [premiumError, setPremiumError] = useState(false)
+  const [selectedRecommendation, setSelectedRecommendation] = useState<string | null>(null)
   const generateInsightsMutation = useGenerateInsights()
   const { data: statsData } = useFeedbackStats(restaurantId)
+  
+  // Determine if user is organization or teacher
+  const isOrganization = user?.userType === "organization"
+  const organizationId = isOrganization ? user?.id : undefined
+  const teacherId = isOrganization ? null : restaurantId
+  
+  // Fetch feedback based on user type
+  const { data: teacherFeedbackData } = useFeedbackList(teacherId)
+  const { data: orgFeedbackData } = useOrganizationFeedback({})
+  
+  // Get feedback based on user type
+  const feedback = isOrganization 
+    ? (orgFeedbackData?.feedback || [])
+    : (teacherFeedbackData?.feedback || [])
 
   const stats = statsData?.stats
   const hasPremium = isPremiumFromAuth(user?.subscription)
@@ -835,8 +852,17 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-foreground">{rec}</p>
-                      {hasPremium && (
-                        <div className="flex justify-end mt-2 pt-2 border-t">
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs h-7"
+                          onClick={() => setSelectedRecommendation(rec)}
+                        >
+                          <Eye className="h-3 w-3 mr-1.5" />
+                          View Supporting Reviews
+                        </Button>
+                        {hasPremium && (
                           <ConvertToActionable
                             restaurantId={restaurantId}
                             sourceType="ai_suggestion"
@@ -844,13 +870,23 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
                             sourceText={rec}
                             defaultTitle={rec.substring(0, 50) + (rec.length > 50 ? "..." : "")}
                           />
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
               </CardContent>
             </Card>
+          )}
+
+          {/* Supporting Reviews Dialog */}
+          {selectedRecommendation && (
+            <SupportingReviewsDialog
+              recommendation={selectedRecommendation}
+              feedback={feedback}
+              open={!!selectedRecommendation}
+              onOpenChange={(open) => !open && setSelectedRecommendation(null)}
+            />
           )}
 
           {/* Unaddressed Concerns */}
