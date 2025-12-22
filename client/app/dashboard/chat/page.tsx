@@ -1,8 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AIChatWidget } from "@/components/ai-chat-widget"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
@@ -43,36 +40,36 @@ export default function ChatPage() {
 
       {/* Main Content */}
       <main className={cn(
-        "flex-1 transition-all duration-200",
+        "flex-1 transition-all duration-200 flex flex-col",
         !isMobile && "ml-64"
       )}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="mb-6">
+        {isMobile ? (
+          // Mobile: Full page chat
+          <div className="flex-1 flex flex-col pb-20">
+            <div className="border-b px-4 py-3 flex-shrink-0">
+              <h1 className="text-xl font-bold">AI Chat</h1>
+              <p className="text-muted-foreground text-xs mt-1">
+                Ask questions about your feedback and get AI-powered insights
+              </p>
+            </div>
+            <div className="flex-1 min-h-0">
+              <AIChatWidget restaurantId={restaurantId} isMobile={true} fullPage={true} />
+            </div>
+          </div>
+        ) : (
+          // Desktop: Fixed full-height chat
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="border-b px-6 py-4 flex-shrink-0">
               <h1 className="text-2xl font-bold">AI Chat</h1>
               <p className="text-muted-foreground text-sm mt-1">
                 Ask questions about your feedback and get AI-powered insights
               </p>
             </div>
-
-            {isMobile ? (
-              // Mobile: Floating button (handled by AIChatWidget)
-              <AIChatWidget restaurantId={restaurantId} isMobile={true} />
-            ) : (
-              // Desktop: Full chat interface
-              <Card>
-                <CardHeader>
-                  <CardTitle>Chat with AI Assistant</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[calc(100vh-16rem)]">
-                    <AIChatWidget restaurantId={restaurantId} />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <div className="flex-1 min-h-0 p-6">
+              <AIChatWidget restaurantId={restaurantId} fullPage={true} />
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       {/* Mobile Bottom Navigation */}

@@ -34,16 +34,17 @@ interface ChatMessage {
 interface AIChatWidgetProps {
   restaurantId: string
   isMobile?: boolean
+  fullPage?: boolean // If true, renders full page chat without floating button/modal
 }
 
-export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWidgetProps) {
+export function AIChatWidget({ restaurantId, isMobile: isMobileProp, fullPage = false }: AIChatWidgetProps) {
   const { toast } = useToast()
   const { user } = useAuth()
   const mobileHook = useIsMobile()
   const isMobile = useMemo(() => mobileHook || isMobileProp, [mobileHook, isMobileProp])
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [inputMessage, setInputMessage] = useState("")
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(fullPage) // Auto-open if full page
   const [premiumError, setPremiumError] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -188,6 +189,16 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
     )
     
     if (isMobile) {
+      if (fullPage) {
+        return (
+          <div className="h-full flex flex-col">
+            <div className="border-b px-4 py-3 flex-shrink-0">
+              <h2 className="font-semibold text-lg">AI Chat</h2>
+            </div>
+            {premiumContent}
+          </div>
+        )
+      }
       return (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetContent side="bottom" className="h-[90vh] p-0 flex flex-col">
@@ -197,6 +208,19 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
             {premiumContent}
           </SheetContent>
         </Sheet>
+      )
+    }
+    
+    if (fullPage) {
+      return (
+        <div className="h-full flex flex-col bg-card rounded-lg border shadow-sm">
+          <div className="border-b px-4 py-3 flex-shrink-0">
+            <h2 className="font-semibold text-lg">AI Chat</h2>
+          </div>
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+            {premiumContent}
+          </div>
+        </div>
       )
     }
     
@@ -293,6 +317,35 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
   )
 
   if (isMobile) {
+    // Full page mode: render chat directly without floating button
+    if (fullPage) {
+      return (
+        <div className="h-full flex flex-col">
+          <div className="border-b px-4 py-3 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5 text-primary" />
+                <h2 className="font-semibold text-lg">AI Assistant</h2>
+              </div>
+              {chatMessages.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setChatMessages([])}
+                  className="h-8 w-8"
+                  title="Clear chat"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+          {chatContent}
+        </div>
+      )
+    }
+
+    // Widget mode: floating button with sheet
     return (
       <>
         {/* Floating Button */}
@@ -335,7 +388,38 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp }: AIChatWid
     )
   }
 
-  // Desktop: Sidebar Chat
+  // Desktop: Chat interface
+  if (fullPage) {
+    // Full page mode: no card wrapper, just the chat content
+    return (
+      <div className="h-full flex flex-col bg-card rounded-lg border shadow-sm">
+        <div className="border-b px-4 py-3 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5 text-primary" />
+              <h2 className="font-semibold text-lg">AI Assistant</h2>
+            </div>
+            {chatMessages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setChatMessages([])}
+                className="h-8 w-8"
+                title="Clear chat"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {chatContent}
+        </div>
+      </div>
+    )
+  }
+
+  // Widget mode: card wrapper for sidebar
   return (
     <Card className="h-full flex flex-col shadow-lg">
       <CardHeader className="pb-3 border-b flex-shrink-0">
