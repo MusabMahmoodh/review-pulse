@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { Teacher, Organization, TeacherAuth, StudentFeedback, ExternalReview, FeedbackTag } from "../models";
+import { Teacher, Organization, TeacherAuth, StudentFeedback, ExternalReview, FeedbackTag, Form } from "../models";
 import { requireAuth } from "../middleware/auth";
 import { hashPassword } from "../utils/password";
 import { generateTeacherId } from "../utils/qr-generator";
@@ -203,6 +203,18 @@ router.post("/teachers", requireAuth, async (req, res) => {
     });
 
     await authRepo.save(auth);
+
+    // Create general form for the teacher
+    const formRepo = AppDataSource.getRepository(Form);
+    const generalForm = formRepo.create({
+      id: `form_general_${teacherId}_${Date.now()}`,
+      name: "General Feedback Form",
+      description: "Default feedback form for collecting student feedback",
+      isGeneral: true,
+      teacherId,
+      isActive: true,
+    });
+    await formRepo.save(generalForm);
 
     return res.status(201).json({
       success: true,

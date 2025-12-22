@@ -1212,3 +1212,143 @@ export const organizationsApi = {
   },
 };
 
+// Forms API
+export const formsApi = {
+  // Get all forms
+  getForms: async (params?: {
+    teacherId?: string;
+    organizationId?: string;
+    includeInactive?: boolean;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.teacherId) queryParams.append("teacherId", params.teacherId);
+    if (params?.organizationId) queryParams.append("organizationId", params.organizationId);
+    if (params?.includeInactive) queryParams.append("includeInactive", "true");
+
+    const query = queryParams.toString();
+    return fetchApi<{
+      forms: Array<{
+        id: string;
+        name: string;
+        description?: string;
+        isGeneral: boolean;
+        teacherId?: string;
+        organizationId?: string;
+        isActive: boolean;
+        createdAt: string;
+        updatedAt: string;
+        tags?: Array<{
+          id: string;
+          tag: {
+            id: string;
+            name: string;
+            color?: string;
+            description?: string;
+          };
+        }>;
+      }>;
+    }>(`/api/forms${query ? `?${query}` : ""}`);
+  },
+
+  // Create a new form
+  createForm: async (data: {
+    name: string;
+    description?: string;
+    teacherId?: string;
+    organizationId?: string;
+    tagIds?: string[];
+  }) => {
+    return fetchApi<{
+      success: boolean;
+      form: {
+        id: string;
+        name: string;
+        description?: string;
+        isGeneral: boolean;
+        teacherId?: string;
+        organizationId?: string;
+        isActive: boolean;
+        tags?: Array<{
+          id: string;
+          tag: {
+            id: string;
+            name: string;
+            color?: string;
+          };
+        }>;
+      };
+    }>("/api/forms", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Update a form
+  updateForm: async (formId: string, data: {
+    name?: string;
+    description?: string;
+    tagIds?: string[];
+  }) => {
+    return fetchApi<{
+      success: boolean;
+      form: {
+        id: string;
+        name: string;
+        description?: string;
+        isGeneral: boolean;
+        tags?: Array<{
+          id: string;
+          tag: {
+            id: string;
+            name: string;
+            color?: string;
+          };
+        }>;
+      };
+    }>(`/api/forms/${formId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Delete a form (soft delete)
+  deleteForm: async (formId: string) => {
+    return fetchApi<{
+      success: boolean;
+      message: string;
+    }>(`/api/forms/${formId}`, {
+      method: "DELETE",
+    });
+  },
+
+  // Create or get general form
+  getOrCreateGeneralForm: async (data: {
+    teacherId?: string;
+    organizationId?: string;
+  }) => {
+    return fetchApi<{
+      success: boolean;
+      form: {
+        id: string;
+        name: string;
+        description?: string;
+        isGeneral: boolean;
+        teacherId?: string;
+        organizationId?: string;
+        isActive: boolean;
+        tags?: Array<{
+          id: string;
+          tag: {
+            id: string;
+            name: string;
+            color?: string;
+          };
+        }>;
+      };
+    }>("/api/forms/general", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+};
+

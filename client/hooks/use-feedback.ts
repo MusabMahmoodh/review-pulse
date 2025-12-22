@@ -4,13 +4,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { feedbackApi } from "@/lib/api-client";
 import type { StudentFeedback } from "@/lib/types";
 
-export function useFeedbackList(teacherId: string | null, tagId?: string | null, filterTeacherId?: string | null) {
+export function useFeedbackList(teacherId: string | null, tagId?: string | null, filterTeacherId?: string | null, formId?: string | null) {
   return useQuery<{ feedback: StudentFeedback[] }>({
-    queryKey: ["feedback", teacherId, tagId, filterTeacherId],
+    queryKey: ["feedback", teacherId, tagId, filterTeacherId, formId],
     queryFn: async () => {
       const params: any = {};
       if (filterTeacherId) params.filterTeacherId = filterTeacherId;
       if (tagId) params.tagId = tagId;
+      if (formId) params.formId = formId;
       
       const queryString = new URLSearchParams(params).toString();
       const response = await feedbackApi.list(teacherId!, queryString ? `?${queryString}` : undefined);

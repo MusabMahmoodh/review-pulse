@@ -16,6 +16,8 @@ import { TeamMember } from "./models/TeamMember";
 import { Tag } from "./models/Tag";
 import { FeedbackTag } from "./models/FeedbackTag";
 import { ExternalReviewTag } from "./models/ExternalReviewTag";
+import { Form } from "./models/Form";
+import { FormTag } from "./models/FormTag";
 
 // Load environment variables before creating DataSource
 dotenv.config();
@@ -50,6 +52,8 @@ const connectionOptions: any = {
         Tag,
         FeedbackTag,
         ExternalReviewTag,
+        Form,
+        FormTag,
     ],
     migrations: [__dirname + "/migrations/**/*.ts"],
     migrationsTableName: "migrations",

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { Organization, OrganizationAuth, Teacher, TeacherAuth, Subscription } from "../models";
+import { Organization, OrganizationAuth, Teacher, TeacherAuth, Subscription, Form } from "../models";
 import { hashPassword, comparePassword } from "../utils/password";
 import { generateTeacherId, generateOrganizationId, generateQRCodeUrl } from "../utils/qr-generator";
 import { signAccessToken, verifyAccessToken, extractTokenFromHeader } from "../utils/jwt";
@@ -91,6 +91,18 @@ router.post("/register/organization", async (req, res) => {
     });
 
     await authRepo.save(auth);
+
+    // Create general form for the organization
+    const formRepo = AppDataSource.getRepository(Form);
+    const generalForm = formRepo.create({
+      id: `form_general_${organizationId}_${Date.now()}`,
+      name: "General Feedback Form",
+      description: "Default feedback form for collecting student feedback",
+      isGeneral: true,
+      organizationId,
+      isActive: true,
+    });
+    await formRepo.save(generalForm);
 
     const token = signAccessToken({
       organizationId,
@@ -211,6 +223,18 @@ router.post("/register/teacher", async (req, res) => {
     });
 
     await authRepo.save(auth);
+
+    // Create general form for the teacher
+    const formRepo = AppDataSource.getRepository(Form);
+    const generalForm = formRepo.create({
+      id: `form_general_${teacherId}_${Date.now()}`,
+      name: "General Feedback Form",
+      description: "Default feedback form for collecting student feedback",
+      isGeneral: true,
+      teacherId,
+      isActive: true,
+    });
+    await formRepo.save(generalForm);
 
     const token = signAccessToken({
       teacherId,

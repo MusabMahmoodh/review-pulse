@@ -2,6 +2,7 @@ import { Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn,
 import { Teacher } from "./Teacher";
 import { Organization } from "./Organization";
 import { FeedbackTag } from "./FeedbackTag";
+import { Form } from "./Form";
 
 @Entity("student_feedback")
 export class StudentFeedback {
@@ -41,6 +42,9 @@ export class StudentFeedback {
   @Column({ type: "text", nullable: true })
   courseName?: string; // e.g., "Mathematics 101", "Physics"
 
+  @Column({ nullable: true })
+  formId?: string; // Reference to the form used for this feedback
+
   @CreateDateColumn()
   createdAt!: Date;
 
@@ -52,6 +56,10 @@ export class StudentFeedback {
   @ManyToOne(() => Organization, { nullable: true })
   @JoinColumn({ name: "organizationId" })
   organization?: Organization;
+
+  @ManyToOne(() => Form, { nullable: true })
+  @JoinColumn({ name: "formId" })
+  form?: Form;
 
   @OneToMany(() => FeedbackTag, (feedbackTag) => feedbackTag.feedback)
   tags!: FeedbackTag[];

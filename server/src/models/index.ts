@@ -13,4 +13,6 @@ export { TeamMember } from "./TeamMember";
 export { Tag } from "./Tag";
 export { FeedbackTag } from "./FeedbackTag";
 export { ExternalReviewTag } from "./ExternalReviewTag";
+export { Form } from "./Form";
+export { FormTag } from "./FormTag";
 

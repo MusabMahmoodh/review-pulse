@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { StudentFeedback, Teacher, Organization, ExternalReview, Tag, FeedbackTag } from "../models";
+import { StudentFeedback, Teacher, Organization, ExternalReview, Tag, FeedbackTag, Form } from "../models";
 import { requireAuth } from "../middleware/auth";
+import { IsNull } from "typeorm";
 
 const router = Router();
 
@@ -86,6 +87,7 @@ router.post("/submit", async (req, res) => {
       suggestions,
       courseName,
       tagIds, // Array of tag IDs that students can select
+      formId, // Optional: specific form to use (defaults to general form)
     } = req.body;
 
     // Validate that either teacherId or organizationId is provided, but not both
@@ -112,6 +114,7 @@ router.post("/submit", async (req, res) => {
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const tagRepo = AppDataSource.getRepository(Tag);
     const feedbackTagRepo = AppDataSource.getRepository(FeedbackTag);
+    const formRepo = AppDataSource.getRepository(Form);
 
     let teacher: Teacher | null = null;
     let organization: Organization | null = null;
@@ -172,6 +175,48 @@ router.post("/submit", async (req, res) => {
       }
     }
 
+    // Get or create general form for this teacher/org
+    let form: Form | null = null;
+    if (formId) {
+      // Use specified form
+      form = await formRepo.findOne({
+        where: { id: formId, isActive: true },
+      });
+      if (!form) {
+        return res.status(404).json({ error: "Form not found" });
+      }
+      // Verify form belongs to the correct teacher/org
+      if (teacherId && form.teacherId !== teacherId) {
+        return res.status(400).json({ error: "Form does not belong to this teacher" });
+      }
+      if (organizationId && form.organizationId !== organizationId) {
+        return res.status(400).json({ error: "Form does not belong to this organization" });
+      }
+    } else {
+      // Get or create general form
+      const generalForm = await formRepo.findOne({
+        where: teacherId
+          ? { teacherId, isGeneral: true }
+          : { organizationId, isGeneral: true },
+      });
+
+      if (generalForm) {
+        form = generalForm;
+      } else {
+        // Create general form if it doesn't exist
+        form = formRepo.create({
+          id: `form_general_${teacherId || organizationId}_${Date.now()}`,
+          name: "General Feedback Form",
+          description: "Default feedback form for collecting student feedback",
+          isGeneral: true,
+          teacherId: teacherId || undefined,
+          organizationId: organizationId || undefined,
+          isActive: true,
+        });
+        await formRepo.save(form);
+      }
+    }
+
     // Create feedback entry
     const feedback = feedbackRepo.create({
       id: `feedback_${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -186,6 +231,7 @@ router.post("/submit", async (req, res) => {
       overallRating,
       suggestions: suggestions || undefined,
       courseName: courseName || undefined,
+      formId: form.id,
     });
 
     await feedbackRepo.save(feedback);
@@ -247,6 +293,7 @@ router.get("/list", requireAuth, async (req, res) => {
     const teacherId = req.teacherId as string | undefined;
     const organizationId = req.organizationId as string | undefined;
     const tagId = req.query.tagId as string | undefined; // Optional filter by tag
+    const formId = req.query.formId as string | undefined; // Optional filter by form
     const filterTeacherId = req.query.filterTeacherId as string | undefined; // For org filtering by teacher
 
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
@@ -257,8 +304,12 @@ router.get("/list", requireAuth, async (req, res) => {
 
     if (teacherId) {
       // Teacher viewing their own feedback
+      const whereCondition: any = { teacherId };
+      if (formId) {
+        whereCondition.formId = formId;
+      }
       feedback = await feedbackRepo.find({
-        where: { teacherId },
+        where: whereCondition,
         order: { createdAt: "DESC" },
       });
     } else if (organizationId) {
@@ -271,19 +322,43 @@ router.get("/list", requireAuth, async (req, res) => {
       if (teacherIds.length > 0) {
         if (filterTeacherId) {
           // Filter by specific teacher
+          const whereCondition: any = { teacherId: filterTeacherId };
+          if (formId) {
+            whereCondition.formId = formId;
+          }
           feedback = await feedbackRepo.find({
-            where: { teacherId: filterTeacherId },
+            where: whereCondition,
             order: { createdAt: "DESC" },
             relations: ["teacher"],
           });
         } else {
           // All teachers' feedback
+          const whereConditions = teacherIds.map((id) => {
+            const condition: any = { teacherId: id };
+            if (formId) {
+              condition.formId = formId;
+            }
+            return condition;
+          });
           feedback = await feedbackRepo.find({
-            where: teacherIds.map((id) => ({ teacherId: id })),
+            where: whereConditions,
             order: { createdAt: "DESC" },
             relations: ["teacher"],
           });
         }
+      }
+      
+      // Also include organization-level feedback
+      if (!filterTeacherId) {
+        const orgWhereCondition: any = { organizationId, teacherId: IsNull() };
+        if (formId) {
+          orgWhereCondition.formId = formId;
+        }
+        const orgFeedback = await feedbackRepo.find({
+          where: orgWhereCondition,
+          order: { createdAt: "DESC" },
+        });
+        feedback = [...feedback, ...orgFeedback];
       }
     } else {
       return res.status(400).json({ error: "Teacher ID or organization access required" });
