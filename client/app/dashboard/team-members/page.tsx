@@ -22,16 +22,12 @@ import { useToast } from "@/hooks/use-toast-simple"
 import { isPremiumFromAuth } from "@/lib/premium"
 import { PremiumUpgrade } from "@/components/premium-upgrade"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
-import { DashboardSidebar } from "@/components/dashboard-sidebar"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
 import type { TeamMember } from "@/lib/types"
 
 export default function TeamMembersPage() {
   const { user, isLoading: authLoading } = useAuth()
   const restaurantId = user?.id || null
   const { toast } = useToast()
-  const isMobile = useIsMobile()
   const [open, setOpen] = useState(false)
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
   const [name, setName] = useState("")
@@ -183,50 +179,7 @@ export default function TeamMembersPage() {
   // Show premium upgrade if not premium
   if (!hasPremium) {
     return (
-      <div className="min-h-screen bg-background flex w-full overflow-x-hidden">
-        <DashboardSidebar />
-        <main className={cn(
-          "flex-1 transition-all duration-200 w-full",
-          !isMobile && "ml-64"
-        )}>
-          <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 sticky top-0 z-40 shadow-sm">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center gap-3 h-16">
-                <Link href="/dashboard">
-                  <Button size="sm" variant="ghost" className="h-9 w-9 p-0">
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <div className="flex-1">
-                  <h1 className="font-bold text-lg leading-tight">Team Members</h1>
-                  <p className="text-xs text-muted-foreground">Manage your team</p>
-                </div>
-              </div>
-            </div>
-          </header>
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <PremiumUpgrade
-              feature="Team Members"
-              description="Add team members and assign them to actionable items for better task management."
-            />
-          </div>
-        </main>
-        <MobileBottomNav />
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-background flex w-full overflow-x-hidden">
-      {/* Desktop Sidebar */}
-      <DashboardSidebar />
-
-      {/* Main Content */}
-      <main className={cn(
-        "flex-1 transition-all duration-200 w-full",
-        !isMobile && "ml-64"
-      )}>
-        {/* Header */}
+      <div className="min-h-screen bg-background">
         <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 sticky top-0 z-40 shadow-sm">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3 h-16">
@@ -239,16 +192,44 @@ export default function TeamMembersPage() {
                 <h1 className="font-bold text-lg leading-tight">Team Members</h1>
                 <p className="text-xs text-muted-foreground">Manage your team</p>
               </div>
-              <Button onClick={() => handleOpenDialog()} size="sm" className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Member
-              </Button>
             </div>
           </div>
         </header>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <PremiumUpgrade
+            feature="Team Members"
+            description="Add team members and assign them to actionable items for better task management."
+          />
+        </div>
+      </div>
+    )
+  }
 
-        {/* Main Content */}
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 sticky top-0 z-40 shadow-sm">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3 h-16">
+            <Link href="/dashboard">
+              <Button size="sm" variant="ghost" className="h-9 w-9 p-0">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div className="flex-1">
+              <h1 className="font-bold text-lg leading-tight">Team Members</h1>
+              <p className="text-xs text-muted-foreground">Manage your team</p>
+            </div>
+            <Button onClick={() => handleOpenDialog()} size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Member
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Stats */}
           <Card>
@@ -339,10 +320,10 @@ export default function TeamMembersPage() {
             </div>
           )}
         </div>
-        </div>
+      </div>
 
-        {/* Add/Edit Dialog */}
-        <Dialog open={open} onOpenChange={handleCloseDialog}>
+      {/* Add/Edit Dialog */}
+      <Dialog open={open} onOpenChange={handleCloseDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -415,8 +396,7 @@ export default function TeamMembersPage() {
             </Button>
           </DialogFooter>
         </DialogContent>
-        </Dialog>
-      </main>
+      </Dialog>
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
