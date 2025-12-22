@@ -44,6 +44,7 @@ interface AIInsightsContentProps {
   restaurantId: string
   insight: AIInsight | null
   onInsightUpdate: (insight: AIInsight) => void
+  formId?: string // Optional: for form-wise insights, undefined/null for global
 }
 
 const TIME_PERIOD_OPTIONS: { value: TimePeriod; label: string }[] = [
@@ -57,7 +58,7 @@ const TIME_PERIOD_OPTIONS: { value: TimePeriod; label: string }[] = [
   { value: "6months", label: "Last 6 Months" },
 ]
 
-export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AIInsightsContentProps) {
+export function AIInsightsContent({ restaurantId, insight, onInsightUpdate, formId }: AIInsightsContentProps) {
   const { toast } = useToast()
   const { user } = useAuth()
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("month")
@@ -72,8 +73,8 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
   const organizationId = isOrganization ? user?.id : undefined
   const teacherId = isOrganization ? null : restaurantId
   
-  // Fetch feedback based on user type
-  const { data: teacherFeedbackData } = useFeedbackList(teacherId)
+  // Fetch feedback based on user type and formId
+  const { data: teacherFeedbackData } = useFeedbackList(teacherId, null, null, formId)
   const { data: orgFeedbackData } = useOrganizationFeedback({})
   
   // Get feedback based on user type
@@ -86,7 +87,13 @@ export function AIInsightsContent({ restaurantId, insight, onInsightUpdate }: AI
 
   const generateInsights = () => {
     generateInsightsMutation.mutate(
-      { restaurantId, timePeriod, filter },
+      { 
+        teacherId: teacherId || null,
+        organizationId: organizationId,
+        timePeriod, 
+        filter,
+        formId: formId || undefined, // Pass formId for form-wise insights
+      },
       {
         onSuccess: (data) => {
           // Convert API response to AIInsight type (generatedAt is string from API, needs to be Date)

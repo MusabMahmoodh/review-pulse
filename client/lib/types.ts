@@ -71,12 +71,41 @@ export interface ExternalReview {
 
 export interface AIInsight {
   id: string
-  teacherId: string
+  teacherId?: string
+  organizationId?: string
+  formId?: string
   summary: string
   recommendations: string[]
   sentiment: "positive" | "neutral" | "negative"
   keyTopics: string[]
   generatedAt: Date
+  // Enhanced insight fields
+  executiveSummary?: {
+    positiveSentiment?: string
+    overallRating?: number
+    totalFeedback?: number
+    trend?: "improving" | "declining" | "stable"
+  }
+  performanceMetrics?: {
+    teaching: number
+    communication: number
+    material: number
+  }
+  keyStrengths?: Array<{
+    title: string
+    description: string
+    rating: number
+  }>
+  areasForImprovement?: Array<{
+    title: string
+    description: string
+    supportingReviews?: string[]
+  }>
+  studentStruggles?: Array<{
+    topic: string
+    description: string
+    frequency?: number
+  }>
 }
 
 export interface FeedbackStats {

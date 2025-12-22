@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { AIInsight, Teacher, Organization, StudentFeedback, ExternalReview } from "../models";
-import { generateInsights, chatAboutFeedback, chatAboutFeedbackStream } from "../utils/openai";
+import { AIInsight, Teacher, Organization, StudentFeedback, ExternalReview, Form } from "../models";
+import { generateInsights, generateEnhancedInsights, chatAboutFeedback, chatAboutFeedbackStream } from "../utils/openai";
 import { MoreThanOrEqual } from "typeorm";
 import { requireAuth } from "../middleware/auth";
 import { isPremium } from "../utils/subscription";
@@ -137,12 +137,38 @@ router.get("/insights", requireAuth, async (req, res) => {
     }
 
     const insightRepo = AppDataSource.getRepository(AIInsight);
+    const formRepo = AppDataSource.getRepository(Form);
+
+    // Verify form access if formId is provided
+    if (formId) {
+      const form = await formRepo.findOne({ where: { id: formId } });
+      if (!form) {
+        return res.status(404).json({ error: "Form not found" });
+      }
+
+      // Verify ownership
+      if (teacherId && form.teacherId && form.teacherId !== teacherId) {
+        return res.status(403).json({ error: "Cannot access other teacher's form insights" });
+      }
+      if (organizationId && form.organizationId && form.organizationId !== organizationId) {
+        return res.status(403).json({ error: "Cannot access other organization's form insights" });
+      }
+    }
 
     let query = insightRepo.createQueryBuilder("insight");
     if (teacherId) {
       query = query.where("insight.teacherId = :teacherId", { teacherId });
     } else if (organizationId) {
       query = query.where("insight.organizationId = :organizationId", { organizationId });
+    }
+
+    // Filter by formId: if provided, get form-wise insights; otherwise, get global insights (formId IS NULL)
+    if (formId && formId !== "") {
+      // Form-wise insights
+      query = query.andWhere("insight.formId = :formId", { formId });
+    } else {
+      // Global insights (formId is null)
+      query = query.andWhere("insight.formId IS NULL");
     }
 
     // If time period is specified, filter insights generated within that period
@@ -281,10 +307,28 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const reviewRepo = AppDataSource.getRepository(ExternalReview);
     const insightRepo = AppDataSource.getRepository(AIInsight);
+    const formRepo = AppDataSource.getRepository(Form);
 
     let teacher: Teacher | null = null;
     let organization: Organization | null = null;
     let teacherIds: string[] = [];
+    let form: Form | null = null;
+
+    // Verify form access if formId is provided
+    if (formId) {
+      form = await formRepo.findOne({ where: { id: formId } });
+      if (!form) {
+        return res.status(404).json({ error: "Form not found" });
+      }
+
+      // Verify ownership
+      if (teacherId && form.teacherId && form.teacherId !== teacherId) {
+        return res.status(403).json({ error: "Cannot generate insights for other teacher's form" });
+      }
+      if (organizationId && form.organizationId && form.organizationId !== organizationId) {
+        return res.status(403).json({ error: "Cannot generate insights for other organization's form" });
+      }
+    }
 
     if (teacherId) {
       teacher = await teacherRepo.findOne({ where: { id: teacherId } });
@@ -380,16 +424,18 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
       }
     }
 
-    // Generate insights using OpenAI
+    // Generate enhanced insights using OpenAI
     let insightData;
     const entityName = teacherId ? teacher?.name : organization?.name || "Organization";
-    console.log("Generating insights...");
+    const formName = form?.name;
+    console.log("Generating enhanced insights...");
     console.log(`Filter: ${filter}`);
+    console.log(`Form ID: ${formId || "global"}`);
     console.log(`Feedback count: ${feedback.length}`);
     console.log(`Reviews count: ${reviews.length}`);
     console.log(entityName);
     try {
-      insightData = await generateInsights(feedback, reviews, entityName);
+      insightData = await generateEnhancedInsights(feedback, reviews, entityName, formName);
     } catch (error: any) {
       console.error("OpenAI error:", error);
       return res.status(500).json({
@@ -402,10 +448,16 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
       id: `insight_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       teacherId: teacherId || undefined,
       organizationId: organizationId || undefined,
+      formId: formId || undefined, // null for global insights, formId for form-wise
       summary: insightData.summary,
       recommendations: insightData.recommendations,
       sentiment: insightData.sentiment,
       keyTopics: insightData.keyTopics,
+      executiveSummary: insightData.executiveSummary,
+      performanceMetrics: insightData.performanceMetrics,
+      keyStrengths: insightData.keyStrengths,
+      areasForImprovement: insightData.areasForImprovement,
+      studentStruggles: insightData.studentStruggles,
     });
 
     await insightRepo.save(insight);
@@ -413,7 +465,7 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
     return res.json({
       success: true,
       insight,
-      message: `Insights generated successfully for ${timePeriod} period`,
+      message: `Insights generated successfully for ${formId ? `form "${formName}"` : "all forms"} (${timePeriod} period)`,
     });
   } catch (error) {
     console.error("Error generating insights:", error);

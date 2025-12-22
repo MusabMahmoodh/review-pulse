@@ -15,7 +15,8 @@ export default function AIInsightsPage() {
   const { user, isLoading: authLoading } = useAuth()
   const restaurantId = user?.id || null
   const isMobile = useIsMobile()
-  const { data: insightsData } = useAIInsights(restaurantId)
+  // Get global insights (formId = null/undefined for overall performance)
+  const { data: insightsData } = useAIInsights(restaurantId, undefined, undefined, undefined)
   
   // Convert API response to AIInsight type (generatedAt is string from API, needs to be Date)
   const convertInsight = (apiInsight: any): AIInsight | null => {
@@ -84,6 +85,7 @@ export default function AIInsightsPage() {
               restaurantId={restaurantId}
               insight={insight}
               onInsightUpdate={setInsight}
+              formId={undefined} // Global insights (overall performance)
             />
             <AIChatWidget restaurantId={restaurantId} isMobile={true} />
           </div>

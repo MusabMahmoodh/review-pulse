@@ -2,7 +2,7 @@
 
 import { useAuth, useForms, useFeedbackList, useFeedbackStats, useAIInsights, useActionableItems, useGenerateInsights } from "@/hooks"
 import { useRouter, useParams } from "next/navigation"
-import { useMemo } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { ArrowLeft, MessageSquare, BarChart3, TrendingUp, TrendingDown, Minus, Sparkles, CheckSquare, Wand2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,6 +13,8 @@ import { FeedbackList } from "@/components/feedback-list"
 import { RatingsChart } from "@/components/ratings-chart"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast-simple"
+import { AIInsightsContent } from "@/components/ai-insights-content"
+import type { AIInsight } from "@/lib/types"
 
 export default function FormDashboardPage() {
   const { user } = useAuth()
@@ -45,8 +47,30 @@ export default function FormDashboardPage() {
 
   // Use feedback directly (already filtered by formId)
   const formFeedback = feedbackData?.feedback || []
-  const aiInsight = insightsData?.insight || null
   const actionableItems = actionableItemsData?.items || []
+
+  // Convert API response to AIInsight type
+  const convertInsight = (apiInsight: any): AIInsight | null => {
+    if (!apiInsight) return null
+    return {
+      ...apiInsight,
+      generatedAt: new Date(apiInsight.generatedAt)
+    }
+  }
+
+  const [aiInsight, setAiInsight] = useState<AIInsight | null>(
+    insightsData?.insight ? convertInsight(insightsData.insight) : null
+  )
+
+  // Update insight when data changes
+  useEffect(() => {
+    if (insightsData?.insight) {
+      setAiInsight(convertInsight(insightsData.insight))
+    }
+  }, [insightsData])
+
+  // Get restaurantId for AIInsightsContent (it expects restaurantId)
+  const restaurantId = teacherId || organizationId || ""
 
   // Calculate stats for this form
   const formStats = useMemo(() => {
@@ -301,102 +325,31 @@ export default function FormDashboardPage() {
           </Card>
         )}
 
-        {/* AI Insights */}
-        <Card className="bg-white dark:bg-[#202c33] border-[#e9edef] dark:border-[#313d45]">
-          <CardHeader>
-            <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-purple-600" />
-                AI Insights
-              </CardTitle>
-              {aiInsight && (
+        {/* AI Insights - Full Component */}
+        <div className="space-y-4">
+          <Card className="bg-white dark:bg-[#202c33] border-[#e9edef] dark:border-[#313d45]">
+            <CardHeader>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-purple-600" />
+                  AI Insights for {form.name}
+                </CardTitle>
                 <Link href="/dashboard/ai-insights">
-                  <Button variant="outline" size="sm" className="text-xs">View All</Button>
+                  <Button variant="outline" size="sm" className="text-xs">View Global Insights</Button>
                 </Link>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {insightsLoading ? (
-              <div className="text-center py-4">
-                <p className="text-sm text-[#667781] dark:text-[#8696a0]">Loading insights...</p>
               </div>
-            ) : aiInsight ? (
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm font-medium mb-1">Summary</p>
-                  <p className="text-sm text-[#667781] dark:text-[#8696a0]">{aiInsight.summary}</p>
-                </div>
-                {aiInsight.recommendations && aiInsight.recommendations.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium mb-1">Top Recommendations</p>
-                    <ul className="text-sm text-[#667781] dark:text-[#8696a0] space-y-1">
-                      {aiInsight.recommendations.slice(0, 3).map((rec, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <span className="text-primary">•</span>
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Badge variant={aiInsight.sentiment === "positive" ? "default" : aiInsight.sentiment === "negative" ? "destructive" : "secondary"}>
-                    {aiInsight.sentiment}
-                  </Badge>
-                  {aiInsight.keyTopics && aiInsight.keyTopics.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {aiInsight.keyTopics.slice(0, 3).map((topic, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs">
-                          {topic}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-4 space-y-3">
-                <p className="text-sm text-[#667781] dark:text-[#8696a0]">No AI insights generated yet for this form.</p>
-                {formFeedback.length > 0 && (
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      generateInsightsMutation.mutate(
-                        {
-                          teacherId,
-                          organizationId,
-                          timePeriod: "month",
-                          filter: "internal",
-                          formId,
-                        },
-                        {
-                          onSuccess: () => {
-                            toast({
-                              title: "Generating Insights",
-                              description: "AI is analyzing your feedback. This may take a moment...",
-                            });
-                          },
-                          onError: (error: any) => {
-                            toast({
-                              title: "Error",
-                              description: error?.data?.error || "Failed to generate insights",
-                              variant: "destructive",
-                            });
-                          },
-                        }
-                      );
-                    }}
-                    disabled={generateInsightsMutation.isPending}
-                  >
-                    <Wand2 className="h-4 w-4 mr-2" />
-                    {generateInsightsMutation.isPending ? "Generating..." : "Generate Insights"}
-                  </Button>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+          </Card>
+          
+          {restaurantId && (
+            <AIInsightsContent
+              restaurantId={restaurantId}
+              insight={aiInsight}
+              onInsightUpdate={setAiInsight}
+              formId={formId} // Form-wise insights
+            />
+          )}
+        </div>
 
         {/* Actionable Items */}
         <Card className="bg-white dark:bg-[#202c33] border-[#e9edef] dark:border-[#313d45]">
