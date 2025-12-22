@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState, use, useMemo } from "react"
+import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +22,8 @@ interface PageProps {
 export default function FeedbackPage({ params }: PageProps) {
   const resolvedParams = use(params)
   const teacherIdOrOrgId = resolvedParams.teacherId
+  const searchParams = useSearchParams()
+  const formId = searchParams.get("formId") || undefined
   const { toast } = useToast()
   const [submitted, setSubmitted] = useState(false)
   const submitMutation = useSubmitFeedback()
@@ -73,6 +76,7 @@ export default function FeedbackPage({ params }: PageProps) {
       {
         teacherId: teacherId || undefined,
         organizationId: organizationId || undefined,
+        formId: formId,
         teachingRating: formData.teachingRating,
         communicationRating: formData.communicationRating,
         materialRating: formData.materialRating,

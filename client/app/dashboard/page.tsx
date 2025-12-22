@@ -3,7 +3,7 @@
 import { useAuth, useForms, useGetOrCreateGeneralForm } from "@/hooks"
 import { useRouter } from "next/navigation"
 import { useMemo, useEffect, useState } from "react"
-import { MessageSquare, Plus, Settings, LogOut, QrCode } from "lucide-react"
+import { MessageSquare, Plus, Settings, LogOut, QrCode, Share2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
 import Link from "next/link"
@@ -11,6 +11,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CreateFormModal } from "@/components/create-form-modal"
+import { FormShareModal } from "@/components/form-share-modal"
 
 export default function DashboardPage() {
   const { user, logout } = useAuth()
@@ -20,6 +21,8 @@ export default function DashboardPage() {
   const teacherId = isOrganization ? null : (user?.id || null)
   const organizationId = isOrganization ? user?.id : undefined
   const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [selectedForm, setSelectedForm] = useState<{ id: string; name: string } | null>(null)
 
   const { data: formsData, isLoading } = useForms({
     teacherId: teacherId || undefined,
@@ -53,6 +56,12 @@ export default function DashboardPage() {
 
   const handleFormClick = (formId: string) => {
     router.push(`/dashboard/forms/${formId}`)
+  }
+
+  const handleShareClick = (e: React.MouseEvent, form: { id: string; name: string }) => {
+    e.stopPropagation() // Prevent form click
+    setSelectedForm(form)
+    setShareModalOpen(true)
   }
 
   return (
@@ -127,8 +136,18 @@ export default function DashboardPage() {
                       </p>
                     )}
                   </div>
-                  <div className="text-xs text-[#667781] dark:text-[#8696a0] shrink-0">
-                    →
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-[#667781] dark:text-[#8696a0] hover:bg-[#e9edef] dark:hover:bg-[#2a3942]"
+                      onClick={(e) => handleShareClick(e, { id: generalForm.id, name: generalForm.name })}
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                    <div className="text-xs text-[#667781] dark:text-[#8696a0]">
+                      →
+                    </div>
                   </div>
                 </div>
               </div>
@@ -186,8 +205,18 @@ export default function DashboardPage() {
                           </div>
                         )}
                       </div>
-                      <div className="text-xs text-[#667781] dark:text-[#8696a0] shrink-0">
-                        →
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-[#667781] dark:text-[#8696a0] hover:bg-[#e9edef] dark:hover:bg-[#2a3942]"
+                          onClick={(e) => handleShareClick(e, { id: form.id, name: form.name })}
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                        <div className="text-xs text-[#667781] dark:text-[#8696a0]">
+                          →
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -235,6 +264,18 @@ export default function DashboardPage() {
         teacherId={teacherId || undefined}
         organizationId={organizationId}
       />
+
+      {/* Share Form Modal */}
+      {selectedForm && (
+        <FormShareModal
+          open={shareModalOpen}
+          onOpenChange={setShareModalOpen}
+          formId={selectedForm.id}
+          formName={selectedForm.name}
+          teacherId={teacherId || undefined}
+          organizationId={organizationId}
+        />
+      )}
     </div>
   )
 }
