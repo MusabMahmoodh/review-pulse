@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { StudentFeedback, Teacher, Organization, ExternalReview, Class, Tag, FeedbackTag } from "../models";
+import { StudentFeedback, Teacher, Organization, ExternalReview, Tag, FeedbackTag } from "../models";
 import { requireAuth } from "../middleware/auth";
 
 const router = Router();
@@ -76,7 +76,6 @@ router.post("/submit", async (req, res) => {
     const {
       teacherId,
       organizationId,
-      classId,
       studentName,
       studentContact,
       studentId,
@@ -111,7 +110,6 @@ router.post("/submit", async (req, res) => {
     const teacherRepo = AppDataSource.getRepository(Teacher);
     const orgRepo = AppDataSource.getRepository(Organization);
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
-    const classRepo = AppDataSource.getRepository(Class);
     const tagRepo = AppDataSource.getRepository(Tag);
     const feedbackTagRepo = AppDataSource.getRepository(FeedbackTag);
 
@@ -137,19 +135,6 @@ router.post("/submit", async (req, res) => {
         return res.status(404).json({ error: "Organization not found" });
       }
       targetOrganizationId = organizationId;
-    }
-
-    // Validate class if provided (only for teacher feedback)
-    if (classId) {
-      if (!teacherId) {
-        return res.status(400).json({ error: "classId can only be used with teacherId" });
-      }
-      const classEntity = await classRepo.findOne({
-        where: { id: classId, teacherId, status: "active" },
-      });
-      if (!classEntity) {
-        return res.status(404).json({ error: "Class not found or inactive" });
-      }
     }
 
     // Validate tags if provided
@@ -192,7 +177,6 @@ router.post("/submit", async (req, res) => {
       id: `feedback_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       teacherId: teacherId || undefined,
       organizationId: organizationId || undefined,
-      classId: classId || undefined,
       studentName: studentName || undefined,
       studentContact: studentContact || undefined,
       studentId: studentId || undefined,
@@ -262,7 +246,6 @@ router.get("/list", requireAuth, async (req, res) => {
   try {
     const teacherId = req.teacherId as string | undefined;
     const organizationId = req.organizationId as string | undefined;
-    const classId = req.query.classId as string | undefined;
     const tagId = req.query.tagId as string | undefined; // Optional filter by tag
     const filterTeacherId = req.query.filterTeacherId as string | undefined; // For org filtering by teacher
 
@@ -274,15 +257,9 @@ router.get("/list", requireAuth, async (req, res) => {
 
     if (teacherId) {
       // Teacher viewing their own feedback
-      const whereClause: any = { teacherId };
-      if (classId) {
-        whereClause.classId = classId;
-      }
-
       feedback = await feedbackRepo.find({
-        where: whereClause,
+        where: { teacherId },
         order: { createdAt: "DESC" },
-        relations: ["class"],
       });
     } else if (organizationId) {
       // Organization viewing all teachers' feedback
@@ -292,28 +269,20 @@ router.get("/list", requireAuth, async (req, res) => {
       const teacherIds = teachers.map((t) => t.id);
 
       if (teacherIds.length > 0) {
-        const whereConditions: any[] = teacherIds.map((id) => ({
-          teacherId: filterTeacherId && filterTeacherId === id ? filterTeacherId : id,
-        }));
-
         if (filterTeacherId) {
           // Filter by specific teacher
           feedback = await feedbackRepo.find({
             where: { teacherId: filterTeacherId },
             order: { createdAt: "DESC" },
-            relations: ["class", "teacher"],
+            relations: ["teacher"],
           });
         } else {
           // All teachers' feedback
           feedback = await feedbackRepo.find({
             where: teacherIds.map((id) => ({ teacherId: id })),
             order: { createdAt: "DESC" },
-            relations: ["class", "teacher"],
+            relations: ["teacher"],
           });
-        }
-
-        if (classId) {
-          feedback = feedback.filter((f) => f.classId === classId);
         }
       }
     } else {

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, MessageSquare, Sparkles, CheckSquare, Users, QrCode, BookOpen, Tag } from "lucide-react"
+import { Home, MessageSquare, Sparkles, CheckSquare, Users, QrCode, Tag } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 
@@ -16,11 +16,6 @@ const navItems = [
     href: "/dashboard/feedback",
     label: "Feedback",
     icon: MessageSquare,
-  },
-  {
-    href: "/dashboard/classes",
-    label: "Classes",
-    icon: BookOpen,
   },
   {
     href: "/dashboard/tags",

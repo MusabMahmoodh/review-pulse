@@ -1,7 +1,6 @@
 import { Entity, PrimaryColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, OneToMany } from "typeorm";
 import { Teacher } from "./Teacher";
 import { Organization } from "./Organization";
-import { Class } from "./Class";
 import { FeedbackTag } from "./FeedbackTag";
 
 @Entity("student_feedback")
@@ -14,9 +13,6 @@ export class StudentFeedback {
 
   @Column({ nullable: true })
   organizationId?: string; // Optional: feedback can be for an organization
-
-  @Column({ nullable: true })
-  classId?: string; // Optional: feedback can be associated with a specific class
 
   @Column({ nullable: true })
   studentName?: string;
@@ -56,10 +52,6 @@ export class StudentFeedback {
   @ManyToOne(() => Organization, { nullable: true })
   @JoinColumn({ name: "organizationId" })
   organization?: Organization;
-
-  @ManyToOne(() => Class, (classEntity) => classEntity.feedback, { nullable: true })
-  @JoinColumn({ name: "classId" })
-  class?: Class;
 
   @OneToMany(() => FeedbackTag, (feedbackTag) => feedbackTag.feedback)
   tags!: FeedbackTag[];

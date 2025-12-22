@@ -207,7 +207,7 @@ export default function QRCodePage() {
                 <li>Consider adding instructions like "Scan to leave feedback"</li>
                 <li>Test the QR code with your phone before displaying</li>
                 <li>Share the link directly via WhatsApp, email, or other messaging apps</li>
-                <li>Create separate QR codes for different classes to track feedback by class</li>
+                <li>Share your QR code with students to collect feedback</li>
               </ul>
             </div>
           </CardContent>

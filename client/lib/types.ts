@@ -40,7 +40,6 @@ export interface Tag {
 export interface StudentFeedback {
   id: string
   teacherId: string
-  classId?: string
   studentName?: string
   studentContact?: string
   studentId?: string
@@ -57,24 +56,6 @@ export interface StudentFeedback {
     color?: string
     description?: string
   }>
-}
-
-export interface Class {
-  id: string
-  name: string
-  description?: string
-  teacherId: string
-  organizationId?: string
-  qrCode: string
-  qrCodeUrl?: string
-  status: "active" | "archived"
-  createdAt: Date
-  updatedAt: Date
-  teacher?: {
-    id: string
-    name: string
-    email: string
-  }
 }
 
 export interface ExternalReview {

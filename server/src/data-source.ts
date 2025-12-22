@@ -13,7 +13,6 @@ import { Subscription } from "./models/Subscription";
 import { ReviewPageSettings } from "./models/ReviewPageSettings";
 import { ActionableItem } from "./models/ActionableItem";
 import { TeamMember } from "./models/TeamMember";
-import { Class } from "./models/Class";
 import { Tag } from "./models/Tag";
 import { FeedbackTag } from "./models/FeedbackTag";
 import { ExternalReviewTag } from "./models/ExternalReviewTag";
@@ -48,7 +47,6 @@ const connectionOptions: any = {
         ReviewPageSettings,
         ActionableItem,
         TeamMember,
-        Class,
         Tag,
         FeedbackTag,
         ExternalReviewTag,

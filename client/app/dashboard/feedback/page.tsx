@@ -326,11 +326,6 @@ export default function FeedbackPage() {
                               <Calendar className="h-3 w-3" />
                               {new Date(item.createdAt).toLocaleDateString()}
                             </span>
-                            {item.classId && (
-                              <Badge variant="outline" className="text-xs">
-                                Class Feedback
-                              </Badge>
-                            )}
                           </div>
                         </div>
                       </div>

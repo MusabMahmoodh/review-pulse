@@ -3,19 +3,15 @@
 import type React from "react"
 
 import { useState, use, useMemo } from "react"
-import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Send, CheckCircle, Star, BookOpen } from "lucide-react"
+import { Send, CheckCircle, Star } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useSubmitFeedback, useReviewPageSettings, useTags } from "@/hooks"
-import { classesApi } from "@/lib/api-client"
-import { useQuery } from "@tanstack/react-query"
 import { TagSelector } from "@/components/tag-selector"
 
 interface PageProps {
@@ -25,8 +21,6 @@ interface PageProps {
 export default function FeedbackPage({ params }: PageProps) {
   const resolvedParams = use(params)
   const teacherIdOrOrgId = resolvedParams.teacherId
-  const searchParams = useSearchParams()
-  const classId = searchParams.get("class") || undefined
   const { toast } = useToast()
   const [submitted, setSubmitted] = useState(false)
   const submitMutation = useSubmitFeedback()
@@ -37,13 +31,6 @@ export default function FeedbackPage({ params }: PageProps) {
   const organizationId = isOrganizationId ? teacherIdOrOrgId : undefined
   
   const { data: settings } = useReviewPageSettings(teacherId || undefined)
-  
-  // Fetch class information if classId is provided (only for teachers)
-  const { data: classData } = useQuery({
-    queryKey: ["class", classId],
-    queryFn: () => classesApi.get(classId!),
-    enabled: !!classId && !!teacherId,
-  })
 
   const [formData, setFormData] = useState({
     studentName: "",
@@ -86,7 +73,6 @@ export default function FeedbackPage({ params }: PageProps) {
       {
         teacherId: teacherId || undefined,
         organizationId: organizationId || undefined,
-        classId: classId,
         teachingRating: formData.teachingRating,
         communicationRating: formData.communicationRating,
         materialRating: formData.materialRating,
@@ -223,14 +209,6 @@ export default function FeedbackPage({ params }: PageProps) {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{pageSettings.welcomeMessage}</CardTitle>
             <CardDescription>Help us improve by sharing your learning experience</CardDescription>
-            {classData?.class && (
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <Badge variant="secondary" className="gap-1.5">
-                  <BookOpen className="h-3 w-3" />
-                  {classData.class.name}
-                </Badge>
-              </div>
-            )}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
