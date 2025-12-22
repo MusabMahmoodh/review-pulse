@@ -183,10 +183,10 @@ export default function TeamMembersPage() {
   // Show premium upgrade if not premium
   if (!hasPremium) {
     return (
-      <div className="min-h-screen bg-background flex">
+      <div className="min-h-screen bg-background flex w-full overflow-x-hidden">
         <DashboardSidebar />
         <main className={cn(
-          "flex-1 transition-all duration-200",
+          "flex-1 transition-all duration-200 w-full",
           !isMobile && "ml-64"
         )}>
           <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 sticky top-0 z-40 shadow-sm">
@@ -217,13 +217,13 @@ export default function TeamMembersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex w-full overflow-x-hidden">
       {/* Desktop Sidebar */}
       <DashboardSidebar />
 
       {/* Main Content */}
       <main className={cn(
-        "flex-1 transition-all duration-200",
+        "flex-1 transition-all duration-200 w-full",
         !isMobile && "ml-64"
       )}>
         {/* Header */}

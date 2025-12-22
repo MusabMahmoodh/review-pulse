@@ -67,13 +67,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] dark:bg-[#111b21] flex">
+    <div className="min-h-screen bg-[#f0f2f5] dark:bg-[#111b21] flex w-full overflow-x-hidden">
       {/* Desktop Sidebar */}
       <DashboardSidebar />
 
       {/* Main Content */}
       <main className={cn(
-        "flex-1 flex flex-col transition-all duration-200",
+        "flex-1 flex flex-col transition-all duration-200 w-full",
         !isMobile && "ml-64"
       )}>
         {/* Header */}

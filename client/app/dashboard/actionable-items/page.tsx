@@ -214,13 +214,13 @@ export default function ActionableItemsPage() {
   const pendingCount = allItems.filter((item) => !item.completed).length
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex w-full overflow-x-hidden">
       {/* Desktop Sidebar */}
       <DashboardSidebar />
 
       {/* Main Content */}
       <main className={cn(
-        "flex-1 transition-all duration-200",
+        "flex-1 transition-all duration-200 w-full",
         !isMobile && "ml-64"
       )}>
         {/* Header */}

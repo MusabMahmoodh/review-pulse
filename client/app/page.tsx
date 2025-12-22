@@ -43,27 +43,27 @@ export default function HomePage() {
 
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50 animate-in fade-in slide-in-from-top duration-500">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between max-w-7xl">
           <div className="animate-in slide-in-from-left duration-700 delay-100">
             <Logo width={32} height={32} showText className="animate-in zoom-in duration-700" />
           </div>
-          <nav className="flex items-center gap-4 animate-in slide-in-from-right duration-700 delay-200">
+          <nav className="flex items-center gap-2 sm:gap-4 animate-in slide-in-from-right duration-700 delay-200">
             <Link href="/login">
-              <Button variant="ghost" className="transition-all hover:scale-105">Login</Button>
+              <Button variant="ghost" size="sm" className="text-sm transition-all hover:scale-105">Login</Button>
             </Link>
             <Link href="/register">
-              <Button className="transition-all hover:scale-105 hover:shadow-lg">Start Free</Button>
+              <Button size="sm" className="text-sm transition-all hover:scale-105 hover:shadow-lg">Start Free</Button>
             </Link>
           </nav>
         </div>
       </header>
 
       {/* 1️⃣ HERO SECTION */}
-      <section className="container mx-auto px-4 py-16 md:py-24 relative">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 relative max-w-7xl">
+        <div className="max-w-4xl mx-auto text-center space-y-4 sm:space-y-6">
           {/* Main heading with animation */}
           <h1
-            className={`text-4xl md:text-6xl font-bold tracking-tight text-balance transition-all duration-1000 ${
+            className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-balance transition-all duration-1000 px-2 ${
               mounted
                 ? "animate-in fade-in slide-in-from-bottom-4 duration-1000"
                 : "opacity-0 translate-y-4"
@@ -86,7 +86,7 @@ export default function HomePage() {
 
           {/* Subtitle with animation */}
           <p
-            className={`text-xl text-muted-foreground text-pretty max-w-3xl mx-auto transition-all duration-1000 delay-500 ${
+            className={`text-base sm:text-lg md:text-xl text-muted-foreground text-pretty max-w-3xl mx-auto transition-all duration-1000 delay-500 px-4 ${
               mounted
                 ? "animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500"
                 : "opacity-0 translate-y-4"
@@ -160,10 +160,10 @@ export default function HomePage() {
       </section>
 
       {/* 2️⃣ PROBLEM SECTION */}
-      <section className="container mx-auto px-4 py-16 md:py-24 bg-muted/30 relative">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Student feedback is everywhere. Clarity is nowhere.</h2>
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 bg-muted/30 relative max-w-7xl">
+        <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
+          <div className="text-center space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-balance px-2">Student feedback is everywhere. Clarity is nowhere.</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-6 mt-12">
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-left duration-700 delay-100">
@@ -228,10 +228,10 @@ export default function HomePage() {
       </section>
 
       {/* 3️⃣ SOLUTION / VALUE PROPOSITION */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
-        <div className="max-w-5xl mx-auto space-y-12">
-          <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Guestra turns feedback into decisions.</h2>
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 max-w-7xl">
+        <div className="max-w-5xl mx-auto space-y-8 sm:space-y-12">
+          <div className="text-center space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-balance px-2">Guestra turns feedback into decisions.</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="text-center group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
@@ -280,10 +280,10 @@ export default function HomePage() {
       </section>
 
       {/* 4️⃣ HOW IT WORKS */}
-      <section id="how-it-works" className="container mx-auto px-4 py-16 md:py-24 bg-muted/30">
-        <div className="max-w-5xl mx-auto space-y-12">
-          <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">
+      <section id="how-it-works" className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 bg-muted/30 max-w-7xl">
+        <div className="max-w-5xl mx-auto space-y-8 sm:space-y-12">
+          <div className="text-center space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-balance px-2">
               From student voice to teaching action — in minutes
             </h2>
           </div>
@@ -359,10 +359,10 @@ export default function HomePage() {
       </section>
 
       {/* 5️⃣ CORE BENEFITS */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
-        <div className="max-w-5xl mx-auto space-y-12">
-          <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Why teachers and institutes choose Guestra</h2>
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 max-w-7xl">
+        <div className="max-w-5xl mx-auto space-y-8 sm:space-y-12">
+          <div className="text-center space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-balance px-2">Why teachers and institutes choose Guestra</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
@@ -414,10 +414,10 @@ export default function HomePage() {
       </section>
 
       {/* 6️⃣ USE CASES / WHO IT'S FOR */}
-      <section className="container mx-auto px-4 py-16 md:py-24 bg-muted/30">
-        <div className="max-w-5xl mx-auto space-y-12">
-          <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Built for teachers and institutes</h2>
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 bg-muted/30 max-w-7xl">
+        <div className="max-w-5xl mx-auto space-y-8 sm:space-y-12">
+          <div className="text-center space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-balance px-2">Built for teachers and institutes</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card className="text-center group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
@@ -452,10 +452,10 @@ export default function HomePage() {
       </section>
 
       {/* 7️⃣ AI DIFFERENTIATION */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
-        <div className="max-w-4xl mx-auto space-y-12">
-          <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">AI that works like a smart manager</h2>
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 max-w-7xl">
+        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
+          <div className="text-center space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-balance px-2">AI that works like a smart manager</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-left duration-700 delay-100">
@@ -510,10 +510,10 @@ export default function HomePage() {
       </section>
 
       {/* 8️⃣ SOCIAL PROOF */}
-      <section className="container mx-auto px-4 py-16 md:py-24 bg-muted/30">
-        <div className="max-w-4xl mx-auto space-y-12">
-          <div className="text-center space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Trusted by teachers and institutes</h2>
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 bg-muted/30 max-w-7xl">
+        <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
+          <div className="text-center space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-balance px-2">Trusted by teachers and institutes</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 hover:scale-105 animate-in fade-in slide-in-from-left duration-700 delay-100">
@@ -536,10 +536,10 @@ export default function HomePage() {
       </section>
 
       {/* 9️⃣ PRICING TEASER */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
-        <div className="max-w-3xl mx-auto text-center space-y-8">
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <h2 className="text-3xl md:text-4xl font-bold text-balance">Simple pricing. No surprises.</h2>
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 max-w-7xl">
+        <div className="max-w-3xl mx-auto text-center space-y-6 sm:space-y-8">
+          <div className="space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-balance px-2">Simple pricing. No surprises.</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
@@ -575,12 +575,12 @@ export default function HomePage() {
       </section>
 
       {/* 🔟 FINAL CTA */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
+      <section className="container mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 max-w-7xl">
         <Card className="bg-primary text-primary-foreground group hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <CardContent className="p-8 md:p-12 text-center space-y-6 relative overflow-hidden">
+          <CardContent className="p-6 sm:p-8 md:p-12 text-center space-y-4 sm:space-y-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/5 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            <h2 className="text-3xl md:text-4xl font-bold text-balance relative z-10">Your students are already talking.</h2>
-            <p className="text-lg opacity-90 text-pretty max-w-2xl mx-auto relative z-10">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-balance relative z-10 px-2">Your students are already talking.</h2>
+            <p className="text-base sm:text-lg opacity-90 text-pretty max-w-2xl mx-auto relative z-10 px-4">
               Guestra tells you what to do next.
             </p>
             <div className="pt-2 relative z-10">
@@ -598,8 +598,8 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t mt-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="container mx-auto px-4 py-8 text-center text-sm text-muted-foreground">
+      <footer className="border-t mt-12 sm:mt-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 text-center text-sm text-muted-foreground max-w-7xl">
           <p>© 2025 Guestra. All rights reserved.</p>
           <p className="mt-2 text-xs">every feedback is a teaching opportunity</p>
         </div>

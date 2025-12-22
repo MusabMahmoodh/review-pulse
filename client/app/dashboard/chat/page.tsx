@@ -62,13 +62,13 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex w-full overflow-x-hidden">
       {/* Desktop Sidebar */}
       <DashboardSidebar />
 
       {/* Main Content */}
       <main className={cn(
-        "flex-1 transition-all duration-200 flex",
+        "flex-1 transition-all duration-200 flex w-full",
         !isMobile && "ml-64"
       )}>
         {isMobile ? (

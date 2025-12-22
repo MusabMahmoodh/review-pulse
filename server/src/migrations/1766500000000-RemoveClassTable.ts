@@ -90,3 +90,4 @@ export class RemoveClassTable1766500000000 implements MigrationInterface {
   }
 }
 
+
