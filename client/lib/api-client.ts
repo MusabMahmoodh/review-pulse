@@ -717,7 +717,7 @@ export const metaAuthApi = {
 export type TimePeriod = "2days" | "week" | "month" | "2months" | "3months" | "4months" | "5months" | "6months";
 
 export const aiApi = {
-  getInsights: async (teacherId: string | null, timePeriod?: TimePeriod, organizationId?: string) => {
+  getInsights: async (teacherId: string | null, timePeriod?: TimePeriod, organizationId?: string, formId?: string) => {
     const params = new URLSearchParams();
     if (teacherId) {
       params.append("teacherId", teacherId);
@@ -727,6 +727,9 @@ export const aiApi = {
     }
     if (timePeriod) {
       params.append("timePeriod", timePeriod);
+    }
+    if (formId) {
+      params.append("formId", formId);
     }
     return fetchApi<{
       insight: {
@@ -742,13 +745,16 @@ export const aiApi = {
     }>(`/api/ai/insights${params.toString() ? `?${params.toString()}` : ""}`);
   },
 
-  generateInsights: async (teacherId: string | null, timePeriod: TimePeriod = "month", filter: "external" | "internal" | "overall" = "overall", organizationId?: string) => {
+  generateInsights: async (teacherId: string | null, timePeriod: TimePeriod = "month", filter: "external" | "internal" | "overall" = "overall", organizationId?: string, formId?: string) => {
     const body: any = { timePeriod, filter };
     if (teacherId) {
       body.teacherId = teacherId;
     }
     if (organizationId) {
       body.organizationId = organizationId;
+    }
+    if (formId) {
+      body.formId = formId;
     }
     return fetchApi<{
       success: boolean;
@@ -875,7 +881,7 @@ export const aiApi = {
 
 // Actionable Items API
 export const actionableItemsApi = {
-  list: async (teacherId: string | null, completed?: boolean, organizationId?: string) => {
+  list: async (teacherId: string | null, completed?: boolean, organizationId?: string, formId?: string) => {
     const params = new URLSearchParams();
     if (teacherId) {
       params.append("teacherId", teacherId);
@@ -885,6 +891,9 @@ export const actionableItemsApi = {
     }
     if (completed !== undefined) {
       params.append("completed", String(completed));
+    }
+    if (formId) {
+      params.append("formId", formId);
     }
     return fetchApi<{
       items: Array<{

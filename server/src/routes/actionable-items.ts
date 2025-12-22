@@ -38,6 +38,7 @@ router.get("/", requireAuth, async (req, res) => {
     const teacherId = req.teacherId as string | undefined;
     const organizationId = req.organizationId as string | undefined;
     const completed = req.query.completed as string | undefined;
+    const formId = req.query.formId as string | undefined;
 
     if (!teacherId && !organizationId) {
       return res.status(400).json({ error: "Teacher ID or organization ID required" });
@@ -63,6 +64,7 @@ router.get("/", requireAuth, async (req, res) => {
     }
 
     const actionableItemRepo = AppDataSource.getRepository(ActionableItem);
+    const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
 
     const query = actionableItemRepo.createQueryBuilder("item");
     if (teacherId) {
@@ -73,6 +75,27 @@ router.get("/", requireAuth, async (req, res) => {
 
     if (completed !== undefined) {
       query.andWhere("item.completed = :completed", { completed: completed === "true" });
+    }
+
+    // Filter by formId if provided - only include items from feedback with this formId
+    if (formId) {
+      // Get all feedback IDs for this form
+      const feedbackWithForm = await feedbackRepo.find({
+        where: { formId },
+        select: ["id"],
+      });
+      const feedbackIds = feedbackWithForm.map(f => f.id);
+      
+      if (feedbackIds.length > 0) {
+        // Only include actionable items where sourceType is "comment" and sourceId is in the feedbackIds
+        query.andWhere(
+          "(item.sourceType = 'comment' AND item.sourceId IN (:...feedbackIds))",
+          { feedbackIds }
+        );
+      } else {
+        // No feedback for this form, return empty
+        return res.json({ items: [] });
+      }
     }
 
     const items = await query.orderBy("item.createdAt", "DESC").getMany();

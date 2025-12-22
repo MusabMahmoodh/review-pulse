@@ -111,6 +111,7 @@ router.get("/insights", requireAuth, async (req, res) => {
     const teacherId = req.teacherId as string | undefined;
     const organizationId = req.organizationId as string | undefined;
     const timePeriod = req.query.timePeriod as TimePeriod | undefined;
+    const formId = req.query.formId as string | undefined;
 
     if (!teacherId && !organizationId) {
       return res.status(400).json({ error: "Teacher ID or organization ID required" });
@@ -223,7 +224,7 @@ router.get("/insights", requireAuth, async (req, res) => {
  */
 router.post("/generate-insights", requireAuth, async (req, res) => {
   try {
-    const { timePeriod = "month", filter = "overall" } = req.body;
+    const { timePeriod = "month", filter = "overall", formId } = req.body;
     const teacherId = req.teacherId as string | undefined;
     const organizationId = req.organizationId as string | undefined;
     
@@ -307,24 +308,40 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
     // Get feedback for analysis within the time period
     let feedback: StudentFeedback[] = [];
     if (teacherId) {
+      const whereCondition: any = {
+        teacherId,
+        createdAt: MoreThanOrEqual(startDate),
+      };
+      if (formId) {
+        whereCondition.formId = formId;
+      }
       feedback = await feedbackRepo.find({
-        where: {
-          teacherId,
-          createdAt: MoreThanOrEqual(startDate),
-        },
+        where: whereCondition,
         order: { createdAt: "DESC" },
       });
     } else if (organizationId) {
       // Get organization-level feedback and all teachers' feedback
+      const orgWhereCondition: any = {
+        organizationId,
+        createdAt: MoreThanOrEqual(startDate),
+      };
+      if (formId) {
+        orgWhereCondition.formId = formId;
+      }
       const orgFeedback = await feedbackRepo.find({
-        where: {
-          organizationId,
-          createdAt: MoreThanOrEqual(startDate),
-        },
+        where: orgWhereCondition,
         order: { createdAt: "DESC" },
       });
+      
+      const teachersWhereConditions = teacherIds.map(id => {
+        const condition: any = { teacherId: id, createdAt: MoreThanOrEqual(startDate) };
+        if (formId) {
+          condition.formId = formId;
+        }
+        return condition;
+      });
       const teachersFeedback = await feedbackRepo.find({
-        where: teacherIds.map(id => ({ teacherId: id, createdAt: MoreThanOrEqual(startDate) })),
+        where: teachersWhereConditions,
         order: { createdAt: "DESC" },
       });
       feedback = [...orgFeedback, ...teachersFeedback];

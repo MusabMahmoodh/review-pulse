@@ -1,9 +1,9 @@
 "use client"
 
-import { useAuth, useForms, useFeedbackList, useFeedbackStats } from "@/hooks"
+import { useAuth, useForms, useFeedbackList, useFeedbackStats, useAIInsights, useActionableItems, useGenerateInsights } from "@/hooks"
 import { useRouter, useParams } from "next/navigation"
 import { useMemo } from "react"
-import { ArrowLeft, MessageSquare, BarChart3, TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { ArrowLeft, MessageSquare, BarChart3, TrendingUp, TrendingDown, Minus, Sparkles, CheckSquare, Wand2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Logo } from "@/components/logo"
@@ -11,6 +11,8 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
 import { FeedbackList } from "@/components/feedback-list"
 import { RatingsChart } from "@/components/ratings-chart"
+import Link from "next/link"
+import { useToast } from "@/hooks/use-toast-simple"
 
 export default function FormDashboardPage() {
   const { user } = useAuth()
@@ -33,8 +35,18 @@ export default function FormDashboardPage() {
   const { data: feedbackData, isLoading: feedbackLoading } = useFeedbackList(teacherId, null, null, formId)
   const { data: statsData, isLoading: statsLoading } = useFeedbackStats(teacherId)
 
+  // Get AI insights for this form
+  const { data: insightsData, isLoading: insightsLoading } = useAIInsights(teacherId, undefined, organizationId, formId)
+  const generateInsightsMutation = useGenerateInsights()
+  const { toast } = useToast()
+
+  // Get actionable items for this form
+  const { data: actionableItemsData, isLoading: actionableItemsLoading } = useActionableItems(teacherId, undefined, organizationId, formId)
+
   // Use feedback directly (already filtered by formId)
   const formFeedback = feedbackData?.feedback || []
+  const aiInsight = insightsData?.insight || null
+  const actionableItems = actionableItemsData?.items || []
 
   // Calculate stats for this form
   const formStats = useMemo(() => {
@@ -288,6 +300,154 @@ export default function FormDashboardPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* AI Insights */}
+        <Card className="bg-white dark:bg-[#202c33] border-[#e9edef] dark:border-[#313d45]">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-purple-600" />
+                AI Insights
+              </CardTitle>
+              {aiInsight && (
+                <Link href="/dashboard/ai-insights">
+                  <Button variant="outline" size="sm" className="text-xs">View All</Button>
+                </Link>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {insightsLoading ? (
+              <div className="text-center py-4">
+                <p className="text-sm text-[#667781] dark:text-[#8696a0]">Loading insights...</p>
+              </div>
+            ) : aiInsight ? (
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium mb-1">Summary</p>
+                  <p className="text-sm text-[#667781] dark:text-[#8696a0]">{aiInsight.summary}</p>
+                </div>
+                {aiInsight.recommendations && aiInsight.recommendations.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium mb-1">Top Recommendations</p>
+                    <ul className="text-sm text-[#667781] dark:text-[#8696a0] space-y-1">
+                      {aiInsight.recommendations.slice(0, 3).map((rec, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-[#008069]">•</span>
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Badge variant={aiInsight.sentiment === "positive" ? "default" : aiInsight.sentiment === "negative" ? "destructive" : "secondary"}>
+                    {aiInsight.sentiment}
+                  </Badge>
+                  {aiInsight.keyTopics && aiInsight.keyTopics.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {aiInsight.keyTopics.slice(0, 3).map((topic, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs">
+                          {topic}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4 space-y-3">
+                <p className="text-sm text-[#667781] dark:text-[#8696a0]">No AI insights generated yet for this form.</p>
+                {formFeedback.length > 0 && (
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      generateInsightsMutation.mutate(
+                        {
+                          teacherId,
+                          organizationId,
+                          timePeriod: "month",
+                          filter: "internal",
+                          formId,
+                        },
+                        {
+                          onSuccess: () => {
+                            toast({
+                              title: "Generating Insights",
+                              description: "AI is analyzing your feedback. This may take a moment...",
+                            });
+                          },
+                          onError: (error: any) => {
+                            toast({
+                              title: "Error",
+                              description: error?.data?.error || "Failed to generate insights",
+                              variant: "destructive",
+                            });
+                          },
+                        }
+                      );
+                    }}
+                    disabled={generateInsightsMutation.isPending}
+                    className="bg-[#008069] hover:bg-[#008069]/90"
+                  >
+                    <Wand2 className="h-4 w-4 mr-2" />
+                    {generateInsightsMutation.isPending ? "Generating..." : "Generate Insights"}
+                  </Button>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Actionable Items */}
+        <Card className="bg-white dark:bg-[#202c33] border-[#e9edef] dark:border-[#313d45]">
+          <CardHeader>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <CheckSquare className="h-4 w-4 text-blue-600" />
+                Actionable Items
+              </CardTitle>
+              {actionableItems.length > 0 && (
+                <Link href="/dashboard/actionable-items">
+                  <Button variant="outline" size="sm" className="text-xs">View All ({actionableItems.length})</Button>
+                </Link>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {actionableItemsLoading ? (
+              <div className="text-center py-4">
+                <p className="text-sm text-[#667781] dark:text-[#8696a0]">Loading actionable items...</p>
+              </div>
+            ) : actionableItems.length > 0 ? (
+              <div className="space-y-2">
+                {actionableItems.slice(0, 3).map((item) => (
+                  <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/50">
+                    <div className={`h-5 w-5 rounded border-2 flex items-center justify-center mt-0.5 ${
+                      item.completed ? "bg-[#008069] border-[#008069]" : "border-[#667781] dark:border-[#8696a0]"
+                    }`}>
+                      {item.completed && (
+                        <CheckSquare className="h-3 w-3 text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium ${item.completed ? "line-through text-[#667781] dark:text-[#8696a0]" : "text-[#111b21] dark:text-[#e9edef]"}`}>
+                        {item.title}
+                      </p>
+                      {item.description && (
+                        <p className="text-xs text-[#667781] dark:text-[#8696a0] mt-1 line-clamp-1">{item.description}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-[#667781] dark:text-[#8696a0]">No actionable items for this form yet.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Feedback List */}
         <Card className="bg-white dark:bg-[#202c33] border-[#e9edef] dark:border-[#313d45]">

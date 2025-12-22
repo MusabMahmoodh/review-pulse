@@ -3,15 +3,17 @@
 import { useAuth, useForms, useGetOrCreateGeneralForm } from "@/hooks"
 import { useRouter } from "next/navigation"
 import { useMemo, useEffect, useState } from "react"
-import { MessageSquare, Plus, Settings, LogOut, QrCode, Share2 } from "lucide-react"
+import { MessageSquare, Plus, Share2, Settings, LogOut, QrCode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
 import Link from "next/link"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CreateFormModal } from "@/components/create-form-modal"
 import { FormShareModal } from "@/components/form-share-modal"
+import { DashboardSidebar } from "@/components/dashboard-sidebar"
+import { MobileBottomNav } from "@/components/mobile-bottom-nav"
+import { cn } from "@/lib/utils"
 
 export default function DashboardPage() {
   const { user, logout } = useAuth()
@@ -65,32 +67,40 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] dark:bg-[#111b21]">
-      {/* Header - WhatsApp style */}
-      <header className="sticky top-0 z-50 bg-[#008069] dark:bg-[#202c33] border-b border-[#008069]/20">
+    <div className="min-h-screen bg-[#f0f2f5] dark:bg-[#111b21] flex">
+      {/* Desktop Sidebar */}
+      <DashboardSidebar />
+
+      {/* Main Content */}
+      <main className={cn(
+        "flex-1 flex flex-col transition-all duration-200",
+        !isMobile && "ml-64"
+      )}>
+        {/* Header */}
+        <header className="sticky top-0 z-50 bg-primary dark:bg-primary border-b border-border">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Logo width={32} height={32} className="text-white" />
-              <h1 className="text-lg font-semibold text-white">
+              <Logo width={32} height={32} className="text-primary-foreground" />
+              <h1 className="text-lg font-semibold text-primary-foreground">
                 {user?.name || "Dashboard"}
               </h1>
             </div>
             <div className="flex items-center gap-2">
               <Link href="/dashboard/settings">
-                <Button size="sm" variant="ghost" className="h-9 w-9 p-0 text-white hover:bg-white/10">
+                <Button size="sm" variant="ghost" className="h-9 w-9 p-0 text-primary-foreground hover:bg-primary-foreground/10">
                   <Settings className="h-4 w-4" />
                 </Button>
               </Link>
               <Link href="/qr-code">
-                <Button size="sm" variant="ghost" className="h-9 w-9 p-0 text-white hover:bg-white/10">
+                <Button size="sm" variant="ghost" className="h-9 w-9 p-0 text-primary-foreground hover:bg-primary-foreground/10">
                   <QrCode className="h-4 w-4" />
                 </Button>
               </Link>
               <Button 
                 size="sm" 
                 variant="ghost" 
-                className="h-9 w-9 p-0 text-white hover:bg-white/10"
+                className="h-9 w-9 p-0 text-primary-foreground hover:bg-primary-foreground/10"
                 onClick={() => {
                   logout()
                   router.push("/login")
@@ -101,37 +111,37 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </header>
+        </header>
 
-      {/* Forms List - WhatsApp contacts style */}
-      <main className="flex-1 overflow-y-auto">
+        {/* Forms List */}
+        <div className="flex-1 overflow-y-auto bg-background">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-muted-foreground">Loading forms...</div>
           </div>
         ) : (
-          <div className="bg-white dark:bg-[#202c33]">
-            {/* General Form - Always at top with different background */}
+          <div className="p-4 space-y-3">
+            {/* General Form - Always at top */}
             {generalForm && (
               <div
                 onClick={() => handleFormClick(generalForm.id)}
-                className="px-4 py-3 cursor-pointer hover:bg-[#f5f6f6] dark:hover:bg-[#2a3942] transition-colors border-b border-[#e9edef] dark:border-[#313d45] bg-gradient-to-r from-[#008069]/5 to-[#008069]/10 dark:from-[#008069]/10 dark:to-[#008069]/20"
+                className="p-4 cursor-pointer bg-card hover:bg-accent transition-colors rounded-lg border border-border shadow-sm hover:shadow-md"
               >
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-[#008069] dark:bg-[#008069] flex items-center justify-center shrink-0">
-                    <MessageSquare className="h-6 w-6 text-white" />
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-xl bg-primary flex items-center justify-center shrink-0">
+                    <MessageSquare className="h-7 w-7 text-primary-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-[#111b21] dark:text-[#e9edef] truncate">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-card-foreground truncate">
                         {generalForm.name}
                       </h3>
-                      <Badge variant="default" className="bg-[#008069] text-white text-xs">
+                      <Badge variant="default" className="bg-primary text-primary-foreground text-xs">
                         General
                       </Badge>
                     </div>
                     {generalForm.description && (
-                      <p className="text-sm text-[#667781] dark:text-[#8696a0] truncate mt-0.5">
+                      <p className="text-sm text-muted-foreground truncate">
                         {generalForm.description}
                       </p>
                     )}
@@ -140,12 +150,12 @@ export default function DashboardPage() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 text-[#667781] dark:text-[#8696a0] hover:bg-[#e9edef] dark:hover:bg-[#2a3942]"
+                      className="h-9 w-9 text-muted-foreground hover:bg-accent"
                       onClick={(e) => handleShareClick(e, { id: generalForm.id, name: generalForm.name })}
                     >
                       <Share2 className="h-4 w-4" />
                     </Button>
-                    <div className="text-xs text-[#667781] dark:text-[#8696a0]">
+                    <div className="text-xs text-muted-foreground">
                       →
                     </div>
                   </div>
@@ -157,8 +167,8 @@ export default function DashboardPage() {
             {customForms.length > 0 && (
               <>
                 {customForms.length > 0 && generalForm && (
-                  <div className="px-4 py-2 bg-[#f0f2f5] dark:bg-[#111b21] border-b border-[#e9edef] dark:border-[#313d45]">
-                    <p className="text-xs font-medium text-[#667781] dark:text-[#8696a0] uppercase">
+                  <div className="px-2 py-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Custom Forms
                     </p>
                   </div>
@@ -167,23 +177,23 @@ export default function DashboardPage() {
                   <div
                     key={form.id}
                     onClick={() => handleFormClick(form.id)}
-                    className="px-4 py-3 cursor-pointer hover:bg-[#f5f6f6] dark:hover:bg-[#2a3942] transition-colors border-b border-[#e9edef] dark:border-[#313d45]"
+                    className="p-4 cursor-pointer bg-card hover:bg-accent transition-colors rounded-lg border border-border shadow-sm hover:shadow-md"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-full bg-[#54656f] dark:bg-[#54656f] flex items-center justify-center shrink-0">
-                        <MessageSquare className="h-6 w-6 text-white" />
+                    <div className="flex items-center gap-4">
+                      <div className="h-14 w-14 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                        <MessageSquare className="h-7 w-7 text-muted-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-[#111b21] dark:text-[#e9edef] truncate">
+                        <h3 className="font-semibold text-card-foreground truncate mb-1">
                           {form.name}
                         </h3>
                         {form.description && (
-                          <p className="text-sm text-[#667781] dark:text-[#8696a0] truncate mt-0.5">
+                          <p className="text-sm text-muted-foreground truncate mb-2">
                             {form.description}
                           </p>
                         )}
                         {form.tags && form.tags.length > 0 && (
-                          <div className="flex gap-1 mt-1 flex-wrap">
+                          <div className="flex gap-1.5 mt-2 flex-wrap">
                             {form.tags.slice(0, 3).map((formTag) => (
                               <Badge
                                 key={formTag.id}
@@ -198,7 +208,7 @@ export default function DashboardPage() {
                               </Badge>
                             ))}
                             {form.tags.length > 3 && (
-                              <span className="text-xs text-[#667781] dark:text-[#8696a0]">
+                              <span className="text-xs text-muted-foreground">
                                 +{form.tags.length - 3}
                               </span>
                             )}
@@ -209,12 +219,12 @@ export default function DashboardPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 text-[#667781] dark:text-[#8696a0] hover:bg-[#e9edef] dark:hover:bg-[#2a3942]"
+                          className="h-9 w-9 text-muted-foreground hover:bg-accent"
                           onClick={(e) => handleShareClick(e, { id: form.id, name: form.name })}
                         >
                           <Share2 className="h-4 w-4" />
                         </Button>
-                        <div className="text-xs text-[#667781] dark:text-[#8696a0]">
+                        <div className="text-xs text-muted-foreground">
                           →
                         </div>
                       </div>
@@ -227,35 +237,30 @@ export default function DashboardPage() {
             {/* Empty State */}
             {!generalForm && customForms.length === 0 && (
               <div className="px-4 py-12 text-center">
-                <MessageSquare className="h-12 w-12 text-[#667781] dark:text-[#8696a0] mx-auto mb-4" />
-                <p className="text-[#667781] dark:text-[#8696a0]">
+                <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
                   No forms yet. Create your first form to get started.
                 </p>
               </div>
             )}
-
-            {/* Create Form Button */}
-            <div
-              onClick={() => setCreateModalOpen(true)}
-              className="px-4 py-3 cursor-pointer hover:bg-[#f5f6f6] dark:hover:bg-[#2a3942] transition-colors border-t border-[#e9edef] dark:border-[#313d45]"
-            >
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-[#008069] dark:bg-[#008069] flex items-center justify-center shrink-0">
-                  <Plus className="h-6 w-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-medium text-[#111b21] dark:text-[#e9edef]">
-                    Create New Form
-                  </h3>
-                  <p className="text-sm text-[#667781] dark:text-[#8696a0]">
-                    Add a custom feedback form
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         )}
+        </div>
+
+        {/* Floating Create Form Button */}
+        <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50">
+          <Button
+            onClick={() => setCreateModalOpen(true)}
+            size="lg"
+            className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-shadow bg-primary hover:bg-primary/90"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
 
       {/* Create Form Modal */}
       <CreateFormModal

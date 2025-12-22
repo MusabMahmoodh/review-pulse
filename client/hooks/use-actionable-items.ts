@@ -4,11 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { actionableItemsApi } from "@/lib/api-client";
 import type { ActionableItem } from "@/lib/types";
 
-export function useActionableItems(teacherId: string | null, completed?: boolean, organizationId?: string) {
+export function useActionableItems(teacherId: string | null, completed?: boolean, organizationId?: string, formId?: string) {
   return useQuery<{ items: ActionableItem[] }>({
-    queryKey: ["actionable-items", teacherId, organizationId, completed],
+    queryKey: ["actionable-items", teacherId, organizationId, completed, formId],
     queryFn: async () => {
-      const response = await actionableItemsApi.list(teacherId, completed, organizationId);
+      const response = await actionableItemsApi.list(teacherId, completed, organizationId, formId);
       return {
       items: response.items.map((item) => ({
         ...item,
