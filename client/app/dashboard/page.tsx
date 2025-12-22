@@ -3,7 +3,7 @@
 import { useAuth, useForms, useGetOrCreateGeneralForm } from "@/hooks"
 import { useRouter } from "next/navigation"
 import { useMemo, useEffect, useState } from "react"
-import { MessageSquare, Plus, Share2, Settings, LogOut, QrCode } from "lucide-react"
+import { MessageSquare, Plus, Share2, LogOut, QrCode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
 import Link from "next/link"
@@ -87,11 +87,6 @@ export default function DashboardPage() {
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <Link href="/dashboard/settings">
-                <Button size="sm" variant="ghost" className="h-9 w-9 p-0 text-primary-foreground hover:bg-primary-foreground/10">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </Link>
               <Link href="/qr-code">
                 <Button size="sm" variant="ghost" className="h-9 w-9 p-0 text-primary-foreground hover:bg-primary-foreground/10">
                   <QrCode className="h-4 w-4" />

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, MessageSquare, MessageCircle, Tag, Users } from "lucide-react"
+import { Home, MessageSquare, MessageCircle, Tag, Users, CheckSquare, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Logo } from "@/components/logo"
@@ -19,6 +19,11 @@ const navItems = [
     icon: MessageSquare,
   },
   {
+    href: "/dashboard/actionable-items",
+    label: "Actionable Items",
+    icon: CheckSquare,
+  },
+  {
     href: "/dashboard/chat",
     label: "Chat",
     icon: MessageCircle,
@@ -32,6 +37,11 @@ const navItems = [
     href: "/dashboard/people",
     label: "People",
     icon: Users,
+  },
+  {
+    href: "/dashboard/settings",
+    label: "Settings",
+    icon: Settings,
   },
 ]
 
