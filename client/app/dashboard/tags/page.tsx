@@ -32,10 +32,14 @@ import { useToast } from "@/hooks/use-toast-simple";
 import { TagBadge } from "@/components/tag-badge";
 import { TagAnalytics } from "@/components/tag-analytics";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 export default function TagsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState<{ open: boolean; tagId?: string }>({
     open: false,
@@ -131,38 +135,46 @@ export default function TagsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex h-16 items-center gap-3">
-            <Link href="/dashboard">
-              <Button size="sm" variant="ghost" className="h-9 w-9 p-0">
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            </Link>
-            <div className="flex-1">
-              <h1 className="text-lg font-semibold leading-none">Tag Management</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {activeTags.length} active tag{activeTags.length !== 1 ? "s" : ""}
-              </p>
-            </div>
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Tag
-                </Button>
-              </DialogTrigger>
-              <CreateTagDialog
-                onSubmit={handleCreate}
-                isLoading={createMutation.isPending}
-              />
-            </Dialog>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex">
+      {/* Desktop Sidebar */}
+      <DashboardSidebar />
 
-      <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-24 md:pb-6">
+      {/* Main Content */}
+      <main className={cn(
+        "flex-1 transition-all duration-200",
+        !isMobile && "ml-64"
+      )}>
+        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="flex h-16 items-center gap-3">
+              <Link href="/dashboard">
+                <Button size="sm" variant="ghost" className="h-9 w-9 p-0">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+              <div className="flex-1">
+                <h1 className="text-lg font-semibold leading-none">Tag Management</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {activeTags.length} active tag{activeTags.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Tag
+                  </Button>
+                </DialogTrigger>
+                <CreateTagDialog
+                  onSubmit={handleCreate}
+                  isLoading={createMutation.isPending}
+                />
+              </Dialog>
+            </div>
+          </div>
+        </header>
+
+        <div className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-24 md:pb-6">
         {/* Info Card */}
         <Card>
           <CardHeader>
@@ -321,8 +333,10 @@ export default function TagsPage() {
             </AlertDialogContent>
           </AlertDialog>
         )}
+        </div>
       </main>
 
+      {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
     </div>
   );
