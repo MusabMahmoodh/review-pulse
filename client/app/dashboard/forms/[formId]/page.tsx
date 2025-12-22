@@ -117,27 +117,27 @@ export default function FormDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#f0f2f5] dark:bg-[#111b21]">
-      {/* Header - WhatsApp style */}
-      <header className="sticky top-0 z-50 bg-[#008069] dark:bg-[#202c33] border-b border-[#008069]/20">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-primary dark:bg-[#202c33] border-b border-border">
         <div className="px-4 py-3">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="sm"
-              className="h-9 w-9 p-0 text-white hover:bg-white/10"
+              className="h-9 w-9 p-0 text-primary-foreground hover:bg-primary-foreground/10"
               onClick={() => router.push("/dashboard")}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-              <MessageSquare className="h-5 w-5 text-white" />
+            <div className="h-10 w-10 rounded-full bg-primary-foreground/20 flex items-center justify-center shrink-0">
+              <MessageSquare className="h-5 w-5 text-primary-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-base font-semibold text-white truncate">
+              <h1 className="text-base font-semibold text-primary-foreground truncate">
                 {form.name}
               </h1>
               {form.description && (
-                <p className="text-xs text-white/80 truncate">
+                <p className="text-xs text-primary-foreground/80 truncate">
                   {form.description}
                 </p>
               )}
@@ -207,7 +207,7 @@ export default function FormDashboardPage() {
                 </div>
                 <div className="h-2 bg-[#e9edef] dark:bg-[#313d45] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#008069] rounded-full"
+                    className="h-full bg-primary rounded-full"
                     style={{ width: `${(formStats.averageRatings.teaching / 5) * 100}%` }}
                   />
                 </div>
@@ -222,7 +222,7 @@ export default function FormDashboardPage() {
                 </div>
                 <div className="h-2 bg-[#e9edef] dark:bg-[#313d45] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#008069] rounded-full"
+                    className="h-full bg-primary rounded-full"
                     style={{ width: `${(formStats.averageRatings.communication / 5) * 100}%` }}
                   />
                 </div>
@@ -237,7 +237,7 @@ export default function FormDashboardPage() {
                 </div>
                 <div className="h-2 bg-[#e9edef] dark:bg-[#313d45] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#008069] rounded-full"
+                    className="h-full bg-primary rounded-full"
                     style={{ width: `${(formStats.averageRatings.material / 5) * 100}%` }}
                   />
                 </div>
@@ -252,7 +252,7 @@ export default function FormDashboardPage() {
                 </div>
                 <div className="h-2 bg-[#e9edef] dark:bg-[#313d45] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#008069] rounded-full"
+                    className="h-full bg-primary rounded-full"
                     style={{ width: `${(formStats.averageRatings.overall / 5) * 100}%` }}
                   />
                 </div>
@@ -333,7 +333,7 @@ export default function FormDashboardPage() {
                     <ul className="text-sm text-[#667781] dark:text-[#8696a0] space-y-1">
                       {aiInsight.recommendations.slice(0, 3).map((rec, idx) => (
                         <li key={idx} className="flex items-start gap-2">
-                          <span className="text-[#008069]">•</span>
+                          <span className="text-primary">•</span>
                           <span>{rec}</span>
                         </li>
                       ))}
@@ -388,7 +388,6 @@ export default function FormDashboardPage() {
                       );
                     }}
                     disabled={generateInsightsMutation.isPending}
-                    className="bg-[#008069] hover:bg-[#008069]/90"
                   >
                     <Wand2 className="h-4 w-4 mr-2" />
                     {generateInsightsMutation.isPending ? "Generating..." : "Generate Insights"}
@@ -424,7 +423,7 @@ export default function FormDashboardPage() {
                 {actionableItems.slice(0, 3).map((item) => (
                   <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/50">
                     <div className={`h-5 w-5 rounded border-2 flex items-center justify-center mt-0.5 ${
-                      item.completed ? "bg-[#008069] border-[#008069]" : "border-[#667781] dark:border-[#8696a0]"
+                      item.completed ? "bg-primary border-primary" : "border-[#667781] dark:border-[#8696a0]"
                     }`}>
                       {item.completed && (
                         <CheckSquare className="h-3 w-3 text-white" />
