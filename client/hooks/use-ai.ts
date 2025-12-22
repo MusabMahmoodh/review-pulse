@@ -40,9 +40,11 @@ export function useAIChatStream() {
       teacherId: string | null,
       message: string,
       onChunk: (chunk: string) => void,
-      organizationId?: string
+      organizationId?: string,
+      formIds?: string[],
+      tagIds?: string[]
     ): Promise<void> => {
-      return aiApi.chatStream(teacherId, message, onChunk, organizationId);
+      return aiApi.chatStream(teacherId, message, onChunk, organizationId, formIds, tagIds);
     },
   };
 }

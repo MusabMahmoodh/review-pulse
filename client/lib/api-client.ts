@@ -796,7 +796,9 @@ export const aiApi = {
     teacherId: string | null,
     message: string,
     onChunk: (chunk: string) => void,
-    organizationId?: string
+    organizationId?: string,
+    formIds?: string[],
+    tagIds?: string[]
   ): Promise<void> => {
     const url = `${API_BASE_URL}/api/ai/chat/stream`;
     const token = getBrowserToken();
@@ -807,6 +809,12 @@ export const aiApi = {
     }
     if (organizationId) {
       body.organizationId = organizationId;
+    }
+    if (formIds && formIds.length > 0) {
+      body.formIds = formIds;
+    }
+    if (tagIds && tagIds.length > 0) {
+      body.tagIds = tagIds;
     }
 
     const response = await fetch(url, {

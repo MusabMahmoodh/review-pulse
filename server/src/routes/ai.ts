@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { AppDataSource } from "../data-source";
-import { AIInsight, Teacher, Organization, StudentFeedback, ExternalReview, Form } from "../models";
+import { AIInsight, Teacher, Organization, StudentFeedback, ExternalReview, Form, FeedbackTag } from "../models";
 import { generateInsights, generateEnhancedInsights, chatAboutFeedback, chatAboutFeedbackStream } from "../utils/openai";
-import { MoreThanOrEqual } from "typeorm";
+import { MoreThanOrEqual, In } from "typeorm";
 import { requireAuth } from "../middleware/auth";
 import { isPremium } from "../utils/subscription";
 
@@ -513,13 +513,17 @@ router.post("/generate-insights", requireAuth, async (req, res) => {
  */
 router.post("/chat", requireAuth, async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, formIds, tagIds } = req.body;
     const teacherId = req.teacherId as string | undefined;
     const organizationId = req.organizationId as string | undefined;
 
     if ((!teacherId && !organizationId) || !message) {
       return res.status(400).json({ error: "Message required" });
     }
+
+    // Normalize formIds and tagIds to arrays
+    const formIdArray = Array.isArray(formIds) ? formIds : formIds ? [formIds] : [];
+    const tagIdArray = Array.isArray(tagIds) ? tagIds : tagIds ? [tagIds] : [];
 
     // Check premium access
     if (teacherId) {
@@ -544,6 +548,7 @@ router.post("/chat", requireAuth, async (req, res) => {
     const orgRepo = AppDataSource.getRepository(Organization);
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const reviewRepo = AppDataSource.getRepository(ExternalReview);
+    const feedbackTagRepo = AppDataSource.getRepository(FeedbackTag);
 
     let teacher: Teacher | null = null;
     let organization: Organization | null = null;
@@ -573,26 +578,54 @@ router.post("/chat", requireAuth, async (req, res) => {
 
     let feedback: StudentFeedback[] = [];
     if (teacherId) {
+      const whereCondition: any = {
+        teacherId,
+        createdAt: MoreThanOrEqual(thirtyDaysAgo),
+      };
+      if (formIdArray.length > 0) {
+        whereCondition.formId = In(formIdArray);
+      }
       feedback = await feedbackRepo.find({
-        where: {
-          teacherId,
-          createdAt: MoreThanOrEqual(thirtyDaysAgo),
-        },
+        where: whereCondition,
         order: { createdAt: "DESC" },
       });
     } else if (organizationId) {
+      const orgWhereCondition: any = {
+        organizationId,
+        createdAt: MoreThanOrEqual(thirtyDaysAgo),
+      };
+      if (formIdArray.length > 0) {
+        orgWhereCondition.formId = In(formIdArray);
+      }
       const orgFeedback = await feedbackRepo.find({
-        where: {
-          organizationId,
-          createdAt: MoreThanOrEqual(thirtyDaysAgo),
-        },
+        where: orgWhereCondition,
         order: { createdAt: "DESC" },
       });
+      
+      const teacherWhereConditions = teacherIds.map(id => {
+        const condition: any = { teacherId: id, createdAt: MoreThanOrEqual(thirtyDaysAgo) };
+        if (formIdArray.length > 0) {
+          condition.formId = In(formIdArray);
+        }
+        return condition;
+      });
       const teachersFeedback = await feedbackRepo.find({
-        where: teacherIds.map(id => ({ teacherId: id, createdAt: MoreThanOrEqual(thirtyDaysAgo) })),
+        where: teacherWhereConditions,
         order: { createdAt: "DESC" },
       });
       feedback = [...orgFeedback, ...teachersFeedback];
+    }
+
+    // Filter by tags if specified
+    if (tagIdArray.length > 0 && feedback.length > 0) {
+      const feedbackIds = feedback.map(f => f.id);
+      const feedbackWithTags = await feedbackTagRepo
+        .createQueryBuilder("ft")
+        .where("ft.tagId IN (:...tagIds)", { tagIds: tagIdArray })
+        .andWhere("ft.feedbackId IN (:...feedbackIds)", { feedbackIds })
+        .getMany();
+      const validFeedbackIds = new Set(feedbackWithTags.map(ft => ft.feedbackId));
+      feedback = feedback.filter(f => validFeedbackIds.has(f.id));
     }
 
     const reviews = await reviewRepo.find({
@@ -656,13 +689,17 @@ router.post("/chat", requireAuth, async (req, res) => {
  */
 router.post("/chat/stream", requireAuth, async (req, res) => {
   try {
-    const { message } = req.body;
+    const { message, formIds, tagIds } = req.body;
     const teacherId = req.teacherId as string | undefined;
     const organizationId = req.organizationId as string | undefined;
 
     if ((!teacherId && !organizationId) || !message) {
       return res.status(400).json({ error: "Message required" });
     }
+
+    // Normalize formIds and tagIds to arrays
+    const formIdArray = Array.isArray(formIds) ? formIds : formIds ? [formIds] : [];
+    const tagIdArray = Array.isArray(tagIds) ? tagIds : tagIds ? [tagIds] : [];
 
     // Check premium access
     if (teacherId) {
@@ -687,6 +724,7 @@ router.post("/chat/stream", requireAuth, async (req, res) => {
     const orgRepo = AppDataSource.getRepository(Organization);
     const feedbackRepo = AppDataSource.getRepository(StudentFeedback);
     const reviewRepo = AppDataSource.getRepository(ExternalReview);
+    const feedbackTagRepo = AppDataSource.getRepository(FeedbackTag);
 
     let teacher: Teacher | null = null;
     let organization: Organization | null = null;
@@ -716,26 +754,54 @@ router.post("/chat/stream", requireAuth, async (req, res) => {
 
     let feedback: StudentFeedback[] = [];
     if (teacherId) {
+      const whereCondition: any = {
+        teacherId,
+        createdAt: MoreThanOrEqual(thirtyDaysAgo),
+      };
+      if (formIdArray.length > 0) {
+        whereCondition.formId = In(formIdArray);
+      }
       feedback = await feedbackRepo.find({
-        where: {
-          teacherId,
-          createdAt: MoreThanOrEqual(thirtyDaysAgo),
-        },
+        where: whereCondition,
         order: { createdAt: "DESC" },
       });
     } else if (organizationId) {
+      const orgWhereCondition: any = {
+        organizationId,
+        createdAt: MoreThanOrEqual(thirtyDaysAgo),
+      };
+      if (formIdArray.length > 0) {
+        orgWhereCondition.formId = In(formIdArray);
+      }
       const orgFeedback = await feedbackRepo.find({
-        where: {
-          organizationId,
-          createdAt: MoreThanOrEqual(thirtyDaysAgo),
-        },
+        where: orgWhereCondition,
         order: { createdAt: "DESC" },
       });
+      
+      const teacherWhereConditions = teacherIds.map(id => {
+        const condition: any = { teacherId: id, createdAt: MoreThanOrEqual(thirtyDaysAgo) };
+        if (formIdArray.length > 0) {
+          condition.formId = In(formIdArray);
+        }
+        return condition;
+      });
       const teachersFeedback = await feedbackRepo.find({
-        where: teacherIds.map(id => ({ teacherId: id, createdAt: MoreThanOrEqual(thirtyDaysAgo) })),
+        where: teacherWhereConditions,
         order: { createdAt: "DESC" },
       });
       feedback = [...orgFeedback, ...teachersFeedback];
+    }
+
+    // Filter by tags if specified
+    if (tagIdArray.length > 0 && feedback.length > 0) {
+      const feedbackIds = feedback.map(f => f.id);
+      const feedbackWithTags = await feedbackTagRepo
+        .createQueryBuilder("ft")
+        .where("ft.tagId IN (:...tagIds)", { tagIds: tagIdArray })
+        .andWhere("ft.feedbackId IN (:...feedbackIds)", { feedbackIds })
+        .getMany();
+      const validFeedbackIds = new Set(feedbackWithTags.map(ft => ft.feedbackId));
+      feedback = feedback.filter(f => validFeedbackIds.has(f.id));
     }
 
     const reviews = await reviewRepo.find({

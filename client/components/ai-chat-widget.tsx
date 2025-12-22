@@ -17,9 +17,10 @@ import {
   Loader2,
   X,
   Minimize2,
+  FileText,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast-simple"
-import { useAIChatStream } from "@/hooks"
+import { useAIChatStream, useForms, useTags } from "@/hooks"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useAuth } from "@/hooks/use-auth"
 import { isPremiumFromAuth } from "@/lib/premium"
@@ -35,9 +36,17 @@ interface AIChatWidgetProps {
   restaurantId: string
   isMobile?: boolean
   fullPage?: boolean // If true, renders full page chat without floating button/modal
+  selectedFormIds?: string[]
+  selectedTagIds?: string[]
 }
 
-export function AIChatWidget({ restaurantId, isMobile: isMobileProp, fullPage = false }: AIChatWidgetProps) {
+export function AIChatWidget({ 
+  restaurantId, 
+  isMobile: isMobileProp, 
+  fullPage = false,
+  selectedFormIds = [],
+  selectedTagIds = [],
+}: AIChatWidgetProps) {
   const { toast } = useToast()
   const { user } = useAuth()
   const mobileHook = useIsMobile()
@@ -53,6 +62,24 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp, fullPage = 
   const { chatStream } = useAIChatStream()
   const [isStreaming, setIsStreaming] = useState(false)
   const hasPremium = isPremiumFromAuth(user?.subscription)
+
+  // Get form and tag data for context
+  const teacherId = user?.type === "teacher" ? user.id : undefined
+  const organizationId = user?.type === "organization" ? user.id : undefined
+  const { data: formsData } = useForms({
+    teacherId: teacherId || undefined,
+    organizationId: organizationId || undefined,
+  })
+  const { data: tagsData } = useTags({
+    teacherId: teacherId || null,
+    organizationId: organizationId || null,
+  })
+
+  const forms = formsData?.forms || []
+  const tags = tagsData?.tags || []
+  
+  const selectedForms = forms.filter((form) => selectedFormIds.includes(form.id))
+  const selectedTags = tags.filter((tag) => selectedTagIds.includes(tag.id))
 
   // Initialize with welcome message
   useEffect(() => {
@@ -101,25 +128,32 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp, fullPage = 
     streamingContentRef.current = "" // Reset streaming content
 
     try {
-      await chatStream(restaurantId, messageToSend, (chunk: string) => {
-        // Accumulate chunks in ref to avoid state update issues
-        streamingContentRef.current += chunk
-        
-        // Update the last message (assistant message) with accumulated chunks
-        setChatMessages((prev) => {
-          const newMessages = [...prev]
-          const lastIndex = newMessages.length - 1
-          const lastMessage = newMessages[lastIndex]
-          if (lastMessage && lastMessage.role === "assistant") {
-            // Create a new message object with the accumulated content
-            newMessages[lastIndex] = {
-              ...lastMessage,
-              content: streamingContentRef.current,
+      await chatStream(
+        restaurantId,
+        messageToSend,
+        (chunk: string) => {
+          // Accumulate chunks in ref to avoid state update issues
+          streamingContentRef.current += chunk
+          
+          // Update the last message (assistant message) with accumulated chunks
+          setChatMessages((prev) => {
+            const newMessages = [...prev]
+            const lastIndex = newMessages.length - 1
+            const lastMessage = newMessages[lastIndex]
+            if (lastMessage && lastMessage.role === "assistant") {
+              // Create a new message object with the accumulated content
+              newMessages[lastIndex] = {
+                ...lastMessage,
+                content: streamingContentRef.current,
+              }
             }
-          }
-          return newMessages
-        })
-      })
+            return newMessages
+          })
+        },
+        user?.type === "organization" ? user.id : undefined,
+        selectedFormIds.length > 0 ? selectedFormIds : undefined,
+        selectedTagIds.length > 0 ? selectedTagIds : undefined
+      )
     } catch (error: any) {
       // Remove the empty assistant message on error
       setChatMessages((prev) => prev.slice(0, -1))
@@ -141,7 +175,7 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp, fullPage = 
     } finally {
       setIsStreaming(false)
     }
-  }, [inputMessage, restaurantId, chatStream, isStreaming, toast])
+  }, [inputMessage, restaurantId, chatStream, isStreaming, toast, selectedFormIds, selectedTagIds, user])
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -288,7 +322,34 @@ export function AIChatWidget({ restaurantId, isMobile: isMobileProp, fullPage = 
         )}
       </div>
 
-      <div className="border-t p-4 flex-shrink-0">
+      <div className="border-t p-4 flex-shrink-0 space-y-2">
+        {(selectedForms.length > 0 || selectedTags.length > 0) && (
+          <div className="flex flex-wrap gap-1.5 text-xs">
+            {selectedForms.map((form) => (
+              <span
+                key={form.id}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20"
+              >
+                <FileText className="h-3 w-3" />
+                {form.name}
+              </span>
+            ))}
+            {selectedTags.map((tag) => (
+              <span
+                key={tag.id}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground border"
+              >
+                {tag.color && (
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: tag.color }}
+                  />
+                )}
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="flex gap-2">
           <Input
             ref={inputRef}
