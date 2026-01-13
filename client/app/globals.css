@@ -123,12 +123,6 @@
   body {
     @apply bg-background text-foreground;
   }
-  html {
-    @apply overflow-x-hidden;
-  }
-  body {
-    @apply overflow-x-hidden;
-  }
 }
 
 @keyframes shimmer {

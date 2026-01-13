@@ -11,21 +11,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Star, Filter, Calendar, X } from "lucide-react"
+import { ChevronLeft, Star, Filter, Calendar, X } from "lucide-react"
+import Link from "next/link"
 import { FeedbackList } from "@/components/feedback-list"
 import { RatingsTrendChart } from "@/components/ratings-trend-chart"
 import { MobileBottomNav } from "@/components/mobile-bottom-nav"
-import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { useFeedbackList, useAuth, useTags } from "@/hooks"
 import type { StudentFeedback } from "@/lib/types"
 import { ConvertToActionable } from "@/components/convert-to-actionable"
 import { TagBadge } from "@/components/tag-badge"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
 
 export default function FeedbackPage() {
   const { user } = useAuth()
-  const isMobile = useIsMobile()
   const teacherId = user?.id || null
   const organizationId = user?.userType === "organization" ? user.id : undefined
   
@@ -81,42 +78,27 @@ export default function FeedbackPage() {
   const totalCount = filteredData.feedback.length
   const totalAvailable = allFeedback.length
 
-  // Show latest feedback twice (as requested)
-  const latestFeedback = useMemo(() => {
-    const sorted = [...filteredData.feedback].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-    const latest = sorted[0]
-    if (latest) {
-      return [latest, latest, ...sorted.slice(1)]
-    }
-    return sorted
-  }, [filteredData.feedback])
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex w-full overflow-x-hidden">
-      {/* Desktop Sidebar */}
-      <DashboardSidebar />
-
-      {/* Main Content */}
-      <main className={cn(
-        "flex-1 transition-all duration-200 w-full",
-        !isMobile && "ml-64"
-      )}>
-        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
-          <div className="container mx-auto px-4 sm:px-6">
-            <div className="flex h-16 items-center gap-3">
-              <div className="flex-1">
-                <h1 className="text-lg font-semibold leading-none">All Feedback</h1>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {totalCount} of {totalAvailable} feedback entries
-                </p>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="flex h-16 items-center gap-3">
+            <Link href="/dashboard">
+              <Button size="sm" variant="ghost" className="h-9 w-9 p-0">
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <div className="flex-1">
+              <h1 className="text-lg font-semibold leading-none">All Feedback</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {totalCount} of {totalAvailable} feedback entries
+              </p>
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <div className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-24 md:pb-6">
+      <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-24 md:pb-6">
         {/* Trend Chart Section */}
         <Card>
           <CardHeader className="pb-4">
@@ -344,6 +326,11 @@ export default function FeedbackPage() {
                               <Calendar className="h-3 w-3" />
                               {new Date(item.createdAt).toLocaleDateString()}
                             </span>
+                            {item.classId && (
+                              <Badge variant="outline" className="text-xs">
+                                Class Feedback
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -395,7 +382,6 @@ export default function FeedbackPage() {
             )}
           </CardContent>
         </Card>
-        </div>
       </main>
       
       {/* Mobile Bottom Navigation */}
