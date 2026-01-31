@@ -125,9 +125,9 @@ export default function FeedbackPage() {
                 <Star className="h-5 w-5 text-primary" />
                 <CardTitle className="text-lg">Rating Trends</CardTitle>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 {/* Time Period Selector */}
-                <div className="flex gap-1 border rounded-md p-1">
+                <div className="flex gap-1 border rounded-md p-1 flex-wrap sm:flex-nowrap">
                   {[
                     { value: "1month", label: "1M" },
                     { value: "3months", label: "3M" },
@@ -139,14 +139,14 @@ export default function FeedbackPage() {
                       size="sm"
                       variant={timePeriod === period.value ? "default" : "ghost"}
                       onClick={() => setTimePeriod(period.value as typeof timePeriod)}
-                      className="h-7 px-3 text-xs"
+                      className="h-7 px-2 sm:px-3 text-xs whitespace-nowrap flex-shrink-0"
                     >
                       {period.label}
                     </Button>
                   ))}
                 </div>
                 {/* Rating Type Selector for Chart */}
-                <div className="flex gap-1 border rounded-md p-1">
+                <div className="flex gap-1 border rounded-md p-1 flex-wrap sm:flex-nowrap overflow-x-auto sm:overflow-visible">
                   {[
                     { value: "teaching", label: "Teaching" },
                     { value: "communication", label: "Communication" },
@@ -158,7 +158,7 @@ export default function FeedbackPage() {
                       size="sm"
                       variant={chartRatingType === type.value ? "default" : "ghost"}
                       onClick={() => setChartRatingType(type.value as typeof chartRatingType)}
-                      className="h-7 px-3 text-xs"
+                      className="h-7 px-2 sm:px-3 text-xs whitespace-nowrap flex-shrink-0"
                     >
                       {type.label}
                     </Button>

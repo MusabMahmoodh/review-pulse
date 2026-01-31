@@ -67,12 +67,12 @@ export function TagSelector({
       
       {/* Selected Tags Display */}
       {selectedTags.length > 0 && (
-        <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[2.5rem]">
+        <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[2.5rem] overflow-x-hidden">
           {selectedTags.map((tag) => (
             <Badge
               key={tag.id}
               variant="secondary"
-              className="gap-1 pr-1"
+              className="gap-1 pr-1 max-w-full"
               style={
                 tag.color
                   ? {
@@ -83,13 +83,13 @@ export function TagSelector({
                   : {}
               }
             >
-              <TagIcon className="h-3 w-3" />
-              {tag.name}
+              <TagIcon className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">{tag.name}</span>
               {!disabled && (
                 <button
                   type="button"
                   onClick={() => handleRemoveTag(tag.id)}
-                  className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                  className="ml-1 hover:bg-destructive/20 rounded-full p-0.5 flex-shrink-0"
                 >
                   <X className="h-3 w-3" />
                 </button>

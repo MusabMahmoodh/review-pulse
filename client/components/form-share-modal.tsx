@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Copy, Check, Download, Share2, MessageCircle } from "lucide-react"
 import { QRCodeSVG } from "qrcode.react"
 import { useToast } from "@/hooks/use-toast-simple"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 interface FormShareModalProps {
   open: boolean
@@ -34,6 +35,7 @@ export function FormShareModal({
   const [copied, setCopied] = useState(false)
   const { toast } = useToast()
   const qrCodeRef = useRef<HTMLDivElement>(null)
+  const isMobile = useIsMobile()
 
   // Generate feedback URL with formId
   const feedbackUrl = typeof window !== "undefined"
@@ -116,15 +118,15 @@ export function FormShareModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
+      <DialogContent className={`${isMobile ? 'inset-0 w-full h-full max-w-full max-h-full rounded-none translate-x-0 translate-y-0' : 'sm:max-w-[500px] max-h-[90vh]'} flex flex-col overflow-hidden`}>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Share Form</DialogTitle>
           <DialogDescription>
             Share this feedback form with your students
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-y-auto flex-1 min-h-0 pr-1 -mr-1">
           {/* QR Code Display */}
           <div className="flex justify-center p-6 bg-white rounded-lg" ref={qrCodeRef}>
             <QRCodeSVG

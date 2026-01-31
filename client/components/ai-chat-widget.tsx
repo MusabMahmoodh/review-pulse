@@ -380,27 +380,9 @@ export function AIChatWidget({
   if (isMobile) {
     // Full page mode: render chat directly without floating button
     if (fullPage) {
+      // Don't show header in fullPage mobile mode since the parent page already has a header
       return (
         <div className="h-full flex flex-col">
-          <div className="border-b px-4 py-3 flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-primary" />
-                <h2 className="font-semibold text-lg">AI Assistant</h2>
-              </div>
-              {chatMessages.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setChatMessages([])}
-                  className="h-8 w-8"
-                  title="Clear chat"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
           {chatContent}
         </div>
       )

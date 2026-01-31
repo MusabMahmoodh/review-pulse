@@ -40,12 +40,10 @@ export function TagAnalytics({ tag, totalFeedback }: TagAnalyticsProps) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <TagIcon className="h-4 w-4 text-primary" />
-            Analytics
-          </CardTitle>
-          <TagBadge tag={tag} size="sm" />
+        <div className="flex items-center justify-end gap-2 min-w-0">
+          <div className="flex-shrink-0 min-w-0 max-w-full">
+            <TagBadge tag={tag} size="sm" className="w-full" />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

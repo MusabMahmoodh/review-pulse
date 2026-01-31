@@ -33,7 +33,7 @@ export function TagBadge({
   return (
     <Badge
       variant={variant}
-      className={`gap-1 ${sizeClasses[size]} ${className || ""}`}
+      className={`gap-1 ${sizeClasses[size]} ${className || ""} max-w-full`}
       style={
         tag.color
           ? {
@@ -44,8 +44,8 @@ export function TagBadge({
           : {}
       }
     >
-      {showIcon && <TagIcon className="h-3 w-3" />}
-      {tag.name}
+      {showIcon && <TagIcon className="h-3 w-3 flex-shrink-0" />}
+      <span className="truncate">{tag.name}</span>
     </Badge>
   );
 }

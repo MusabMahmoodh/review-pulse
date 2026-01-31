@@ -43,7 +43,7 @@ export function MobileBottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-2xl safe-area-inset-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-[60] border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-2xl safe-area-inset-bottom">
       <div className="container mx-auto px-1">
         <div className="flex items-center justify-around h-[70px] gap-0.5">
           {navItems.map((item) => {

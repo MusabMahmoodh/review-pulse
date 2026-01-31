@@ -358,9 +358,11 @@ function TagCard({ tag, onEdit, onDelete }: TagCardProps) {
   return (
     <Card className="relative">
       <CardContent className="pt-6">
-        <div className="flex items-start justify-between mb-2">
-          <TagBadge tag={tag} size="md" />
-          <div className="flex gap-1">
+        <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
+          <div className="flex-1 min-w-0">
+            <TagBadge tag={tag} size="md" className="w-full" />
+          </div>
+          <div className="flex gap-1 flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
@@ -380,7 +382,7 @@ function TagCard({ tag, onEdit, onDelete }: TagCardProps) {
           </div>
         </div>
         {tag.description && (
-          <p className="text-sm text-muted-foreground mt-2">{tag.description}</p>
+          <p className="text-sm text-muted-foreground mt-2 break-words">{tag.description}</p>
         )}
       </CardContent>
     </Card>

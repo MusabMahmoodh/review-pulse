@@ -356,14 +356,15 @@ export default function FeedbackPage({ params }: PageProps) {
                         placeholder="Any suggestions or feedback you'd like to share?"
                         value={formData.suggestions}
                         onChange={handleChange}
-                        rows={4}
+                        rows={6}
+                        className="min-h-[120px]"
                       />
                     </div>
 
                     {/* Name and Phone - Side by side on larger screens */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="studentName">Your Name</Label>
+                        <Label htmlFor="studentName">Your Name <span className="text-muted-foreground text-xs">(Optional)</span></Label>
                         <Input
                           id="studentName"
                           name="studentName"
@@ -374,7 +375,7 @@ export default function FeedbackPage({ params }: PageProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="studentContact">Contact Number</Label>
+                        <Label htmlFor="studentContact">Contact Number <span className="text-muted-foreground text-xs">(Optional)</span></Label>
                         <Input
                           id="studentContact"
                           name="studentContact"
@@ -389,8 +390,8 @@ export default function FeedbackPage({ params }: PageProps) {
                       We'll only use this to stay connected with you
                     </p>
 
-                    {/* Tag Selector */}
-                    {availableTags.length > 0 && (
+                    {/* Tag Selector - Only show for general feedback form (no formId) */}
+                    {!formId && availableTags.length > 0 && (
                       <div className="space-y-2">
                         <Label>Tags</Label>
                         <TagSelector
@@ -408,29 +409,17 @@ export default function FeedbackPage({ params }: PageProps) {
                 )}
               </div>
 
-              {/* Submit Buttons */}
+              {/* Submit Button */}
               <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                {allRatingsSet && !showOptionalDetails && (
-                  <Button
-                    type="button"
-                    onClick={handleQuickSubmit}
-                    variant="outline"
-                    className="flex-1"
-                    disabled={submitMutation.isPending}
-                  >
-                    <Send className="mr-2 h-4 w-4" />
-                    {submitMutation.isPending ? "Submitting..." : "Submit Now"}
-                  </Button>
-                )}
                 <Button
                   type="submit"
-                  className={`flex-1 ${designStyles.buttonClass}`}
+                  className={`flex-1 h-12 min-h-[48px] ${designStyles.buttonClass}`}
                   size="lg"
                   disabled={submitMutation.isPending}
                   style={designStyles.buttonStyle}
                 >
                   <Send className="mr-2 h-4 w-4" />
-                  {submitMutation.isPending ? "Submitting..." : "Submit Feedback"}
+                  {submitMutation.isPending ? "Submitting..." : "Submit Now"}
                 </Button>
               </div>
             </form>

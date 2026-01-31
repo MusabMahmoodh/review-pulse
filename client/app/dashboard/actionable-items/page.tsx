@@ -214,7 +214,7 @@ export default function ActionableItemsPage() {
   const pendingCount = allItems.filter((item) => !item.completed).length
 
   return (
-    <div className="min-h-screen bg-background flex w-full overflow-x-hidden">
+    <div className="min-h-screen bg-background flex w-full overflow-x-hidden relative">
       {/* Desktop Sidebar */}
       <DashboardSidebar />
 
