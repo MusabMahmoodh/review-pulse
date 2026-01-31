@@ -87,7 +87,7 @@ export function AIChatWidget({
     teacherId: teacherId || undefined,
     organizationId: organizationId || undefined,
   })
-  const { data: tagsData } = useTags({
+  const { data: tagsData, isLoading: tagsLoading } = useTags({
     teacherId: teacherId || null,
     organizationId: organizationId || null,
   })
@@ -100,7 +100,24 @@ export function AIChatWidget({
   
   // Filter out already selected items - include all active tags
   const availableForms = forms.filter((form) => !selectedFormIds.includes(form.id))
-  const availableTags = tags.filter((tag) => !selectedTagIds.includes(tag.id) && tag.isActive === true)
+  // Include all tags that are active and not already selected
+  const availableTags = tags.filter((tag) => {
+    const notSelected = !selectedTagIds.includes(tag.id)
+    // Only include tags that are explicitly active (true)
+    const isActive = tag.isActive === true
+    return notSelected && isActive
+  })
+  
+  // Debug: Log tags to see what we're getting
+  useEffect(() => {
+    if (tagsData) {
+      console.log('Tags data in chat widget:', tagsData)
+      console.log('All tags:', tags)
+      console.log('Available tags:', availableTags)
+      console.log('Available tags count:', availableTags.length)
+      console.log('onTagSelect exists:', !!onTagSelect)
+    }
+  }, [tagsData, tags, availableTags, onTagSelect])
 
   // Initialize with welcome message
   useEffect(() => {
@@ -391,32 +408,35 @@ export function AIChatWidget({
                 </SelectContent>
               </Select>
             )}
-            {availableTags.length > 0 && onTagSelect && (
+            {onTagSelect && (
               <Select
                 value=""
                 onValueChange={(value) => {
                   if (value) onTagSelect(value)
                 }}
+                disabled={availableTags.length === 0}
               >
                 <SelectTrigger className="h-8 w-auto min-w-[120px] text-xs">
                   <TagIcon className="h-3 w-3 mr-1" />
-                  <SelectValue placeholder="Add Tag" />
+                  <SelectValue placeholder={availableTags.length > 0 ? "Add Tag" : "No Tags"} />
                 </SelectTrigger>
-                <SelectContent className="z-[100]">
-                  {availableTags.map((tag) => (
-                    <SelectItem key={tag.id} value={tag.id}>
-                      <div className="flex items-center gap-2">
-                        {tag.color && (
-                          <div
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: tag.color }}
-                          />
-                        )}
-                        <span>{tag.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                {availableTags.length > 0 && (
+                  <SelectContent className="z-[100]">
+                    {availableTags.map((tag) => (
+                      <SelectItem key={tag.id} value={tag.id}>
+                        <div className="flex items-center gap-2">
+                          {tag.color && (
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: tag.color }}
+                            />
+                          )}
+                          <span>{tag.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                )}
               </Select>
             )}
           </div>
