@@ -139,14 +139,28 @@ export function AIChatWidget({
   // Auto-scroll to bottom when messages change or streaming
   useEffect(() => {
     if (scrollRef.current) {
-      // Use setTimeout to ensure DOM has updated
-      setTimeout(() => {
+      // Use double requestAnimationFrame to ensure DOM has fully rendered
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+          }
+        })
+      })
+    }
+  }, [chatMessages.length, isStreaming])
+  
+  // Also scroll continuously during streaming
+  useEffect(() => {
+    if (isStreaming && scrollRef.current) {
+      const interval = setInterval(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTop = scrollRef.current.scrollHeight
         }
-      }, 100)
+      }, 150)
+      return () => clearInterval(interval)
     }
-  }, [chatMessages, isStreaming])
+  }, [isStreaming])
 
   const sendChatMessage = useCallback(async () => {
     if (!inputMessage.trim() || isStreaming) return
@@ -194,14 +208,12 @@ export function AIChatWidget({
             return newMessages
           })
           
-          // Auto-scroll during streaming
-          if (scrollRef.current) {
-            setTimeout(() => {
-              if (scrollRef.current) {
-                scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-              }
-            }, 50)
-          }
+          // Auto-scroll during streaming - use requestAnimationFrame for smoother updates
+          requestAnimationFrame(() => {
+            if (scrollRef.current) {
+              scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+            }
+          })
         },
         user?.type === "organization" ? user.id : undefined,
         selectedFormIds.length > 0 ? selectedFormIds : undefined,
@@ -209,13 +221,11 @@ export function AIChatWidget({
       )
       
       // Scroll to bottom after streaming completes
-      if (scrollRef.current) {
-        setTimeout(() => {
-          if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-          }
-        }, 100)
-      }
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+        }
+      })
     } catch (error: any) {
       // Remove the empty assistant message on error
       setChatMessages((prev) => prev.slice(0, -1))
