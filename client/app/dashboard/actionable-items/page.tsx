@@ -233,133 +233,110 @@ export default function ActionableItemsPage() {
         </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold">{items.length}</p>
-                  <p className="text-sm text-muted-foreground">Total Items</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">{completedCount}</p>
-                  <p className="text-sm text-muted-foreground">Completed</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-orange-600">{pendingCount}</p>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                </div>
-              </CardContent>
-            </Card>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 md:pb-6">
+        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+          {/* Stats - Compact on mobile */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="bg-card border rounded-lg p-3 sm:p-4 text-center">
+              <p className="text-xl sm:text-2xl font-semibold">{items.length}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Total</p>
+            </div>
+            <div className="bg-card border rounded-lg p-3 sm:p-4 text-center">
+              <p className="text-xl sm:text-2xl font-semibold text-green-600 dark:text-green-500">{completedCount}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Done</p>
+            </div>
+            <div className="bg-card border rounded-lg p-3 sm:p-4 text-center">
+              <p className="text-xl sm:text-2xl font-semibold text-orange-600 dark:text-orange-500">{pendingCount}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Pending</p>
+            </div>
           </div>
 
-          {/* Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Filters
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Status Filter */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-medium min-w-[80px]">Status:</span>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant={statusFilter === "all" ? "default" : "outline"}
-                    onClick={() => setStatusFilter("all")}
-                  >
-                    All ({allItems.length})
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={statusFilter === "pending" ? "default" : "outline"}
-                    onClick={() => setStatusFilter("pending")}
-                  >
-                    Pending ({allItems.filter(i => !i.completed).length})
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={statusFilter === "completed" ? "default" : "outline"}
-                    onClick={() => setStatusFilter("completed")}
-                  >
-                    Completed ({allItems.filter(i => i.completed).length})
-                  </Button>
-                </div>
+          {/* Filters - Compact on mobile */}
+          <div className="bg-card border rounded-lg p-3 sm:p-4 space-y-3">
+            {/* Status Filter - Horizontal on mobile */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-1">
+                <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-medium text-muted-foreground">Status</span>
               </div>
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
+                <Button
+                  size="sm"
+                  variant={statusFilter === "all" ? "default" : "outline"}
+                  onClick={() => setStatusFilter("all")}
+                  className="h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
+                >
+                  All
+                </Button>
+                <Button
+                  size="sm"
+                  variant={statusFilter === "pending" ? "default" : "outline"}
+                  onClick={() => setStatusFilter("pending")}
+                  className="h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
+                >
+                  Pending
+                </Button>
+                <Button
+                  size="sm"
+                  variant={statusFilter === "completed" ? "default" : "outline"}
+                  onClick={() => setStatusFilter("completed")}
+                  className="h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
+                >
+                  Done
+                </Button>
+              </div>
+            </div>
 
-              {/* Form Filter */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-medium min-w-[80px]">Form:</span>
-                <Select value={formFilter} onValueChange={setFormFilter}>
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="All Forms" />
+            {/* Other Filters - Stacked on mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+              <Select value={formFilter} onValueChange={setFormFilter}>
+                <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm">
+                  <SelectValue placeholder="All Forms" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Forms</SelectItem>
+                  {forms.map(form => (
+                    <SelectItem key={form.id} value={form.id}>
+                      {form.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {teamMembers.length > 0 && (
+                <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+                  <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm">
+                    <SelectValue placeholder="All People" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Forms</SelectItem>
-                    {forms.map(form => (
-                      <SelectItem key={form.id} value={form.id}>
-                        {form.name}
+                    <SelectItem value="all">All People</SelectItem>
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {teamMembers.map(member => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-
-              {/* Assignee Filter */}
-              {teamMembers.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium min-w-[80px]">Assignee:</span>
-                  <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="All People" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All People</SelectItem>
-                      <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {teamMembers.map(member => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {member.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
               )}
 
-              {/* Tag Filter */}
               {tags.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium min-w-[80px]">Tag:</span>
-                  <Select value={tagFilter} onValueChange={setTagFilter}>
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="All Tags" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Tags</SelectItem>
-                      {tags.map(tag => (
-                        <SelectItem key={tag.id} value={tag.id}>
-                          {tag.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select value={tagFilter} onValueChange={setTagFilter}>
+                  <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm">
+                    <SelectValue placeholder="All Tags" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Tags</SelectItem>
+                    {tags.map(tag => (
+                      <SelectItem key={tag.id} value={tag.id}>
+                        {tag.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Actionable Items List */}
           {isLoading ? (
@@ -379,105 +356,102 @@ export default function ActionableItemsPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {filteredAndSortedItems.map((item) => {
                 // Get feedback for this item to show form and tags
                 const feedback = item.sourceType === "comment" ? feedbackMap.get(item.sourceId) : null
                 const assignedMember = item.assignedTo ? teamMembers.find(m => m.id === item.assignedTo) : null
                 
                 return (
-                <Card
+                <div
                   key={item.id}
-                  className={item.completed ? "opacity-75" : ""}
+                  className={cn(
+                    "bg-card border rounded-lg p-3 sm:p-4 transition-all",
+                    item.completed && "opacity-60"
+                  )}
                 >
-                  <CardContent className="pt-6">
-                    <div className="flex items-start gap-4">
-                      <Checkbox
-                        checked={item.completed}
-                        onCheckedChange={() => handleToggleComplete(item)}
-                        disabled={updateMutation.isPending}
-                        className="mt-1"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <h3
-                            className={`font-semibold text-base ${
-                              item.completed ? "line-through text-muted-foreground" : ""
-                            }`}
-                          >
-                            {item.title}
-                          </h3>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(item)}
-                            disabled={deleteMutation.isPending}
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          >
-                            {deleteMutation.isPending ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <X className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                        {item.description && (
-                          <p className="text-sm text-muted-foreground mb-3">
-                            {item.description}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge
-                            variant={
-                              item.sourceType === "comment" ? "secondary" : "outline"
-                            }
-                            className="text-xs"
-                          >
-                            {item.sourceType === "comment" ? "From Comment" : "From AI"}
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={item.completed}
+                      onCheckedChange={() => handleToggleComplete(item)}
+                      disabled={updateMutation.isPending}
+                      className="mt-0.5 sm:mt-1"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1.5 sm:mb-2">
+                        <h3
+                          className={cn(
+                            "font-semibold text-sm sm:text-base leading-snug flex-1",
+                            item.completed && "line-through text-muted-foreground"
+                          )}
+                        >
+                          {item.title}
+                        </h3>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(item)}
+                          disabled={deleteMutation.isPending}
+                          className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
+                        >
+                          {deleteMutation.isPending ? (
+                            <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
+                          ) : (
+                            <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {item.description && (
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 leading-relaxed">
+                          {item.description}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
+                        <Badge
+                          variant={item.sourceType === "comment" ? "secondary" : "outline"}
+                          className="text-[10px] sm:text-xs h-5 sm:h-6 px-1.5 sm:px-2"
+                        >
+                          {item.sourceType === "comment" ? "Comment" : "AI"}
+                        </Badge>
+                        {feedback && (
+                          <Badge variant="outline" className="text-[10px] sm:text-xs h-5 sm:h-6 px-1.5 sm:px-2">
+                            {forms.find(f => f.id === feedback.formId)?.name || "Form"}
                           </Badge>
-                          {feedback && (
-                            <Badge variant="outline" className="text-xs">
-                              {forms.find(f => f.id === feedback.formId)?.name || "Unknown Form"}
-                            </Badge>
-                          )}
-                          {feedback?.tags && feedback.tags.length > 0 && (
-                            <>
-                              {feedback.tags.slice(0, 2).map(ft => (
-                                <Badge 
-                                  key={ft.id} 
-                                  variant="outline" 
-                                  className="text-xs"
-                                  style={{ borderColor: ft.tag.color, color: ft.tag.color }}
-                                >
-                                  {ft.tag.name}
-                                </Badge>
-                              ))}
-                              {feedback.tags.length > 2 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{feedback.tags.length - 2}
-                                </Badge>
-                              )}
-                            </>
-                          )}
-                          {assignedMember && (
-                            <Badge variant="outline" className="text-xs">
-                              👤 {assignedMember.name}
-                            </Badge>
-                          )}
-                          {item.sourceText && (
-                            <span className="text-xs text-muted-foreground line-clamp-1 max-w-xs">
-                              {item.sourceText}
-                            </span>
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(item.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
+                        )}
+                        {feedback?.tags && feedback.tags.length > 0 && (
+                          <>
+                            {feedback.tags.slice(0, 2).map(ft => (
+                              <Badge 
+                                key={ft.id} 
+                                variant="outline" 
+                                className="text-[10px] sm:text-xs h-5 sm:h-6 px-1.5 sm:px-2"
+                                style={{ borderColor: ft.tag.color, color: ft.tag.color }}
+                              >
+                                {ft.tag.name}
+                              </Badge>
+                            ))}
+                            {feedback.tags.length > 2 && (
+                              <Badge variant="outline" className="text-[10px] sm:text-xs h-5 sm:h-6 px-1.5 sm:px-2">
+                                +{feedback.tags.length - 2}
+                              </Badge>
+                            )}
+                          </>
+                        )}
+                        {assignedMember && (
+                          <Badge variant="outline" className="text-[10px] sm:text-xs h-5 sm:h-6 px-1.5 sm:px-2">
+                            {assignedMember.name}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] sm:text-xs text-muted-foreground">
+                          {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
                         <ActionableItemEditor item={item} restaurantId={restaurantId} />
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               )
               })}
             </div>

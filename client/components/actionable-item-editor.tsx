@@ -73,11 +73,12 @@ export function ActionableItemEditor({ item, restaurantId }: ActionableItemEdito
 
   return (
     <>
-      <div className="flex items-center gap-2 mt-2">
+      <div className="flex items-center gap-1.5">
         {assignedMember && (
-          <Badge variant="outline" className="text-xs gap-1">
+          <Badge variant="outline" className="text-[10px] sm:text-xs h-5 sm:h-6 px-1.5 sm:px-2 gap-1">
             <User className="h-3 w-3" />
-            {assignedMember.name}
+            <span className="hidden sm:inline">{assignedMember.name}</span>
+            <span className="sm:hidden">{assignedMember.name.split(' ')[0]}</span>
           </Badge>
         )}
         {item.deadline && (
@@ -87,20 +88,20 @@ export function ActionableItemEditor({ item, restaurantId }: ActionableItemEdito
                 ? "destructive"
                 : "outline"
             }
-            className="text-xs gap-1"
+            className="text-[10px] sm:text-xs h-5 sm:h-6 px-1.5 sm:px-2 gap-1"
           >
             <Calendar className="h-3 w-3" />
-            {new Date(item.deadline).toLocaleDateString()}
+            {new Date(item.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </Badge>
         )}
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setOpen(true)}
-          className="h-6 px-2 text-xs"
+          className="h-6 sm:h-7 px-2 text-[10px] sm:text-xs ml-auto"
         >
-          <Edit className="h-3 w-3 mr-1" />
-          Edit
+          <Edit className="h-3 w-3 sm:mr-1" />
+          <span className="hidden sm:inline">Edit</span>
         </Button>
       </div>
 
