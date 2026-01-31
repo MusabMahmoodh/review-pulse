@@ -14,8 +14,6 @@ import { useAuth } from "@/hooks/use-auth"
 import { useToast } from "@/hooks/use-toast-simple"
 import { isPremiumFromAuth } from "@/lib/premium"
 import { PremiumUpgrade } from "@/components/premium-upgrade"
-import { MobileBottomNav } from "@/components/mobile-bottom-nav"
-import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { ActionableItemEditor } from "@/components/actionable-item-editor"
 import type { ActionableItem } from "@/lib/types"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -214,15 +212,7 @@ export default function ActionableItemsPage() {
   const pendingCount = allItems.filter((item) => !item.completed).length
 
   return (
-    <div className="min-h-screen bg-background flex w-full overflow-x-hidden relative">
-      {/* Desktop Sidebar */}
-      <DashboardSidebar />
-
-      {/* Main Content */}
-      <main className={cn(
-        "flex-1 transition-all duration-200 w-full",
-        !isMobile && "ml-64"
-      )}>
+    <>
         {/* Header */}
         <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 sticky top-0 z-40 shadow-sm">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -494,11 +484,7 @@ export default function ActionableItemsPage() {
           )}
         </div>
       </div>
-      </main>
-      
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
-    </div>
+    </>
   )
 }
 

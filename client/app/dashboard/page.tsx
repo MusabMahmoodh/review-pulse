@@ -11,8 +11,6 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
 import { CreateFormModal } from "@/components/create-form-modal"
 import { FormShareModal } from "@/components/form-share-modal"
-import { DashboardSidebar } from "@/components/dashboard-sidebar"
-import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 import { cn } from "@/lib/utils"
 
 export default function DashboardPage() {
@@ -67,15 +65,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] dark:bg-[#111b21] flex w-full overflow-x-hidden">
-      {/* Desktop Sidebar */}
-      <DashboardSidebar />
-
-      {/* Main Content */}
-      <main className={cn(
-        "flex-1 flex flex-col transition-all duration-200 w-full",
-        !isMobile && "ml-64"
-      )}>
+    <>
         {/* Header */}
         <header className="sticky top-0 z-50 bg-primary dark:bg-primary border-b border-border">
         <div className="px-4 py-3">
@@ -252,10 +242,6 @@ export default function DashboardPage() {
             <Plus className="h-6 w-6" />
           </Button>
         </div>
-      </main>
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
 
       {/* Create Form Modal */}
       <CreateFormModal
@@ -276,6 +262,6 @@ export default function DashboardPage() {
           organizationId={organizationId}
         />
       )}
-    </div>
+    </>
   )
 }

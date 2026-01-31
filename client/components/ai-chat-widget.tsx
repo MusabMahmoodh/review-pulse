@@ -6,6 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -18,6 +25,8 @@ import {
   X,
   Minimize2,
   FileText,
+  Plus,
+  Tag as TagIcon,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useAIChatStream, useForms, useTags } from "@/hooks"
@@ -38,6 +47,10 @@ interface AIChatWidgetProps {
   fullPage?: boolean // If true, renders full page chat without floating button/modal
   selectedFormIds?: string[]
   selectedTagIds?: string[]
+  onFormSelect?: (formId: string) => void
+  onFormRemove?: (formId: string) => void
+  onTagSelect?: (tagId: string) => void
+  onTagRemove?: (tagId: string) => void
 }
 
 export function AIChatWidget({ 
@@ -46,6 +59,10 @@ export function AIChatWidget({
   fullPage = false,
   selectedFormIds = [],
   selectedTagIds = [],
+  onFormSelect,
+  onFormRemove,
+  onTagSelect,
+  onTagRemove,
 }: AIChatWidgetProps) {
   const { toast } = useToast()
   const { user } = useAuth()
@@ -80,6 +97,10 @@ export function AIChatWidget({
   
   const selectedForms = forms.filter((form) => selectedFormIds.includes(form.id))
   const selectedTags = tags.filter((tag) => selectedTagIds.includes(tag.id))
+  
+  // Filter out already selected items - include all active tags
+  const availableForms = forms.filter((form) => !selectedFormIds.includes(form.id))
+  const availableTags = tags.filter((tag) => !selectedTagIds.includes(tag.id) && tag.isActive === true)
 
   // Initialize with welcome message
   useEffect(() => {
@@ -88,7 +109,7 @@ export function AIChatWidget({
         if (prev.length === 0) {
           const welcomeMessage: ChatMessage = {
             role: "assistant",
-            content: "👋 Welcome! I'm your AI assistant for Guestra. I'm here to help you understand your customer feedback better.\n\nYou can ask me questions like:\n• What are customers saying about our food quality?\n• How can we improve our service?\n• What are the main complaints we're receiving?\n• What trends do you see in our reviews?\n\nFeel free to ask me anything about your feedback data!",
+            content: "👋 Welcome! I'm your AI assistant for Guestra. I'm here to help you understand your student feedback better.\n\nYou can ask me questions like:\n• What are students saying about my teaching methods?\n• How can I improve my communication with students?\n• What are the main concerns students have about the course materials?\n• What trends do you see in the feedback ratings?\n• What are students' overall satisfaction levels?\n\nFeel free to ask me anything about your feedback data!",
             timestamp: new Date(),
           }
           return [welcomeMessage]
@@ -98,11 +119,17 @@ export function AIChatWidget({
     }
   }, [hasPremium]) // Only run when premium status is determined
 
+  // Auto-scroll to bottom when messages change or streaming
   useEffect(() => {
-    if (scrollRef.current && isOpen) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    if (scrollRef.current) {
+      // Use setTimeout to ensure DOM has updated
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+        }
+      }, 100)
     }
-  }, [chatMessages, isOpen])
+  }, [chatMessages, isStreaming])
 
   const sendChatMessage = useCallback(async () => {
     if (!inputMessage.trim() || isStreaming) return
@@ -149,11 +176,29 @@ export function AIChatWidget({
             }
             return newMessages
           })
+          
+          // Auto-scroll during streaming
+          if (scrollRef.current) {
+            setTimeout(() => {
+              if (scrollRef.current) {
+                scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+              }
+            }, 50)
+          }
         },
         user?.type === "organization" ? user.id : undefined,
         selectedFormIds.length > 0 ? selectedFormIds : undefined,
         selectedTagIds.length > 0 ? selectedTagIds : undefined
       )
+      
+      // Scroll to bottom after streaming completes
+      if (scrollRef.current) {
+        setTimeout(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+          }
+        }, 100)
+      }
     } catch (error: any) {
       // Remove the empty assistant message on error
       setChatMessages((prev) => prev.slice(0, -1))
@@ -271,8 +316,8 @@ export function AIChatWidget({
   }
 
   const chatContent = (
-    <>
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 scroll-smooth">
+    <div className="flex flex-col h-full min-h-0">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 scroll-smooth" style={{ paddingBottom: isMobile ? '200px' : '0' }}>
         {chatMessages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-8">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -283,9 +328,9 @@ export function AIChatWidget({
               Get detailed answers about your feedback. Try asking:
             </p>
             <div className="mt-4 space-y-2 text-left">
-              <p className="text-xs text-muted-foreground">• "What are customers saying about our food?"</p>
-              <p className="text-xs text-muted-foreground">• "How can we improve service?"</p>
-              <p className="text-xs text-muted-foreground">• "What are the main complaints?"</p>
+              <p className="text-xs text-muted-foreground">• "What are students saying about my teaching?"</p>
+              <p className="text-xs text-muted-foreground">• "How can I improve communication?"</p>
+              <p className="text-xs text-muted-foreground">• "What are the main concerns about course materials?"</p>
             </div>
           </div>
         ) : (
@@ -322,9 +367,64 @@ export function AIChatWidget({
         )}
       </div>
 
-      <div className="border-t p-4 flex-shrink-0 space-y-2">
+      <div className={`border-t bg-background flex-shrink-0 ${isMobile ? 'fixed bottom-0 left-0 right-0 pb-20' : 'sticky bottom-0'} z-[55]`}>
+        {/* Add Forms/Tags Section */}
+        {(onFormSelect || onTagSelect) && (
+          <div className="px-3 py-2 border-b flex items-center gap-2 flex-wrap">
+            {availableForms.length > 0 && onFormSelect && (
+              <Select
+                value=""
+                onValueChange={(value) => {
+                  if (value) onFormSelect(value)
+                }}
+              >
+                <SelectTrigger className="h-8 w-auto min-w-[120px] text-xs">
+                  <Plus className="h-3 w-3 mr-1" />
+                  <SelectValue placeholder="Add Form" />
+                </SelectTrigger>
+                <SelectContent className="z-[100]">
+                  {availableForms.map((form) => (
+                    <SelectItem key={form.id} value={form.id}>
+                      {form.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            {availableTags.length > 0 && onTagSelect && (
+              <Select
+                value=""
+                onValueChange={(value) => {
+                  if (value) onTagSelect(value)
+                }}
+              >
+                <SelectTrigger className="h-8 w-auto min-w-[120px] text-xs">
+                  <TagIcon className="h-3 w-3 mr-1" />
+                  <SelectValue placeholder="Add Tag" />
+                </SelectTrigger>
+                <SelectContent className="z-[100]">
+                  {availableTags.map((tag) => (
+                    <SelectItem key={tag.id} value={tag.id}>
+                      <div className="flex items-center gap-2">
+                        {tag.color && (
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: tag.color }}
+                          />
+                        )}
+                        <span>{tag.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
+        
+        {/* Selected Items Display */}
         {(selectedForms.length > 0 || selectedTags.length > 0) && (
-          <div className="flex flex-wrap gap-1.5 text-xs">
+          <div className="px-3 py-2 border-b flex flex-wrap gap-1.5 text-xs">
             {selectedForms.map((form) => (
               <span
                 key={form.id}
@@ -332,6 +432,14 @@ export function AIChatWidget({
               >
                 <FileText className="h-3 w-3" />
                 {form.name}
+                {onFormRemove && (
+                  <button
+                    onClick={() => onFormRemove(form.id)}
+                    className="ml-0.5 hover:bg-primary/20 rounded-full p-0.5"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                )}
               </span>
             ))}
             {selectedTags.map((tag) => (
@@ -346,11 +454,21 @@ export function AIChatWidget({
                   />
                 )}
                 {tag.name}
+                {onTagRemove && (
+                  <button
+                    onClick={() => onTagRemove(tag.id)}
+                    className="ml-0.5 hover:bg-secondary/20 rounded-full p-0.5"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                )}
               </span>
             ))}
           </div>
         )}
-        <div className="flex gap-2">
+        
+        {/* Input Section */}
+        <div className="p-3 flex gap-2">
           <Input
             ref={inputRef}
             placeholder="Ask a question..."
@@ -374,7 +492,7 @@ export function AIChatWidget({
           </Button>
         </div>
       </div>
-    </>
+    </div>
   )
 
   if (isMobile) {
@@ -382,7 +500,7 @@ export function AIChatWidget({
     if (fullPage) {
       // Don't show header in fullPage mobile mode since the parent page already has a header
       return (
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col min-h-0">
           {chatContent}
         </div>
       )
@@ -435,29 +553,8 @@ export function AIChatWidget({
   if (fullPage) {
     // Full page mode: no card wrapper, just the chat content
     return (
-      <div className="h-full flex flex-col bg-card rounded-lg border shadow-sm">
-        <div className="border-b px-4 py-3 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-primary" />
-              <h2 className="font-semibold text-lg">AI Assistant</h2>
-            </div>
-            {chatMessages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setChatMessages([])}
-                className="h-8 w-8"
-                title="Clear chat"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          {chatContent}
-        </div>
+      <div className="h-full flex flex-col min-h-0">
+        {chatContent}
       </div>
     )
   }

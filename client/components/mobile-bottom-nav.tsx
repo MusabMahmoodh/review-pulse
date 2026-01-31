@@ -1,7 +1,6 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Home, MessageSquare, Tag, Users, MessageCircle, CheckSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -36,10 +35,17 @@ const navItems = [
 
 export function MobileBottomNav() {
   const pathname = usePathname()
+  const router = useRouter()
   const isMobile = useIsMobile()
 
   if (!isMobile) {
     return null
+  }
+
+  const handleNavClick = (href: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    // Use shallow routing for SPA-like behavior
+    router.push(href)
   }
 
   return (
@@ -52,9 +58,9 @@ export function MobileBottomNav() {
               (item.href !== "/dashboard" && pathname?.startsWith(item.href))
             
             return (
-              <Link
+              <button
                 key={item.href}
-                href={item.href}
+                onClick={(e) => handleNavClick(item.href, e)}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 min-w-0 flex-1 h-full transition-all duration-200",
                   "hover:bg-muted/50 active:bg-muted rounded-lg",
@@ -84,7 +90,7 @@ export function MobileBottomNav() {
                 )}>
                   {item.label}
                 </span>
-              </Link>
+              </button>
             )
           })}
         </div>
