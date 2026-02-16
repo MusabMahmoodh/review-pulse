@@ -15,14 +15,9 @@ export const metadata: Metadata = {
   description: "Collect and analyze student feedback to improve your teaching and educational services",
   generator: "v0.app",
   icons: {
-    icon: [
-      { url: "/favicons/favicon.ico", sizes: "any" },
-      { url: "/favicons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-    ],
-    apple: "/favicons/apple-touch-icon.png",
+    icon: "/favicon.png",
+    apple: "/apple-icon.png",
   },
-  manifest: "/favicons/site.webmanifest",
 }
 
 export const viewport: Viewport = {

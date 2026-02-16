@@ -31,6 +31,8 @@ import { useTags, useCreateTag, useUpdateTag, useDeleteTag, useAuth, useFeedback
 import { useToast } from "@/hooks/use-toast-simple";
 import { TagBadge } from "@/components/tag-badge";
 import { TagAnalytics } from "@/components/tag-analytics";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -133,7 +135,15 @@ export default function TagsPage() {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex w-full overflow-x-hidden">
+      {/* Desktop Sidebar */}
+      <DashboardSidebar />
+
+      {/* Main Content */}
+      <main className={cn(
+        "flex-1 transition-all duration-200 w-full",
+        !isMobile && "ml-64"
+      )}>
         <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="flex h-16 items-center gap-3">
@@ -324,7 +334,11 @@ export default function TagsPage() {
           </AlertDialog>
         )}
         </div>
-    </>
+      </main>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
+    </div>
   );
 }
 
@@ -344,11 +358,9 @@ function TagCard({ tag, onEdit, onDelete }: TagCardProps) {
   return (
     <Card className="relative">
       <CardContent className="pt-6">
-        <div className="flex items-start justify-between gap-2 mb-2 min-w-0">
-          <div className="flex-1 min-w-0">
-            <TagBadge tag={tag} size="md" className="w-full" />
-          </div>
-          <div className="flex gap-1 flex-shrink-0">
+        <div className="flex items-start justify-between mb-2">
+          <TagBadge tag={tag} size="md" />
+          <div className="flex gap-1">
             <Button
               variant="ghost"
               size="sm"
@@ -368,7 +380,7 @@ function TagCard({ tag, onEdit, onDelete }: TagCardProps) {
           </div>
         </div>
         {tag.description && (
-          <p className="text-sm text-muted-foreground mt-2 break-words">{tag.description}</p>
+          <p className="text-sm text-muted-foreground mt-2">{tag.description}</p>
         )}
       </CardContent>
     </Card>

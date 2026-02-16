@@ -9,10 +9,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, CheckCircle, Star, ChevronRight, Sparkles } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Send, CheckCircle, Star, BookOpen } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { useToast } from "@/hooks/use-toast-simple"
 import { useSubmitFeedback, useReviewPageSettings, useTags } from "@/hooks"
+import { classesApi } from "@/lib/api-client"
+import { useQuery } from "@tanstack/react-query"
 import { TagSelector } from "@/components/tag-selector"
 
 interface PageProps {
@@ -23,10 +26,9 @@ export default function FeedbackPage({ params }: PageProps) {
   const resolvedParams = use(params)
   const teacherIdOrOrgId = resolvedParams.teacherId
   const searchParams = useSearchParams()
-  const formId = searchParams.get("formId") || undefined
+  const classId = searchParams.get("class") || undefined
   const { toast } = useToast()
   const [submitted, setSubmitted] = useState(false)
-  const [showOptionalDetails, setShowOptionalDetails] = useState(false)
   const submitMutation = useSubmitFeedback()
   
   // Check if it's an organization ID (starts with "org_") or teacher ID
@@ -35,6 +37,13 @@ export default function FeedbackPage({ params }: PageProps) {
   const organizationId = isOrganizationId ? teacherIdOrOrgId : undefined
   
   const { data: settings } = useReviewPageSettings(teacherId || undefined)
+  
+  // Fetch class information if classId is provided (only for teachers)
+  const { data: classData } = useQuery({
+    queryKey: ["class", classId],
+    queryFn: () => classesApi.get(classId!),
+    enabled: !!classId && !!teacherId,
+  })
 
   const [formData, setFormData] = useState({
     studentName: "",
@@ -77,7 +86,7 @@ export default function FeedbackPage({ params }: PageProps) {
       {
         teacherId: teacherId || undefined,
         organizationId: organizationId || undefined,
-        formId: formId,
+        classId: classId,
         teachingRating: formData.teachingRating,
         communicationRating: formData.communicationRating,
         materialRating: formData.materialRating,
@@ -111,76 +120,6 @@ export default function FeedbackPage({ params }: PageProps) {
       ...prev,
       [e.target.name]: e.target.value,
     }))
-  }
-
-  // Rating categories with questions
-  const ratingCategories = [
-    {
-      question: "How do you feel about the teaching quality?",
-      description: "How effective was the teaching and explanation?",
-      ratingKey: "teachingRating" as const,
-      icon: "📚",
-    },
-    {
-      question: "How do you feel about the communication?",
-      description: "How clear and responsive was the communication?",
-      ratingKey: "communicationRating" as const,
-      icon: "💬",
-    },
-    {
-      question: "How do you feel about the course materials?",
-      description: "How useful and well-organized were the materials?",
-      ratingKey: "materialRating" as const,
-      icon: "📝",
-    },
-    {
-      question: "How do you feel about the overall experience?",
-      description: "How likely are you to recommend this teacher?",
-      ratingKey: "overallRating" as const,
-      icon: "⭐",
-    },
-  ]
-
-  // Check if all ratings are set (for quick submit)
-  const allRatingsSet = ratingCategories.every(
-    (cat) => formData[cat.ratingKey] > 0
-  )
-
-  // Quick submit handler (skip optional details)
-  const handleQuickSubmit = async (e: React.MouseEvent) => {
-    e.preventDefault()
-    
-    submitMutation.mutate(
-      {
-        teacherId: teacherId || undefined,
-        organizationId: organizationId || undefined,
-        formId: formId,
-        teachingRating: formData.teachingRating,
-        communicationRating: formData.communicationRating,
-        materialRating: formData.materialRating,
-        overallRating: formData.overallRating,
-        studentName: formData.studentName || undefined,
-        studentContact: formData.studentContact || undefined,
-        suggestions: formData.suggestions || undefined,
-        tagIds: formData.tagIds.length > 0 ? formData.tagIds : undefined,
-      },
-      {
-        onSuccess: () => {
-          setSubmitted(true)
-          toast({
-            title: "Thank you!",
-            description: "Your feedback has been submitted successfully",
-          })
-        },
-        onError: () => {
-          toast({
-            title: "Error",
-            description: "Failed to submit feedback. Please try again.",
-            variant: "destructive",
-          })
-        },
-      }
-    )
   }
 
   // Get design variation styles
@@ -279,149 +218,122 @@ export default function FeedbackPage({ params }: PageProps) {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
         <Card className={designStyles.cardClass}>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">{pageSettings.welcomeMessage}</CardTitle>
             <CardDescription>Help us improve by sharing your learning experience</CardDescription>
+            {classData?.class && (
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <Badge variant="secondary" className="gap-1.5">
+                  <BookOpen className="h-3 w-3" />
+                  {classData.class.name}
+                </Badge>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* All Ratings Section - Single Page */}
-              <div className="space-y-6">
-                <div className="text-center pb-2">
-                  <h3 className="text-lg font-semibold text-foreground">
-                    Rate your experience
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Click the stars to rate each category
-                  </p>
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Rating Sections */}
+              <RatingSection
+                title="Teaching Quality"
+                description="How effective was the teaching and explanation?"
+                value={formData.teachingRating}
+                onChange={(value) => handleRatingChange("teachingRating", value)}
+                primaryColor={pageSettings.primaryColor}
+                designVariation={pageSettings.designVariation}
+              />
 
-                <div className="space-y-6">
-                  {ratingCategories.map((category, index) => (
-                    <div
-                      key={category.ratingKey}
-                      className="space-y-3 pb-4 border-b last:border-b-0"
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl mt-1">{category.icon}</span>
-                        <div className="flex-1">
-                          <h4 className="font-medium text-base">{category.question}</h4>
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            {category.description}
-                          </p>
-                        </div>
-                      </div>
+              <RatingSection
+                title="Communication"
+                description="How clear and responsive was the communication?"
+                value={formData.communicationRating}
+                onChange={(value) => handleRatingChange("communicationRating", value)}
+                primaryColor={pageSettings.primaryColor}
+                designVariation={pageSettings.designVariation}
+              />
 
-                      <RatingSection
-                        value={formData[category.ratingKey]}
-                        onChange={(value) => handleRatingChange(category.ratingKey, value)}
-                        primaryColor={pageSettings.primaryColor}
-                        designVariation={pageSettings.designVariation}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <RatingSection
+                title="Course Materials"
+                description="How useful and well-organized were the materials?"
+                value={formData.materialRating}
+                onChange={(value) => handleRatingChange("materialRating", value)}
+                primaryColor={pageSettings.primaryColor}
+                designVariation={pageSettings.designVariation}
+              />
 
-              {/* Optional Details Section - Collapsible */}
-              <div className="space-y-4 pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={() => setShowOptionalDetails(!showOptionalDetails)}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-sm">
-                      Additional Details (Optional)
-                    </span>
-                  </div>
-                  <ChevronRight
-                    className={`h-4 w-4 text-muted-foreground transition-transform ${
-                      showOptionalDetails ? "rotate-90" : ""
-                    }`}
+              <RatingSection
+                title="Overall Experience"
+                description="How likely are you to recommend this teacher?"
+                value={formData.overallRating}
+                onChange={(value) => handleRatingChange("overallRating", value)}
+                primaryColor={pageSettings.primaryColor}
+                designVariation={pageSettings.designVariation}
+              />
+
+              <div className="border-t pt-6 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="suggestions">Additional Comments (Optional)</Label>
+                  <Textarea
+                    id="suggestions"
+                    name="suggestions"
+                    placeholder="Any suggestions or feedback you'd like to share?"
+                    value={formData.suggestions}
+                    onChange={handleChange}
+                    rows={4}
                   />
-                </button>
+                </div>
 
-                {showOptionalDetails && (
-                  <div className="space-y-4 pl-1 animate-in slide-in-from-top-2 duration-200">
-                    {/* Comments */}
-                    <div className="space-y-2">
-                      <Label htmlFor="suggestions">Additional Comments</Label>
-                      <Textarea
-                        id="suggestions"
-                        name="suggestions"
-                        placeholder="Any suggestions or feedback you'd like to share?"
-                        value={formData.suggestions}
-                        onChange={handleChange}
-                        rows={6}
-                        className="min-h-[120px]"
-                      />
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="studentName">Your Name (Optional)</Label>
+                  <Input
+                    id="studentName"
+                    name="studentName"
+                    placeholder="John Doe"
+                    value={formData.studentName}
+                    onChange={handleChange}
+                  />
+                </div>
 
-                    {/* Name and Phone - Side by side on larger screens */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="studentName">Your Name <span className="text-muted-foreground text-xs">(Optional)</span></Label>
-                        <Input
-                          id="studentName"
-                          name="studentName"
-                          placeholder="John Doe"
-                          value={formData.studentName}
-                          onChange={handleChange}
-                        />
-                      </div>
+                <div className="space-y-2">
+                  <Label htmlFor="studentContact">Contact Number (Optional)</Label>
+                  <Input
+                    id="studentContact"
+                    name="studentContact"
+                    type="tel"
+                    placeholder="+1 (555) 123-4567"
+                    value={formData.studentContact}
+                    onChange={handleChange}
+                  />
+                  <p className="text-xs text-muted-foreground">We'll only use this to stay connected with you</p>
+                </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="studentContact">Contact Number <span className="text-muted-foreground text-xs">(Optional)</span></Label>
-                        <Input
-                          id="studentContact"
-                          name="studentContact"
-                          type="tel"
-                          placeholder="+1 (555) 123-4567"
-                          value={formData.studentContact}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
+                {/* Tag Selector */}
+                {availableTags.length > 0 && (
+                  <div className="space-y-2">
+                    <TagSelector
+                      tags={availableTags}
+                      selectedTagIds={formData.tagIds}
+                      onSelectionChange={(tagIds) => setFormData({ ...formData, tagIds })}
+                      maxSelections={5}
+                    />
                     <p className="text-xs text-muted-foreground">
-                      We'll only use this to stay connected with you
+                      Select tags that best describe your feedback (optional)
                     </p>
-
-                    {/* Tag Selector - Only show for general feedback form (no formId) */}
-                    {!formId && availableTags.length > 0 && (
-                      <div className="space-y-2">
-                        <Label>Tags</Label>
-                        <TagSelector
-                          tags={availableTags}
-                          selectedTagIds={formData.tagIds}
-                          onSelectionChange={(tagIds) => setFormData({ ...formData, tagIds })}
-                          maxSelections={5}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Select tags that best describe your feedback
-                        </p>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
 
-              {/* Submit Button */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                <Button
-                  type="submit"
-                  className={`flex-1 h-12 min-h-[48px] ${designStyles.buttonClass}`}
-                  size="lg"
-                  disabled={submitMutation.isPending}
-                  style={designStyles.buttonStyle}
-                >
-                  <Send className="mr-2 h-4 w-4" />
-                  {submitMutation.isPending ? "Submitting..." : "Submit Now"}
-                </Button>
-              </div>
+              <Button 
+                type="submit" 
+                className={`w-full ${designStyles.buttonClass}`}
+                size="lg" 
+                disabled={submitMutation.isPending}
+                style={designStyles.buttonStyle}
+              >
+                <Send className="mr-2 h-4 w-4" />
+                {submitMutation.isPending ? "Submitting..." : "Submit Feedback"}
+              </Button>
             </form>
           </CardContent>
         </Card>
@@ -431,30 +343,34 @@ export default function FeedbackPage({ params }: PageProps) {
 }
 
 interface RatingSectionProps {
+  title: string
+  description: string
   value: number
   onChange: (value: number) => void
   primaryColor: string
   designVariation: string
 }
 
-function RatingSection({ value, onChange, primaryColor, designVariation }: RatingSectionProps) {
+function RatingSection({ title, description, value, onChange, primaryColor, designVariation }: RatingSectionProps) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-1 sm:gap-2">
+    <div className="space-y-3 pb-4 border-b last:border-b-0">
+      <div>
+        <h3 className="font-medium text-lg">{title}</h3>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+
+      <div className="flex items-center justify-between gap-2">
         {[1, 2, 3, 4, 5].map((rating) => (
           <button
             key={rating}
             type="button"
             onClick={() => onChange(rating)}
-            className="flex-1 transition-all hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-lg p-1"
-            style={{
-              focusRingColor: primaryColor,
-            }}
+            className="flex-1 transition-all hover:scale-110"
             aria-label={`Rate ${rating} stars`}
           >
             <Star
-              className={`h-10 w-10 sm:h-12 sm:w-12 mx-auto transition-all ${
-                rating <= value ? "" : "text-muted stroke-muted-foreground opacity-40"
+              className={`h-10 w-10 mx-auto transition-colors ${
+                rating <= value ? "" : "text-muted stroke-muted-foreground"
               }`}
               style={rating <= value ? { 
                 fill: primaryColor, 
@@ -468,9 +384,6 @@ function RatingSection({ value, onChange, primaryColor, designVariation }: Ratin
 
       <div className="flex justify-between text-xs text-muted-foreground px-2">
         <span>Poor</span>
-        <span className="font-medium" style={{ color: primaryColor }}>
-          {value}/5
-        </span>
         <span>Excellent</span>
       </div>
     </div>
