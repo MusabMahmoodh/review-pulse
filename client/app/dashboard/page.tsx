@@ -124,10 +124,8 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="w-full overflow-x-auto">
-                <div className="min-w-[280px]">
-                  <RatingsChart feedback={feedback} />
-                </div>
+              <div className="w-full min-w-0">
+                <RatingsChart feedback={feedback} />
               </div>
             </CardContent>
           </Card>

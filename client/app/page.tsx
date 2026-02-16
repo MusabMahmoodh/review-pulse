@@ -24,162 +24,202 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Logo width={28} height={28} showText />
-          <nav className="flex items-center gap-2">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+          <Logo width={32} height={32} showText />
+          <nav className="flex items-center gap-3">
             <Link href="/login">
-              <Button variant="ghost" size="sm">Login</Button>
+              <Button variant="ghost">Login</Button>
             </Link>
             <Link href="/register">
-              <Button size="sm">Start Free</Button>
+              <Button>Start Free</Button>
             </Link>
           </nav>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 md:py-24">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">
-            Stop collecting reviews.
-            <br />
-            <span className="text-primary">Start fixing what matters.</span>
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            Review Pulse helps restaurants turn customer feedback into AI-powered,
-            actionable insights — so you know exactly what to improve.
-          </p>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/register">
-              <Button size="lg" className="w-full sm:w-auto">
-                Start Free
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="#how-it-works">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                See How It Works
-              </Button>
-            </Link>
+      {/* Hero Section - Cinematic */}
+      <section className="relative pt-32 pb-24 md:pt-44 md:pb-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-4xl text-center">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+              Stop collecting reviews.
+              <br />
+              <span className="bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent">
+                Start fixing what matters.
+              </span>
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground md:text-xl">
+              Review Pulse helps restaurants turn customer feedback into AI-powered,
+              actionable insights — so you know exactly what to improve.
+            </p>
+            <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
+              <Link href="/register">
+                <Button size="lg" className="h-12 px-8 text-base">
+                  Start Free
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Link href="#how-it-works">
+                <Button size="lg" variant="outline" className="h-12 px-8 text-base">
+                  See How It Works
+                </Button>
+              </Link>
+            </div>
           </div>
-          <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-primary" />
-              <span>QR-based customer reviews</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-primary" />
-              <span>AI-generated insights</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-primary" />
-              <span>Turn feedback into action</span>
-            </div>
+
+          {/* Feature pills */}
+          <div className="mt-16 flex flex-wrap justify-center gap-3">
+            {[
+              "QR-based customer reviews",
+              "AI-generated insights",
+              "Turn feedback into action",
+            ].map((feature) => (
+              <div
+                key={feature}
+                className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm text-muted-foreground"
+              >
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                {feature}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Problem Section */}
-      <section className="border-b border-border bg-muted/30">
-        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
-          <h2 className="text-center text-2xl font-bold text-foreground sm:text-3xl">
-            Reviews are everywhere. Clarity is nowhere.
-          </h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+      <section className="border-y border-border bg-muted/30 py-24 md:py-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl lg:text-5xl">
+              Reviews are everywhere.
+              <br />
+              <span className="text-muted-foreground">Clarity is nowhere.</span>
+            </h2>
+          </div>
+
+          <div className="mx-auto mt-16 grid max-w-5xl gap-4 md:grid-cols-2">
             {[
-              { title: "Feedback scattered across platforms", desc: "Google, Facebook, Instagram — impossible to track." },
-              { title: "No time to read everything", desc: "Hundreds of reviews pile up with no analysis." },
-              { title: "Repetitive and unstructured", desc: "Hard to spot patterns or what really matters." },
-              { title: "Important issues get buried", desc: "Critical problems missed until it's too late." },
+              { title: "Feedback scattered across platforms", desc: "Google, Facebook, Instagram — impossible to track everything." },
+              { title: "No time to read everything", desc: "Hundreds of reviews pile up with no time to analyze them." },
+              { title: "Repetitive and unstructured", desc: "Hard to spot patterns or understand what really matters." },
+              { title: "Important issues get buried", desc: "Critical problems missed until it's too late to fix them." },
             ].map((item) => (
-              <div key={item.title} className="rounded-lg border border-border bg-card p-5">
-                <h3 className="font-medium text-foreground">{item.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{item.desc}</p>
+              <div
+                key={item.title}
+                className="group rounded-2xl border border-border bg-card p-6 transition-colors hover:border-primary/50"
+              >
+                <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-2 text-muted-foreground">{item.desc}</p>
               </div>
             ))}
           </div>
-          <p className="mt-8 text-center font-medium text-muted-foreground">
-            Reading reviews doesn't improve your business. Acting on them does.
+
+          <p className="mx-auto mt-12 max-w-xl text-center text-lg font-medium text-muted-foreground">
+            Reading reviews doesn't improve your business.
+            <span className="text-foreground"> Acting on them does.</span>
           </p>
         </div>
       </section>
 
-      {/* Solution Section */}
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
-          <h2 className="text-center text-2xl font-bold text-foreground sm:text-3xl">
-            Review Pulse turns feedback into decisions.
-          </h2>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+      {/* Solution Section - 3 Pillars */}
+      <section className="py-24 md:py-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl lg:text-5xl">
+              Review Pulse turns feedback
+              <br />
+              <span className="text-primary">into decisions.</span>
+            </h2>
+          </div>
+
+          <div className="mx-auto mt-16 grid max-w-5xl gap-8 md:grid-cols-3">
             {[
-              { icon: QrCode, title: "Collect", desc: "Customers leave feedback instantly via QR" },
-              { icon: Brain, title: "Analyze", desc: "AI clusters reviews, detects patterns, finds issues" },
-              { icon: Target, title: "Act", desc: "Clear, prioritized action items for your team" },
-            ].map((item) => (
+              { icon: QrCode, title: "Collect", desc: "Customers leave feedback instantly via QR code — no app needed." },
+              { icon: Brain, title: "Analyze", desc: "AI clusters reviews, detects patterns, and finds real issues." },
+              { icon: Target, title: "Act", desc: "Get clear, prioritized action items for your team." },
+            ].map((item, i) => (
               <div key={item.title} className="text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <item.icon className="h-6 w-6 text-primary" />
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+                  <item.icon className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-foreground">{item.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{item.desc}</p>
+                <h3 className="mt-6 text-xl font-semibold text-foreground">{item.title}</h3>
+                <p className="mt-3 text-muted-foreground">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="border-b border-border bg-muted/30">
-        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
-          <h2 className="text-center text-2xl font-bold text-foreground sm:text-3xl">
-            From customer voice to team action — in minutes
-          </h2>
-          <div className="mt-10 space-y-4">
+      {/* How It Works - Timeline */}
+      <section id="how-it-works" className="border-y border-border bg-muted/30 py-24 md:py-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl lg:text-5xl">
+              From customer voice to team action
+              <br />
+              <span className="text-muted-foreground">— in minutes.</span>
+            </h2>
+          </div>
+
+          <div className="mx-auto mt-16 max-w-3xl space-y-6">
             {[
               { step: 1, title: "Collect", items: ["QR on tables, bills, or counters", "No app needed for customers"] },
               { step: 2, title: "Understand", items: ["AI identifies common complaints & praise", "Sentiment, themes, and urgency scored"] },
-              { step: 3, title: "Improve", items: ["Actionable tasks generated", "Track what's fixed and what's pending"] },
+              { step: 3, title: "Improve", items: ["Actionable tasks generated automatically", "Track what's fixed and what's pending"] },
             ].map((section) => (
-              <div key={section.step} className="rounded-lg border border-border bg-card p-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-                    {section.step}
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground">{section.title}</h3>
+              <div
+                key={section.step}
+                className="flex gap-6 rounded-2xl border border-border bg-card p-6"
+              >
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground">
+                  {section.step}
                 </div>
-                <ul className="mt-3 space-y-1.5 pl-11">
-                  {section.items.map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-foreground">{section.title}</h3>
+                  <ul className="mt-3 space-y-2">
+                    {section.items.map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-muted-foreground">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Benefits */}
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
-          <h2 className="text-center text-2xl font-bold text-foreground sm:text-3xl">
-            Why restaurants choose Review Pulse
-          </h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+      {/* Benefits Grid */}
+      <section className="py-24 md:py-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl lg:text-5xl">
+              Why restaurants choose
+              <br />
+              <span className="text-primary">Review Pulse</span>
+            </h2>
+          </div>
+
+          <div className="mx-auto mt-16 grid max-w-5xl gap-6 md:grid-cols-2">
             {[
-              { icon: Clock, title: "Save time", desc: "No more reading hundreds of reviews" },
-              { icon: Target, title: "Fix the right problems", desc: "AI highlights what impacts customers most" },
-              { icon: Star, title: "Improve ratings organically", desc: "Fix issues before they hit public platforms" },
-              { icon: Users, title: "Align your team", desc: "Everyone knows what to improve next" },
+              { icon: Clock, title: "Save time", desc: "No more reading hundreds of reviews manually." },
+              { icon: Target, title: "Fix the right problems", desc: "AI highlights what impacts customers most." },
+              { icon: Star, title: "Improve ratings organically", desc: "Fix issues before they hit public platforms." },
+              { icon: Users, title: "Align your team", desc: "Everyone knows what to improve next." },
             ].map((item) => (
-              <div key={item.title} className="flex gap-4 rounded-lg border border-border bg-card p-5">
-                <item.icon className="h-5 w-5 shrink-0 text-primary" />
+              <div
+                key={item.title}
+                className="flex gap-5 rounded-2xl border border-border bg-card p-6 transition-colors hover:border-primary/50"
+              >
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                  <item.icon className="h-6 w-6 text-primary" />
+                </div>
                 <div>
-                  <h3 className="font-medium text-foreground">{item.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{item.desc}</p>
+                  <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
+                  <p className="mt-1 text-muted-foreground">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -188,117 +228,145 @@ export default function HomePage() {
       </section>
 
       {/* Use Cases */}
-      <section className="border-b border-border bg-muted/30">
-        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
-          <h2 className="text-center text-2xl font-bold text-foreground sm:text-3xl">
-            Built for real restaurant teams
-          </h2>
-          <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <section className="border-y border-border bg-muted/30 py-24 md:py-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+              Built for real restaurant teams
+            </h2>
+          </div>
+
+          <div className="mx-auto mt-12 flex max-w-4xl flex-wrap justify-center gap-4">
             {[
               { icon: Building2, title: "Single-location owners" },
               { icon: Briefcase, title: "Multi-outlet chains" },
               { icon: BarChart3, title: "Operations managers" },
-              { icon: Users, title: "CX teams" },
+              { icon: Users, title: "Customer experience teams" },
             ].map((item) => (
-              <div key={item.title} className="rounded-lg border border-border bg-card p-4 text-center">
-                <item.icon className="mx-auto h-6 w-6 text-primary" />
-                <p className="mt-2 text-sm font-medium text-foreground">{item.title}</p>
+              <div
+                key={item.title}
+                className="flex items-center gap-3 rounded-full border border-border bg-card px-5 py-3"
+              >
+                <item.icon className="h-5 w-5 text-primary" />
+                <span className="font-medium text-foreground">{item.title}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* AI Section */}
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
-          <h2 className="text-center text-2xl font-bold text-foreground sm:text-3xl">
-            AI that works like a smart manager
-          </h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+      {/* AI Features */}
+      <section className="py-24 md:py-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl lg:text-5xl">
+              AI that works like
+              <br />
+              <span className="text-primary">a smart manager</span>
+            </h2>
+          </div>
+
+          <div className="mx-auto mt-16 grid max-w-5xl gap-4 md:grid-cols-2">
             {[
-              { icon: Sparkles, title: "Groups similar feedback", desc: "Finds patterns across hundreds of reviews" },
-              { icon: TrendingUp, title: "Detects recurring problems", desc: "Spots issues before they escalate" },
-              { icon: Target, title: "Prioritizes urgency", desc: "Highlights what needs attention now" },
-              { icon: Brain, title: "Learns over time", desc: "Gets smarter with your feedback" },
+              { icon: Sparkles, title: "Groups similar feedback", desc: "Finds patterns across hundreds of reviews automatically." },
+              { icon: TrendingUp, title: "Detects recurring problems", desc: "Spots issues before they escalate into crises." },
+              { icon: Target, title: "Prioritizes by urgency", desc: "Highlights what needs your attention right now." },
+              { icon: Brain, title: "Learns over time", desc: "Gets smarter with every piece of feedback." },
             ].map((item) => (
-              <div key={item.title} className="flex gap-4 rounded-lg border border-border bg-card p-5">
-                <item.icon className="h-5 w-5 shrink-0 text-primary" />
+              <div
+                key={item.title}
+                className="flex gap-4 rounded-2xl border border-border bg-card p-6"
+              >
+                <item.icon className="h-6 w-6 shrink-0 text-primary" />
                 <div>
-                  <h3 className="font-medium text-foreground">{item.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{item.desc}</p>
+                  <h3 className="font-semibold text-foreground">{item.title}</h3>
+                  <p className="mt-1 text-muted-foreground">{item.desc}</p>
                 </div>
               </div>
             ))}
           </div>
-          <p className="mt-8 text-center font-medium text-foreground">
+
+          <p className="mx-auto mt-12 max-w-lg text-center text-lg font-medium text-foreground">
             No black box. Just clear insights you can act on.
           </p>
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="border-b border-border bg-muted/30">
-        <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-          <h2 className="text-center text-2xl font-bold text-foreground sm:text-3xl">
-            Trusted by restaurant teams
-          </h2>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-border bg-card p-6 text-center">
-              <p className="text-3xl font-bold text-primary">32%</p>
-              <p className="mt-1 text-sm text-muted-foreground">Reduced negative reviews</p>
+      {/* Stats - Cinematic */}
+      <section className="border-y border-border bg-muted/30 py-24 md:py-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+              Trusted by restaurant teams
+            </h2>
+          </div>
+
+          <div className="mx-auto mt-16 grid max-w-3xl gap-8 md:grid-cols-2">
+            <div className="rounded-2xl border border-border bg-card p-8 text-center">
+              <p className="text-5xl font-bold text-primary md:text-6xl">32%</p>
+              <p className="mt-3 text-lg text-muted-foreground">Reduced negative reviews</p>
             </div>
-            <div className="rounded-lg border border-border bg-card p-6 text-center">
-              <p className="text-3xl font-bold text-primary">5+ hours</p>
-              <p className="mt-1 text-sm text-muted-foreground">Saved per week on analysis</p>
+            <div className="rounded-2xl border border-border bg-card p-8 text-center">
+              <p className="text-5xl font-bold text-primary md:text-6xl">5+</p>
+              <p className="mt-3 text-lg text-muted-foreground">Hours saved per week</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing Teaser */}
-      <section className="border-b border-border">
-        <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
-          <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
-            Simple pricing. No surprises.
-          </h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+      {/* Pricing */}
+      <section className="py-24 md:py-32">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl lg:text-5xl">
+              Simple pricing.
+              <br />
+              <span className="text-muted-foreground">No surprises.</span>
+            </h2>
+          </div>
+
+          <div className="mx-auto mt-12 flex max-w-2xl flex-wrap justify-center gap-4">
             {[
               { icon: CheckCircle2, text: "Start free" },
               { icon: TrendingUp, text: "Scale as you grow" },
               { icon: Shield, text: "No long-term contracts" },
             ].map((item) => (
-              <div key={item.text} className="rounded-lg border border-border bg-card p-4">
-                <item.icon className="mx-auto h-5 w-5 text-primary" />
-                <p className="mt-2 font-medium text-foreground">{item.text}</p>
+              <div
+                key={item.text}
+                className="flex items-center gap-2 rounded-full border border-border bg-card px-5 py-3"
+              >
+                <item.icon className="h-5 w-5 text-primary" />
+                <span className="font-medium text-foreground">{item.text}</span>
               </div>
             ))}
           </div>
-          <div className="mt-8">
+
+          <div className="mt-12 text-center">
             <Link href="/register">
-              <Button size="lg">
+              <Button size="lg" className="h-12 px-8 text-base">
                 Start Free
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="bg-primary">
-        <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
-          <h2 className="text-2xl font-bold text-primary-foreground sm:text-3xl">
+      {/* Final CTA - Cinematic */}
+      <section className="relative overflow-hidden bg-primary py-24 md:py-32">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary-foreground/10 via-transparent to-transparent" />
+        <div className="relative mx-auto max-w-7xl px-6 text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-primary-foreground md:text-4xl lg:text-5xl">
             Your customers are already talking.
           </h2>
-          <p className="mt-2 text-lg text-primary-foreground/80">
+          <p className="mx-auto mt-4 max-w-xl text-xl text-primary-foreground/80">
             Review Pulse tells you what to do next.
           </p>
-          <div className="mt-6">
+          <div className="mt-10">
             <Link href="/register">
-              <Button size="lg" variant="secondary">
+              <Button size="lg" variant="secondary" className="h-12 px-8 text-base">
                 Get Started Free
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
           </div>
@@ -306,9 +374,10 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border">
-        <div className="mx-auto max-w-6xl px-4 py-8 text-center sm:px-6">
-          <p className="text-sm text-muted-foreground">
+      <footer className="border-t border-border py-12">
+        <div className="mx-auto max-w-7xl px-6 text-center">
+          <Logo width={28} height={28} className="mx-auto" />
+          <p className="mt-4 text-sm text-muted-foreground">
             © 2026 Review Pulse. All rights reserved.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">

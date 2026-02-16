@@ -50,7 +50,7 @@ export function MobileBottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background safe-area-inset-bottom">
       <div className="mx-auto max-w-lg px-2">
-        <div className="flex h-16 items-center justify-around">
+        <div className="flex h-16 items-center justify-between gap-1">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href ||
@@ -61,7 +61,7 @@ export function MobileBottomNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex min-w-[48px] flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-2 transition-colors",
+                  "flex h-full min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-2 transition-colors",
                   "active:bg-muted",
                   isActive
                     ? "text-primary"
