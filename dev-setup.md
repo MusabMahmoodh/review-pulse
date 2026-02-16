@@ -1,6 +1,51 @@
 # Development Setup Guide
 
-This guide covers setting up Review Pulse for development using **free cloud services** for easy access and collaboration.
+This guide now uses the **current architecture**: single Next.js app on Vercel + Supabase (DB + Auth).
+
+## ✅ Current Architecture (2026)
+
+There is **no separate backend deployment** in the active setup.
+
+```
+┌─────────────────────────────┐
+│           Vercel            │
+│  Next.js UI + API Routes    │
+│    (Vercel Functions)       │
+└──────────────┬──────────────┘
+               │
+               ↓
+┌─────────────────────────────┐
+│          Supabase           │
+│  Postgres + Supabase Auth   │
+└─────────────────────────────┘
+```
+
+### Required env vars (`client/.env.local`)
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+OPENAI_API_KEY=...
+SERPER_API_KEY=...
+ENCRYPTION_KEY=...
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=
+```
+
+### Local run
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+---
+
+## Legacy Reference (Pre-migration)
+
+The sections below that mention Railway/Hostinger/separate backend are legacy reference from the old architecture.
 
 ## Architecture Overview
 
@@ -24,11 +69,7 @@ This guide covers setting up Review Pulse for development using **free cloud ser
 ```
 
 **Alternative Options:**
-- **Render** (instead of Railway) - Free tier available
-- **Fly.io** (instead of Railway) - Free tier available
-- **Neon** (instead of Supabase) - Free PostgreSQL tier
 
----
 
 ## Part 1: Supabase Database Setup (Free Tier)
 
@@ -74,7 +115,6 @@ cd server
 npm run admin:create admin@dev.com devpassword123
 ```
 
----
 
 ## Part 2: Railway Backend Setup (Free Tier)
 
@@ -161,7 +201,6 @@ railway run npm run migration:run
 3. Use **"Run Command"** feature
 4. Run: `npm run migration:run`
 
----
 
 ## Part 3: Vercel Frontend Setup (Free Tier)
 
@@ -202,7 +241,6 @@ NEXT_PUBLIC_API_URL=https://your-railway-app.up.railway.app
 3. Follow DNS configuration instructions
 4. SSL is automatic
 
----
 
 ## Alternative: Render Setup (Free Tier)
 
@@ -224,7 +262,6 @@ If Railway doesn't work, use Render:
 
 **Note**: Render free tier spins down after 15 minutes of inactivity. First request may be slow.
 
----
 
 ## Alternative: Fly.io Setup (Free Tier)
 
@@ -274,7 +311,6 @@ If Railway doesn't work, use Render:
    fly deploy
    ```
 
----
 
 ## Part 4: Google OAuth Setup (Development)
 
@@ -306,7 +342,6 @@ If Railway doesn't work, use Render:
    - `https://your-vercel-app.vercel.app/api/auth/google/callback` (Vercel)
 6. Save **Client ID** and **Client Secret**
 
----
 
 ## Part 5: OpenAI API Key (Free Trial)
 
@@ -320,7 +355,6 @@ If Railway doesn't work, use Render:
 
 **Note**: Free tier includes $5 credit. GPT-4o-mini is very affordable (~$0.15 per 1M tokens).
 
----
 
 ## Part 6: Local Development Setup
 
@@ -383,7 +417,6 @@ echo "NEXT_PUBLIC_API_URL=http://localhost:3001" > .env.local
 npm run dev
 ```
 
----
 
 ## Part 7: Development Workflow
 
@@ -416,10 +449,8 @@ railway run npm run migration:run
 ### 7.3 Viewing Logs
 
 **Railway:**
-- Go to Railway dashboard → Your service → **Logs**
 
 **Vercel:**
-- Go to Vercel dashboard → Your project → **Deployments** → Click deployment → **Logs**
 
 **Local:**
 ```bash
@@ -432,37 +463,17 @@ cd client
 npm run dev
 ```
 
----
 
 ## Part 8: Free Tier Limits & Considerations
 
 ### Supabase Free Tier
-- ✅ 500MB database storage
-- ✅ 2GB bandwidth/month
-- ✅ Unlimited API requests
-- ✅ 2 projects
-- ⚠️ Database pauses after 1 week of inactivity
 
 ### Railway Free Tier
-- ✅ $5 credit/month (~500 hours of usage)
-- ✅ Auto-deployments
-- ✅ Custom domains
-- ⚠️ Spins down after inactivity (wakes on request)
 
 ### Vercel Free Tier
-- ✅ Unlimited deployments
-- ✅ 100GB bandwidth/month
-- ✅ Automatic SSL
-- ✅ Preview deployments
-- ⚠️ 100 build minutes/month
 
 ### Render Free Tier
-- ✅ 750 hours/month
-- ✅ 100GB bandwidth/month
-- ⚠️ Spins down after 15 min inactivity
-- ⚠️ Slower cold starts
 
----
 
 ## Troubleshooting
 
@@ -478,60 +489,25 @@ psql "postgresql://postgres:password@db.xxxxx.supabase.co:5432/postgres"
 
 ### Railway Deployment Fails
 
-- Check build logs in Railway dashboard
-- Verify environment variables
-- Check Node.js version compatibility
-- Ensure `package.json` has correct start script
 
 ### Vercel Build Fails
 
-- Check build logs in Vercel dashboard
-- Verify `NEXT_PUBLIC_API_URL` is set
-- Check for TypeScript errors
-- Verify Node.js version (Vercel uses 18.x by default)
 
 ### Backend Not Accessible
 
-- Check Railway/Render logs
-- Verify PORT environment variable
-- Check if service is running (not paused)
-- Verify CORS settings allow Vercel domain
 
----
 
 ## Quick Start Checklist
 
-- [ ] Supabase project created
-- [ ] Database migrations run
-- [ ] Admin user created
-- [ ] Railway/Render backend deployed
-- [ ] Backend environment variables configured
-- [ ] Vercel frontend deployed
-- [ ] Frontend environment variables configured
-- [ ] Google OAuth configured
-- [ ] OpenAI API key added
-- [ ] Local development environment working
-- [ ] All services accessible and communicating
 
----
 
 ## Cost Summary
 
 **All Free Tier:**
-- Supabase: $0/month
-- Railway: $0/month (with $5 credit)
-- Vercel: $0/month
-- **Total: $0/month** 🎉
 
 **Note**: For production, consider paid tiers for better performance and reliability.
 
----
 
 ## Support Resources
 
-- [Supabase Docs](https://supabase.com/docs)
-- [Railway Docs](https://docs.railway.app)
-- [Vercel Docs](https://vercel.com/docs)
-- [Render Docs](https://render.com/docs)
-- [Fly.io Docs](https://fly.io/docs)
 

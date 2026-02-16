@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { authApi } from "@/lib/api-client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const TOKEN_KEY = "rp_auth_token";
 
@@ -43,33 +44,45 @@ export function useAuth() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const existingToken = typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_KEY) : null;
-    if (!existingToken) {
-      setIsLoading(false);
-      return;
-    }
+    const loadAuth = async () => {
+      try {
+        const existingToken = typeof window !== "undefined" ? window.localStorage.getItem(TOKEN_KEY) : null;
+        const supabase = getSupabaseBrowserClient();
+        const { data } = await supabase.auth.getSession();
+        const sessionToken = data.session?.access_token || null;
+        const activeToken = existingToken || sessionToken;
 
-    setToken(existingToken);
+        if (!activeToken) {
+          setIsLoading(false);
+          return;
+        }
 
-    authApi
-      .me(existingToken)
-      .then((res) => {
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(TOKEN_KEY, activeToken);
+        }
+
+        setToken(activeToken);
+
+        const res = await authApi.me(activeToken);
         setUser(res.restaurant);
-      })
-      .catch((err: any) => {
+      } catch (err: any) {
         console.error("Auth me error", err);
         setError(err?.data?.error || "Session expired");
         if (typeof window !== "undefined") {
           window.localStorage.removeItem(TOKEN_KEY);
         }
         setToken(null);
-      })
-      .finally(() => {
+      } finally {
         setIsLoading(false);
-      });
+      }
+    };
+
+    void loadAuth();
   }, []);
 
   const logout = () => {
+    const supabase = getSupabaseBrowserClient();
+    void supabase.auth.signOut();
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(TOKEN_KEY);
     }

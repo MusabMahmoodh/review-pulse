@@ -1,5 +1,7 @@
-// API Client for backend server
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+
+// API Client for unified frontend + Vercel Functions deployment
+const API_BASE_URL = "";
 
 export class ApiError extends Error {
   constructor(
@@ -104,19 +106,25 @@ export const authApi = {
   },
 
   login: async (email: string, password: string) => {
-    return fetchApi<{
-      success: boolean;
-      token: string;
-      restaurantId: string;
+    const supabase = getSupabaseBrowserClient();
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error || !data.session?.access_token) {
+      throw new ApiError(401, "Unauthorized", { error: error?.message || "Invalid email or password" });
+    }
+
+    const meResponse = await authApi.me(data.session.access_token);
+
+    return {
+      success: true,
+      token: data.session.access_token,
+      restaurantId: meResponse.restaurant.id,
       restaurant: {
-        id: string;
-        name: string;
-        email: string;
-      };
-    }>("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
+        id: meResponse.restaurant.id,
+        name: meResponse.restaurant.name,
+        email: meResponse.restaurant.email,
+      },
+    };
   },
 
   me: async (token: string) => {
@@ -415,8 +423,7 @@ export const externalReviewsApi = {
 // Meta OAuth API
 export const metaAuthApi = {
   authorize: (restaurantId: string) => {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-    return `${backendUrl}/api/auth/meta/authorize?restaurantId=${restaurantId}`;
+    return `/api/auth/meta/authorize?restaurantId=${restaurantId}`;
   },
 };
 

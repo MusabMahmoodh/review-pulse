@@ -1,6 +1,48 @@
 # Production Setup Guide
 
-This guide covers deploying Review Pulse to production using **AWS Amplify** (frontend), **Hostinger** (backend), and **Supabase** (database).
+This guide now uses the **current production architecture**: one Vercel project for frontend + API routes, with Supabase for database and authentication.
+
+## ✅ Current Architecture (2026)
+
+```
+┌─────────────────────────────┐
+│           Vercel            │
+│  Next.js UI + API Routes    │
+│    (Vercel Functions)       │
+└──────────────┬──────────────┘
+               │
+               ↓
+┌─────────────────────────────┐
+│          Supabase           │
+│  Postgres + Supabase Auth   │
+└─────────────────────────────┘
+```
+
+### Required Vercel env vars
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+OPENAI_API_KEY=...
+SERPER_API_KEY=...
+ENCRYPTION_KEY=...
+NEXT_PUBLIC_SITE_URL=https://your-app.vercel.app
+NEXT_PUBLIC_API_URL=
+```
+
+### Deploy settings
+
+- Root Directory: `client`
+- Build Command: `npm run build`
+- Start Command: `npm run start`
+- Framework: Next.js
+
+---
+
+## Legacy Reference (Pre-migration)
+
+The sections below that mention AWS Amplify/Hostinger/separate backend are legacy reference from the old architecture.
 
 ## Architecture Overview
 

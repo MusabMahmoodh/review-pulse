@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,7 +21,6 @@ import { MobileBottomNav } from "@/components/mobile-bottom-nav"
 
 function SettingsPageContent() {
   const { toast } = useToast()
-  const searchParams = useSearchParams()
   const router = useRouter()
   const queryClient = useQueryClient()
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
@@ -221,41 +220,6 @@ function SettingsPageContent() {
       }
     },
   })
-
-  // Handle OAuth callback messages from URL params
-  useEffect(() => {
-    const metaConnected = searchParams.get("meta_connected")
-    const metaError = searchParams.get("meta_error")
-
-    // if (metaConnected === "true") {
-    //   queryClient.invalidateQueries({ queryKey: ["restaurants", "meta-integration", restaurantId] })
-    //   toast({
-    //     title: "Success",
-    //     description: "Meta (Facebook & Instagram) account connected successfully!",
-    //   })
-    //   // Clean up URL
-    //   window.history.replaceState({}, "", "/dashboard/settings")
-    // }
-
-    // if (metaError) {
-    //   const errorMessages: Record<string, string> = {
-    //     missing_params: "Missing authorization parameters",
-    //     token_exchange_failed: "Failed to obtain access token from Meta",
-    //     no_pages: "No Facebook pages found. Please create a Facebook Page first.",
-    //     invalid_account: "Unable to determine Facebook account ID",
-    //     premium_required: "Premium subscription required. Please contact admin to upgrade.",
-    //     unknown: "An unknown error occurred during Meta authorization",
-    //   }
-
-    //   toast({
-    //     title: "Connection Failed",
-    //     description: errorMessages[metaError] || "Failed to connect Meta account",
-    //     variant: "destructive",
-    //   })
-    //   // Clean up URL
-    //   window.history.replaceState({}, "", "/dashboard/settings")
-    // }
-  }, [searchParams, queryClient, restaurantId, toast])
 
   const handleAddKeyword = () => {
     if (!newKeyword.trim()) {
