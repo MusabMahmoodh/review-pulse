@@ -1,59 +1,57 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Crown, Lock, Sparkles } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Zap, Check, ArrowRight } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface PremiumUpgradeProps {
-  feature?: string
   description?: string
   className?: string
 }
 
-export function PremiumUpgrade({ 
-  feature = "Premium Feature",
-  description = "This feature requires a premium subscription. Please contact your admin to upgrade.",
+export function PremiumUpgrade({
+  description = "Upgrade to access advanced capabilities and unlock the full potential of Review Pulse.",
   className = ""
 }: PremiumUpgradeProps) {
+  const features = [
+    "AI-powered insights and recommendations",
+    "Google Reviews integration",
+    "Advanced analytics dashboard",
+    "Priority support",
+  ]
+
   return (
-    <Card className={`border-2 border-dashed ${className}`}>
-      <CardHeader className="text-center pb-4">
-        <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-          <Crown className="h-8 w-8 text-white" />
+    <Card className={cn("border border-border", className)}>
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <Zap className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-medium">Upgrade to Premium</CardTitle>
+            <CardDescription className="text-sm">
+              {description}
+            </CardDescription>
+          </div>
         </div>
-        <CardTitle className="text-xl">Premium Feature</CardTitle>
-        <CardDescription className="text-sm mt-2">
-          {description}
-        </CardDescription>
       </CardHeader>
-      <CardContent className="text-center space-y-4">
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <div className="flex items-center justify-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span>AI-powered insights and recommendations</span>
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span>Social media integration (Google{/*, Facebook, Instagram*/})</span>
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span>Advanced analytics and reporting</span>
-          </div>
-        </div>
-        <div className="pt-4 border-t">
-          <p className="text-xs text-muted-foreground mb-3">
-            Contact your administrator to activate premium features
-          </p>
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <Lock className="h-3 w-3" />
-            <span>Premium subscription required</span>
-          </div>
+      <CardContent className="space-y-4">
+        <ul className="space-y-2">
+          {features.map((item) => (
+            <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Check className="h-4 w-4 text-primary shrink-0" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="pt-2">
+          <Button className="w-full" size="sm">
+            View Plans
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
         </div>
       </CardContent>
     </Card>
   )
 }
-
-
-

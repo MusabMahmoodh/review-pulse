@@ -3,81 +3,163 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ===== MODERN PROFESSIONAL THEME ===== */
+/* Clean, minimal, elegant SaaS aesthetic */
+
 :root {
-  /* Updated color palette for restaurant feedback platform - warm, trustworthy tones */
-  --background: oklch(0.99 0.005 85);
-  --foreground: oklch(0.15 0.02 70);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.02 70);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.02 70);
-  --primary: oklch(0.55 0.18 35); /* Warm orange for food/hospitality */
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.95 0.01 85);
-  --secondary-foreground: oklch(0.25 0.02 70);
-  --muted: oklch(0.96 0.01 85);
-  --muted-foreground: oklch(0.5 0.02 70);
-  --accent: oklch(0.94 0.02 85);
-  --accent-foreground: oklch(0.25 0.02 70);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.9 0.01 85);
-  --input: oklch(0.9 0.01 85);
-  --ring: oklch(0.55 0.18 35);
-  --chart-1: oklch(0.65 0.2 35);
-  --chart-2: oklch(0.6 0.15 140);
-  --chart-3: oklch(0.55 0.15 230);
-  --chart-4: oklch(0.7 0.18 85);
-  --chart-5: oklch(0.5 0.12 290);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.55 0.18 35);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.95 0.01 85);
-  --sidebar-accent-foreground: oklch(0.25 0.02 70);
-  --sidebar-border: oklch(0.9 0.01 85);
-  --sidebar-ring: oklch(0.55 0.18 35);
+  /* Surfaces - clean, layered */
+  --background: hsl(0 0% 99%);
+  --foreground: hsl(220 20% 14%);
+  --surface-1: hsl(0 0% 100%);
+  --surface-2: hsl(220 14% 96%);
+  --surface-3: hsl(220 13% 91%);
+
+  /* Legacy aliases for compatibility */
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(220 20% 14%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(220 20% 14%);
+
+  /* Text hierarchy */
+  --text-primary: hsl(220 20% 14%);
+  --text-secondary: hsl(220 10% 46%);
+  --text-muted: hsl(220 8% 62%);
+  --muted: hsl(220 14% 96%);
+  --muted-foreground: hsl(220 10% 46%);
+
+  /* Borders - subtle */
+  --border: hsl(220 13% 90%);
+  --border-default: hsl(220 13% 90%);
+  --border-subtle: hsl(220 13% 94%);
+  --input: hsl(220 13% 90%);
+
+  /* Accent - refined indigo-blue */
+  --primary: hsl(230 85% 58%);
+  --primary-foreground: hsl(0 0% 100%);
+  --accent: hsl(230 85% 58%);
+  --accent-hover: hsl(230 85% 52%);
+  --accent-muted: hsl(230 40% 95%);
+  --accent-foreground: hsl(220 20% 14%);
+
+  /* Secondary */
+  --secondary: hsl(220 14% 96%);
+  --secondary-foreground: hsl(220 20% 14%);
+
+  /* Semantic states */
+  --success: hsl(142 72% 42%);
+  --warning: hsl(38 95% 50%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+
+  /* Focus */
+  --ring: hsl(230 85% 58% / 0.4);
+
+  /* Shadows - crisp, layered */
+  --shadow-xs: 0 1px 2px hsl(220 20% 14% / 0.04);
+  --shadow-sm: 0 1px 3px hsl(220 20% 14% / 0.06), 0 1px 2px hsl(220 20% 14% / 0.04);
+  --shadow-md: 0 4px 6px hsl(220 20% 14% / 0.06), 0 2px 4px hsl(220 20% 14% / 0.04);
+  --shadow-lg: 0 10px 15px hsl(220 20% 14% / 0.08), 0 4px 6px hsl(220 20% 14% / 0.04);
+
+  /* Chart colors - harmonious palette */
+  --chart-1: hsl(230 75% 58%);
+  --chart-2: hsl(200 75% 50%);
+  --chart-3: hsl(160 60% 45%);
+  --chart-4: hsl(45 90% 50%);
+  --chart-5: hsl(280 60% 55%);
+
+  /* Radius - consistent */
+  --radius: 0.5rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Sidebar */
+  --sidebar: hsl(0 0% 100%);
+  --sidebar-foreground: hsl(220 20% 14%);
+  --sidebar-primary: hsl(230 85% 58%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(220 14% 96%);
+  --sidebar-accent-foreground: hsl(220 20% 14%);
+  --sidebar-border: hsl(220 13% 90%);
+  --sidebar-ring: hsl(230 85% 58% / 0.4);
 }
 
 .dark {
-  --background: oklch(0.13 0.01 70);
-  --foreground: oklch(0.97 0.005 85);
-  --card: oklch(0.16 0.01 70);
-  --card-foreground: oklch(0.97 0.005 85);
-  --popover: oklch(0.16 0.01 70);
-  --popover-foreground: oklch(0.97 0.005 85);
-  --primary: oklch(0.65 0.2 35);
-  --primary-foreground: oklch(0.13 0.01 70);
-  --secondary: oklch(0.23 0.015 70);
-  --secondary-foreground: oklch(0.97 0.005 85);
-  --muted: oklch(0.23 0.015 70);
-  --muted-foreground: oklch(0.65 0.01 85);
-  --accent: oklch(0.25 0.02 70);
-  --accent-foreground: oklch(0.97 0.005 85);
-  --destructive: oklch(0.45 0.18 25);
-  --destructive-foreground: oklch(0.97 0.005 85);
-  --border: oklch(0.25 0.02 70);
-  --input: oklch(0.25 0.02 70);
-  --ring: oklch(0.65 0.2 35);
-  --chart-1: oklch(0.65 0.2 35);
-  --chart-2: oklch(0.6 0.15 140);
-  --chart-3: oklch(0.55 0.15 230);
-  --chart-4: oklch(0.7 0.18 85);
-  --chart-5: oklch(0.5 0.12 290);
-  --sidebar: oklch(0.16 0.01 70);
-  --sidebar-foreground: oklch(0.97 0.005 85);
-  --sidebar-primary: oklch(0.65 0.2 35);
-  --sidebar-primary-foreground: oklch(0.13 0.01 70);
-  --sidebar-accent: oklch(0.23 0.015 70);
-  --sidebar-accent-foreground: oklch(0.97 0.005 85);
-  --sidebar-border: oklch(0.25 0.02 70);
-  --sidebar-ring: oklch(0.65 0.2 35);
+  /* Surfaces - dark layered */
+  --background: hsl(220 16% 8%);
+  --foreground: hsl(0 0% 98%);
+  --surface-1: hsl(220 16% 11%);
+  --surface-2: hsl(220 16% 15%);
+  --surface-3: hsl(220 16% 20%);
+
+  /* Legacy aliases */
+  --card: hsl(220 16% 11%);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(220 16% 11%);
+  --popover-foreground: hsl(0 0% 98%);
+
+  /* Text hierarchy */
+  --text-primary: hsl(0 0% 98%);
+  --text-secondary: hsl(220 10% 70%);
+  --text-muted: hsl(220 8% 52%);
+  --muted: hsl(220 16% 15%);
+  --muted-foreground: hsl(220 10% 65%);
+
+  /* Borders */
+  --border: hsl(220 13% 20%);
+  --border-default: hsl(220 13% 20%);
+  --border-subtle: hsl(220 13% 16%);
+  --input: hsl(220 13% 20%);
+
+  /* Accent */
+  --primary: hsl(230 85% 65%);
+  --primary-foreground: hsl(220 16% 8%);
+  --accent: hsl(230 85% 65%);
+  --accent-hover: hsl(230 85% 72%);
+  --accent-muted: hsl(230 40% 16%);
+  --accent-foreground: hsl(0 0% 98%);
+
+  /* Secondary */
+  --secondary: hsl(220 16% 18%);
+  --secondary-foreground: hsl(0 0% 98%);
+
+  /* Semantic */
+  --destructive: hsl(0 72% 55%);
+  --destructive-foreground: hsl(0 0% 98%);
+
+  /* Focus */
+  --ring: hsl(230 85% 65% / 0.4);
+
+  /* Shadows - darker */
+  --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.15);
+  --shadow-sm: 0 1px 3px hsl(0 0% 0% / 0.2), 0 1px 2px hsl(0 0% 0% / 0.15);
+  --shadow-md: 0 4px 6px hsl(0 0% 0% / 0.2), 0 2px 4px hsl(0 0% 0% / 0.15);
+  --shadow-lg: 0 10px 15px hsl(0 0% 0% / 0.25), 0 4px 6px hsl(0 0% 0% / 0.15);
+
+  /* Chart colors - adjusted for dark */
+  --chart-1: hsl(230 80% 65%);
+  --chart-2: hsl(200 80% 60%);
+  --chart-3: hsl(160 65% 55%);
+  --chart-4: hsl(45 95% 55%);
+  --chart-5: hsl(280 65% 65%);
+
+  /* Sidebar */
+  --sidebar: hsl(220 16% 11%);
+  --sidebar-foreground: hsl(0 0% 98%);
+  --sidebar-primary: hsl(230 85% 65%);
+  --sidebar-primary-foreground: hsl(220 16% 8%);
+  --sidebar-accent: hsl(220 16% 18%);
+  --sidebar-accent-foreground: hsl(0 0% 98%);
+  --sidebar-border: hsl(220 13% 20%);
+  --sidebar-ring: hsl(230 85% 65% / 0.4);
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback";
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-sans: "Geist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", monospace;
+
+  /* Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -102,10 +184,14 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 6px);
+
+  /* Sidebar */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -120,205 +206,91 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Typography - clean hierarchy */
+  h1 {
+    @apply text-2xl sm:text-3xl font-semibold tracking-tight text-foreground;
+  }
+
+  h2 {
+    @apply text-xl sm:text-2xl font-semibold tracking-tight text-foreground;
+  }
+
+  h3 {
+    @apply text-lg font-medium tracking-tight text-foreground;
+  }
+
+  h4 {
+    @apply text-base font-medium text-foreground;
+  }
+
+  p {
+    @apply leading-relaxed text-muted-foreground;
   }
 }
 
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
+@layer components {
+  /* Clean card surface - no glass */
+  .card-surface {
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
   }
-  100% {
-    transform: translateX(100%);
+
+  /* Elevated surface for modals/popovers */
+  .card-elevated {
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Subtle hover effect */
+  .hover-lift {
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Interactive card */
+  .card-interactive {
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .card-interactive:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
   }
 }
 
-.animate-shimmer {
-  animation: shimmer 2s infinite;
-}
+@layer utilities {
+  /* Functional transitions only */
+  .transition-base {
+    transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+  }
 
-@keyframes gradient-shift {
-  0%, 100% {
-    opacity: 0.8;
-    transform: scale(1) rotate(0deg);
+  .transition-shadow {
+    transition: box-shadow 150ms ease;
   }
-  25% {
-    opacity: 1;
-    transform: scale(1.05) rotate(2deg);
+
+  .transition-transform {
+    transition: transform 200ms ease;
   }
-  50% {
-    opacity: 0.9;
-    transform: scale(1) rotate(0deg);
-  }
-  75% {
-    opacity: 1;
-    transform: scale(1.05) rotate(-2deg);
+
+  /* Focus ring utility */
+  .focus-ring {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 }
 
-.animate-gradient-shift {
-  animation: gradient-shift 6s ease-in-out infinite;
-}
-
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin-slow {
-  animation: spin-slow 8s linear infinite;
-}
-
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(147, 51, 234, 0.5), 0 0 40px rgba(219, 39, 119, 0.3), 0 0 60px rgba(59, 130, 246, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(147, 51, 234, 0.7), 0 0 60px rgba(219, 39, 119, 0.5), 0 0 90px rgba(59, 130, 246, 0.4);
-  }
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%) skewX(-15deg);
-  }
-  100% {
-    transform: translateX(200%) skewX(-15deg);
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
-
-@keyframes sparkle {
-  0%, 100% {
-    opacity: 0;
-    transform: scale(0) rotate(0deg);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1) rotate(180deg);
-  }
-}
-
-@keyframes magic-pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.02);
-  }
-}
-
-@keyframes ripple {
-  0% {
-    transform: scale(0);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
-@keyframes particles {
-  0% {
-    transform: translateY(0) translateX(0) scale(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-100px) translateX(var(--tx)) scale(1);
-    opacity: 0;
-  }
-}
-
-@keyframes ripple {
-  0% {
-    transform: scale(0);
-    opacity: 0.6;
-  }
-  100% {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
-.animate-ripple {
-  animation: ripple 0.6s ease-out;
-}
-
-.delay-1000 {
-  animation-delay: 1s;
-}
-
-/* Additional animation utilities for modern landing page */
-@keyframes slide-in-from-bottom-4 {
-  from {
-    transform: translateY(1rem);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slide-in-from-left {
-  from {
-    transform: translateX(-1rem);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slide-in-from-right {
-  from {
-    transform: translateX(1rem);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slide-in-from-top {
-  from {
-    transform: translateY(-1rem);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
+/* Single page transition - keep minimal */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -328,79 +300,21 @@
   }
 }
 
-@keyframes zoom-in {
+@keyframes slide-up {
   from {
-    transform: scale(0.95);
     opacity: 0;
+    transform: translateY(4px);
   }
   to {
-    transform: scale(1);
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Animation utility classes */
-.animate-in {
-  animation-fill-mode: both;
+.animate-fade-in {
+  animation: fade-in 200ms ease-out;
 }
 
-.fade-in {
-  animation: fade-in 0.5s ease-out;
-}
-
-.slide-in-from-bottom-4 {
-  animation: slide-in-from-bottom-4 0.5s ease-out;
-}
-
-.slide-in-from-left {
-  animation: slide-in-from-left 0.5s ease-out;
-}
-
-.slide-in-from-right {
-  animation: slide-in-from-right 0.5s ease-out;
-}
-
-.slide-in-from-top {
-  animation: slide-in-from-top 0.5s ease-out;
-}
-
-.zoom-in {
-  animation: zoom-in 0.5s ease-out;
-}
-
-/* Support for duration and delay utilities */
-.duration-500 {
-  animation-duration: 0.5s;
-}
-
-.duration-700 {
-  animation-duration: 0.7s;
-}
-
-.duration-1000 {
-  animation-duration: 1s;
-}
-
-.delay-100 {
-  animation-delay: 0.1s;
-}
-
-.delay-200 {
-  animation-delay: 0.2s;
-}
-
-.delay-300 {
-  animation-delay: 0.3s;
-}
-
-.delay-400 {
-  animation-delay: 0.4s;
-}
-
-.delay-500 {
-  animation-delay: 0.5s;
-}
-
-.delay-700 {
-  animation-delay: 0.7s;
+.animate-slide-up {
+  animation: slide-up 200ms ease-out;
 }

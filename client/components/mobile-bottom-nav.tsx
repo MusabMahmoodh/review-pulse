@@ -48,66 +48,34 @@ export function MobileBottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-2xl safe-area-inset-bottom">
-      <div className="container mx-auto px-1">
-        <div className="flex items-center justify-around h-[70px] gap-0.5">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background safe-area-inset-bottom">
+      <div className="mx-auto max-w-lg px-2">
+        <div className="flex h-16 items-center justify-around">
           {navItems.map((item) => {
             const Icon = item.icon
-            const isActive = pathname === item.href || 
+            const isActive = pathname === item.href ||
               (item.href !== "/dashboard" && pathname?.startsWith(item.href))
-            const isAI = item.href === "/dashboard/ai-insights"
-            
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 min-w-0 flex-1 h-full transition-all duration-200",
-                  "hover:bg-muted/50 active:bg-muted rounded-lg",
-                  isActive && "text-primary",
-                  isAI && "relative"
+                  "flex min-w-[48px] flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-2 transition-colors",
+                  "active:bg-muted",
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <div className={cn(
-                  "relative flex items-center justify-center transition-transform duration-200",
-                  isActive && "scale-110"
-                )}>
-                  {/* Animated glow effect for AI button */}
-                  {isAI && (
-                    <>
-                      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-indigo-500/20 blur-md animate-pulse" />
-                      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-purple-400/30 via-pink-400/30 to-indigo-400/30 blur-sm animate-pulse" style={{ animationDelay: '0.5s' }} />
-                    </>
+                <Icon
+                  className={cn(
+                    "h-5 w-5",
+                    isActive && "text-primary"
                   )}
-                  <div className={cn(
-                    "p-2 rounded-lg transition-colors duration-200 relative z-10",
-                    isActive && "bg-primary/10",
-                    isAI && !isActive && "bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-indigo-500/10"
-                  )}>
-                    <Icon className={cn(
-                      "h-5 w-5 transition-colors duration-200 relative z-10",
-                      isActive ? "text-primary" : "text-muted-foreground",
-                      isAI && !isActive && "text-purple-500 dark:text-purple-400",
-                      isAI && !isActive && "animate-spin-slow"
-                    )} />
-                  </div>
-                  {isActive && (
-                    <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary animate-pulse" />
-                  )}
-                  {/* Sparkle particles for AI button */}
-                  {isAI && (
-                    <>
-                      <span className="absolute top-0 right-0 w-1 h-1 rounded-full bg-purple-400 animate-ping" style={{ animationDelay: '0s', animationDuration: '2s' }} />
-                      <span className="absolute bottom-0 left-0 w-1 h-1 rounded-full bg-pink-400 animate-ping" style={{ animationDelay: '1s', animationDuration: '2s' }} />
-                      <span className="absolute top-1/2 left-0 w-0.5 h-0.5 rounded-full bg-indigo-400 animate-ping" style={{ animationDelay: '0.5s', animationDuration: '1.5s' }} />
-                    </>
-                  )}
-                </div>
-                <span className={cn(
-                  "text-[10px] font-semibold leading-tight text-center truncate w-full px-0.5 transition-colors duration-200",
-                  isActive ? "text-primary" : "text-muted-foreground",
-                  isAI && !isActive && "text-purple-600 dark:text-purple-400"
-                )}>
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
+                <span className="text-[11px] font-medium leading-tight">
                   {item.label}
                 </span>
               </Link>

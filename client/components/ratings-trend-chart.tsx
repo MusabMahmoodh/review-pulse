@@ -1,7 +1,7 @@
 "use client"
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts"
+import { ChartContainer } from "@/components/ui/chart"
 import type { CustomerFeedback } from "@/lib/types"
 
 interface RatingsTrendChartProps {
@@ -83,10 +83,10 @@ export function RatingsTrendChart({ feedback, timePeriod, ratingType }: RatingsT
     .map(({ key, dateObj, ...rest }) => rest)
 
   const colors = {
-    food: "#8b5cf6", // purple
-    staff: "#ec4899", // pink
-    ambience: "#3b82f6", // blue
-    overall: "#6366f1", // indigo
+    food: "var(--color-chart-1)",
+    staff: "var(--color-chart-2)",
+    ambience: "var(--color-chart-3)",
+    overall: "var(--color-chart-4)",
   }
 
   const color = colors[ratingType]

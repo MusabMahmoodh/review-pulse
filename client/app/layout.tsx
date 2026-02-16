@@ -11,8 +11,8 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Guestra - Restaurant Customer Insights",
-  description: "Collect and analyze customer feedback to improve your restaurant experience",
+  title: "Review Pulse - Restaurant Customer Insights",
+  description: "Collect customer feedback, track trends, and improve restaurant performance.",
   generator: "v0.app",
   icons: {
     icon: "/favicon.png",
@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans antialiased`}>
+      <body className="font-sans antialiased min-h-screen bg-background text-foreground">
         <ReactQueryProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             {children}

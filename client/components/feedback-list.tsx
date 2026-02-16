@@ -16,13 +16,11 @@ interface FeedbackListProps {
 export function FeedbackList({ feedback, loading, compact = false, restaurantId }: FeedbackListProps) {
   if (loading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-3 p-5">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-4">
-              <div className="h-20 bg-muted rounded" />
-            </CardContent>
-          </Card>
+          <div key={i} className="animate-pulse rounded-lg border border-border p-4">
+            <div className="h-16 rounded bg-muted" />
+          </div>
         ))}
       </div>
     )
@@ -30,20 +28,20 @@ export function FeedbackList({ feedback, loading, compact = false, restaurantId 
 
   if (feedback.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-8 text-center text-muted-foreground">
-          <p>No feedback yet. Share your QR code to start collecting reviews!</p>
-        </CardContent>
-      </Card>
+      <div className="p-8 text-center">
+        <p className="text-sm text-muted-foreground">
+          No feedback yet. Share your QR code to start collecting reviews!
+        </p>
+      </div>
     )
   }
 
   return (
-    <div className={compact ? "space-y-0 divide-y" : "space-y-3"}>
+    <div className={compact ? "divide-y divide-border" : "space-y-3"}>
       {feedback.map((item) => (
-        <div key={item.id} className={compact ? "px-6 py-4" : ""}>
+        <div key={item.id} className={compact ? "px-5 py-4" : ""}>
           {!compact && (
-            <Card>
+            <Card className="border">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
@@ -102,7 +100,7 @@ export function FeedbackList({ feedback, loading, compact = false, restaurantId 
                 </div>
 
                 {item.suggestions && (
-                  <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                  <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
                     <p className="text-sm">{item.suggestions}</p>
                     {restaurantId && (
                       <div className="flex justify-end pt-2">
@@ -122,7 +120,7 @@ export function FeedbackList({ feedback, loading, compact = false, restaurantId 
           )}
 
           {compact && (
-            <div className="space-y-2">
+            <div className="space-y-2 rounded-md transition-colors hover:bg-muted/30">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{item.customerName || "Anonymous"}</p>

@@ -1,7 +1,7 @@
 "use client"
 
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
 import type { CustomerFeedback } from "@/lib/types"
 
 interface RatingsChartProps {
@@ -15,7 +15,12 @@ export function RatingsChart({ feedback }: RatingsChartProps) {
   const avgAmbience = feedback.length > 0 ? feedback.reduce((sum, f) => sum + f.ambienceRating, 0) / feedback.length : 0
   const avgOverall = feedback.length > 0 ? feedback.reduce((sum, f) => sum + f.overallRating, 0) / feedback.length : 0
 
-  const colors = ["#8b5cf6", "#ec4899", "#3b82f6", "#6366f1"] // purple, pink, blue, indigo
+  const colors = [
+    "var(--color-chart-1)",
+    "var(--color-chart-2)",
+    "var(--color-chart-3)",
+    "var(--color-chart-4)",
+  ]
 
   const chartData = [
     { category: "Food", rating: Number(avgFood.toFixed(1)) },

@@ -26,165 +26,105 @@ export default function DashboardPage() {
   const aiInsight = insightsData?.insight || null
   const loading = feedbackLoading || statsLoading || insightsLoading
 
+  const quickActions = [
+    {
+      href: "/dashboard/ai-insights",
+      title: "AI Insights",
+      description: aiInsight ? "Latest AI summary is available" : "Generate smart trends and recommendations",
+      icon: Sparkles,
+    },
+    {
+      href: "/dashboard/actionable-items",
+      title: "Actionable Items",
+      description: "Track and prioritize improvement tasks",
+      icon: CheckSquare,
+    },
+    {
+      href: "/dashboard/team-members",
+      title: "Team Members",
+      description: "Manage staff access and accountability",
+      icon: Users,
+    },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Logo width={40} height={40} />
-              <div>
-                <h1 className="text-lg font-semibold leading-none">The Culinary Corner</h1>
-                <p className="text-xs text-muted-foreground mt-0.5">Dashboard Overview</p>
-              </div>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 border-b border-border bg-background">
+        <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <Logo width={32} height={32} />
+            <div>
+              <p className="text-sm font-semibold leading-none text-foreground">The Culinary Corner</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Dashboard</p>
             </div>
-            <div className="flex items-center gap-1">
-              <Link href="/dashboard/settings">
-                <Button size="sm" variant="ghost" className="h-9 w-9 p-0">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/qr-code">
-                <Button size="sm" variant="ghost" className="h-9 w-9 p-0">
-                  <QrCode className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Button size="sm" variant="ghost" className="h-9 w-9 p-0">
-                <LogOut className="h-4 w-4" />
+          </div>
+          <div className="flex items-center gap-1">
+            <Link href="/dashboard/settings">
+              <Button size="icon-sm" variant="ghost">
+                <Settings className="h-4 w-4" />
               </Button>
-            </div>
+            </Link>
+            <Link href="/qr-code">
+              <Button size="icon-sm" variant="ghost">
+                <QrCode className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Button size="icon-sm" variant="ghost">
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 sm:px-6 py-6 space-y-6 pb-24 md:pb-6">
-        {/* Stats Cards */}
+      <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 pb-24 sm:px-6 md:pb-8">
         {stats && (
-          <div className="w-full overflow-hidden">
+          <section className="space-y-3">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Performance Snapshot</h2>
+              <p className="text-sm text-muted-foreground">Key metrics for the current period</p>
+            </div>
             <StatsCards stats={stats} />
-          </div>
+          </section>
         )}
 
-        {/* Quick Actions - Hidden on mobile since these are in bottom nav */}
         {!isMobile && (
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* AI Insights Card */}
-            <Link href="/dashboard/ai-insights" className="block">
-            <Card className="group relative overflow-hidden border-2 border-purple-200/50 dark:border-purple-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-purple-300/70 dark:hover:border-purple-700/70">
-            {/* Main highlighted gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-100/80 via-pink-100/80 via-blue-100/60 to-indigo-100/80 dark:from-purple-950/80 dark:via-pink-950/80 dark:via-blue-950/60 dark:to-indigo-950/80 animate-gradient-shift" />
-            
-            {/* Secondary gradient overlay for depth */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-purple-200/40 via-transparent to-pink-200/40 dark:from-purple-800/40 dark:to-pink-800/40" />
-            
-            {/* Animated shimmer effect */}
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent dark:via-white/10" />
-            
-            {/* Floating particles/glow effects - more prominent */}
-            <div className="absolute top-0 right-0 w-40 h-40 bg-purple-400/40 dark:bg-purple-600/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0s' }} />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-400/40 dark:bg-pink-600/30 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1s' }} />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 bg-indigo-400/30 dark:bg-indigo-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }} />
-            
-            <CardContent className="p-6 relative z-10">
-              <div className="flex items-center gap-4">
-                {/* Animated icon container */}
-                <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-600 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 opacity-75 animate-pulse" />
-                  <Sparkles className="h-7 w-7 text-white relative z-10 animate-spin-slow" />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 dark:from-purple-400 dark:via-pink-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                      AI-Powered Insights
-                    </h3>
-                    <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-700 dark:text-purple-300 border border-purple-300/50 dark:border-purple-500/50">
-                      NEW
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground line-clamp-1">
-                    Get intelligent analysis and actionable recommendations
-                  </p>
-                </div>
-                
-                <ChevronRight className="h-5 w-5 text-purple-600 dark:text-purple-400 transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110 shrink-0" />
-              </div>
-            </CardContent>
-          </Card>
-          </Link>
-
-          {/* Actionable Items Card */}
-          <Link href="/dashboard/actionable-items" className="block">
-            <Card className="group relative overflow-hidden border-2 border-blue-200/50 dark:border-blue-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-blue-300/70 dark:hover:border-blue-700/70">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-100/80 via-cyan-100/80 to-indigo-100/80 dark:from-blue-950/80 dark:via-cyan-950/80 dark:to-indigo-950/80" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-blue-200/40 via-transparent to-cyan-200/40 dark:from-blue-800/40 dark:to-cyan-800/40" />
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent dark:via-white/10" />
-              <CardContent className="relative p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="p-2 rounded-lg bg-blue-500/20 dark:bg-blue-400/20">
-                        <CheckSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <section className="space-y-3">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Quick Actions</h2>
+              <p className="text-sm text-muted-foreground">Jump to common workflows</p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {quickActions.map((item) => {
+                const ActionIcon = item.icon
+                return (
+                  <Link key={item.href} href={item.href} className="group block">
+                    <div className="flex h-full items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:border-primary/50 hover:shadow-md">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <ActionIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
-                      <span className="font-bold text-lg text-blue-900 dark:text-blue-100">
-                        Actionable Items
-                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground">{item.title}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-1">{item.description}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" />
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-1">
-                      Track and manage improvement tasks
-                    </p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-blue-600 dark:text-blue-400 transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110 shrink-0" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-          </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
         )}
 
-        {/* Team Members Card - Hidden on mobile since it's in bottom nav */}
-        {!isMobile && (
-          <Link href="/dashboard/team-members" className="block">
-            <Card className="group relative overflow-hidden border-2 border-green-200/50 dark:border-green-800/50 shadow-xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] hover:border-green-300/70 dark:hover:border-green-700/70">
-              <div className="absolute inset-0 bg-gradient-to-br from-green-100/80 via-emerald-100/80 to-teal-100/80 dark:from-green-950/80 dark:via-emerald-950/80 dark:to-teal-950/80" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-green-200/40 via-transparent to-emerald-200/40 dark:from-green-800/40 dark:to-emerald-800/40" />
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/30 to-transparent dark:via-white/10" />
-              <CardContent className="relative p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="p-2 rounded-lg bg-green-500/20 dark:bg-green-400/20">
-                        <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      </div>
-                      <span className="font-bold text-lg text-green-900 dark:text-green-100">
-                        Team Members
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-1">
-                      Manage your team and assign tasks
-                    </p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-green-600 dark:text-green-400 transition-all duration-300 group-hover:translate-x-2 group-hover:scale-110 shrink-0" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        )}
-
-        {/* Charts and Analytics Section */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Ratings Chart */}
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-4">
+        <section className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
               <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">Ratings Overview</CardTitle>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-base font-medium">Ratings Overview</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="px-4 sm:px-6 pb-6">
-              <div className="w-full overflow-x-auto -mx-2 px-2">
+            <CardContent>
+              <div className="w-full overflow-x-auto">
                 <div className="min-w-[280px]">
                   <RatingsChart feedback={feedback} />
                 </div>
@@ -192,49 +132,48 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Recent Feedback */}
-          <Card className="overflow-hidden">
-            <CardHeader className="pb-4">
+          <Card>
+            <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                  <CardTitle className="text-lg">Recent Feedback</CardTitle>
+                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-base font-medium">Recent Feedback</CardTitle>
                 </div>
                 {feedback.length > 3 && (
-                  <Link href="/dashboard/feedback" className="text-xs text-primary hover:underline">
+                  <Link href="/dashboard/feedback" className="text-xs font-medium text-primary hover:underline">
                     View all
                   </Link>
                 )}
               </div>
             </CardHeader>
-            <CardContent className="px-0 pb-0">
+            <CardContent className="p-0">
               <FeedbackList feedback={feedback.slice(0, 3)} loading={loading} compact restaurantId={restaurantId} />
               {feedback.length > 3 && (
                 <Link href="/dashboard/feedback">
-                  <div className="px-6 py-4 border-t text-center hover:bg-muted/50 transition-colors">
+                  <div className="border-t border-border px-5 py-3 text-center transition-colors hover:bg-muted">
                     <span className="text-sm font-medium text-primary">View All Feedback</span>
                   </div>
                 </Link>
               )}
             </CardContent>
           </Card>
-        </div>
+        </section>
 
-        {/* External Reviews */}
-        <Card className="overflow-hidden">
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">External Reviews</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="px-0 pb-0">
-            <ExternalReviews restaurantId={restaurantId} compact />
-          </CardContent>
-        </Card>
+        <section>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-base font-medium">External Reviews</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ExternalReviews restaurantId={restaurantId} compact />
+            </CardContent>
+          </Card>
+        </section>
       </main>
-      
-      {/* Mobile Bottom Navigation */}
+
       <MobileBottomNav />
     </div>
   )
